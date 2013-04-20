@@ -41,6 +41,10 @@ public class TwitterProtocol {
 		obj.addProperty(ID_KEY, sequenceNumberGenerator+=1);
 	}
 	
+	public TwitterProtocol(byte[] data) {
+		
+	}
+	
 	public String getMethod() {
 		return obj.get(METHOD_KEY).getAsString();
 	}
