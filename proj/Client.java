@@ -2,25 +2,15 @@ import java.io.PrintStream;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
-import com.google.gson.JsonObject;
-
-
 public class Client extends RIONode {
 	
-	public static final String methodKey = "method";
-	public static final String collectionKey = "collection";
-	public static final String idKey = "id";
-	public static final String dataKey = "data";
-	public static final String usernameKey = "username";
-	public static final String passwordKey = "password";
-	public static final String nameKey = "name";
-	
-	private static int sequenceNumberGenerator = 0;
+	/** to get the response from on receive */
+	private byte[] response = null; 
 
 	@Override
 	public void onRIOReceive(Integer from, int protocol, byte[] msg) {
-		// TODO Auto-generated method stub
-		
+		// TODO(leelee): figure out how to get from onCommand to here.
+		response = msg;
 	}
 
 	@Override
@@ -59,19 +49,18 @@ public class Client extends RIONode {
 				logError("create <username> <name> <password> <serveraddress>");
 			}
 			int serverAddress = Integer.valueOf(server);
-			// format a new JsonObject and pass it to the server.
-			JsonObject obj = new JsonObject();
-			obj.addProperty(methodKey, "createEntry");
-			obj.addProperty(collectionKey, "user");
-			obj.addProperty("sequenceNumber", sequenceNumberGenerator+=1);
-			JsonObject data = new JsonObject();
-			data.addProperty("username", username);
-			data.addProperty("name", name);
-			data.addProperty("password", password);
-			obj.add(dataKey, data);
+			// TODO(leelee): machine id 0 for now
+			// create entry user.
+			User user = new User(0);
+			user.setUserName(username);
+			user.setName(name);
+			user.setPassword(password);
+			user.setIsLogin(false);
+			// create TwitterProtocol.
+			TwitterProtocol tp = new TwitterProtocol("createEntry", "user", user.getJsonObject());
 			logOutput("Creating a user, name:" + name);
-			// create entry is user.
-			RIOSend(serverAddress, Protocol.DATA, obj.toString().getBytes());
+			// send to the server the tp as bytes array
+			sendLater(serverAddress, Protocol.DATA, tp.getBytes());
 			
 		} else if (token.equalsIgnoreCase("login")) {
 			String username = sc.findInLine(pattern);
@@ -89,6 +78,10 @@ public class Client extends RIONode {
 			int serverAddress = Integer.valueOf(server);
 			logOutput("Logging in");
 			// get from the map this username
+			
+			// RIOSEND.....
+			
+			// update entry, user login logout
 
 			// if null, syso user not found and continue
 
@@ -161,6 +154,23 @@ public class Client extends RIONode {
 			logOutput("Fecthing unread post");
 			// get all the unread post
 		}
+	}
+	
+	/**
+	 * Note: this only works for one server, one client.
+	 * @param destAddr
+	 * @param protocol
+	 * @param payload
+	 * @return
+	 */
+	public byte[] sendLater(int destAddr, int protocol, byte[] payload) {
+		RIOSend(destAddr, protocol, payload);
+		byte[] response = null;
+		while (this.response == null) {
+		}
+		response = this.response;
+		this.response = null;
+		return response;
 	}
 	
 	public void logError(String output) {

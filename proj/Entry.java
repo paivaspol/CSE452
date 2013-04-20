@@ -12,7 +12,7 @@ public class Entry {
 	private Date time;
 	private int machineId;
 	private int counter;
-	private JsonObject jsonObject;
+	protected JsonObject jsonObject;
 	private String hash;
 	
 	private static int counterGenerator = 0;
@@ -43,7 +43,7 @@ public class Entry {
 		hashToComponents();
 	}
 	
-	public JsonObject getJson() {
+	public JsonObject getJsonObject() {
 		return jsonObject;
 	}
 	
