@@ -2,6 +2,11 @@ import java.io.PrintStream;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
+/**
+ * 
+ * @author leelee
+ *
+ */
 public class Client extends RIONode {
 	
 	/** to get the response from on receive */
