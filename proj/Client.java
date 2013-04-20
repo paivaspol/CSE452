@@ -2,8 +2,20 @@ import java.io.PrintStream;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
+import com.google.gson.JsonObject;
+
 
 public class Client extends RIONode {
+	
+	public static final String methodKey = "method";
+	public static final String collectionKey = "collection";
+	public static final String idKey = "id";
+	public static final String dataKey = "data";
+	public static final String usernameKey = "username";
+	public static final String passwordKey = "password";
+	public static final String nameKey = "name";
+	
+	private static int sequenceNumberGenerator = 0;
 
 	@Override
 	public void onRIOReceive(Integer from, int protocol, byte[] msg) {
@@ -47,9 +59,20 @@ public class Client extends RIONode {
 				logError("create <username> <name> <password> <serveraddress>");
 			}
 			int serverAddress = Integer.valueOf(server);
-			RIOSend(serverAddress, Protocol.DATA, null);
+			// format a new JsonObject and pass it to the server.
+			JsonObject obj = new JsonObject();
+			obj.addProperty(methodKey, "createEntry");
+			obj.addProperty(collectionKey, "user");
+			obj.addProperty("sequenceNumber", sequenceNumberGenerator+=1);
+			JsonObject data = new JsonObject();
+			data.addProperty("username", username);
+			data.addProperty("name", name);
+			data.addProperty("password", password);
+			obj.add(dataKey, data);
 			logOutput("Creating a user, name:" + name);
 			// create entry is user.
+			RIOSend(serverAddress, Protocol.DATA, obj.toString().getBytes());
+			
 		} else if (token.equalsIgnoreCase("login")) {
 			String username = sc.findInLine(pattern);
 			if (username == null) {
