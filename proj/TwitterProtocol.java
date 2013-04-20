@@ -41,8 +41,8 @@ public class TwitterProtocol {
 		obj.addProperty(ID_KEY, sequenceNumberGenerator+=1);
 	}
 	
-	public TwitterProtocol(byte[] data) {
-		
+	public TwitterProtocol(byte[] tp) {
+		// TODO(pai): add the deserialize code 
 	}
 	
 	public String getMethod() {
