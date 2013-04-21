@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
@@ -16,19 +17,14 @@ import edu.washington.cs.cse490h.lib.PersistentStorageWriter;
 public class TwitterServer extends RIONode {
 
   /**
-   * JSON Keys for sending to Server
-   */
-  public static final String METHOD = "method";
-  public static final String COLLECTION = "collection";
-  public static final String DATA = "data";
-
-  /**
    * Method name constants for server RPC
    */
   public static final String CREATE = "create";
   public static final String READ = "read";
   public static final String UPDATE = "update";
   public static final String DELETE = "delete";
+
+  private static final String TEMP_FILENAME = ".tmp";
 
   /**
    * An instance of GSON for serializing and deserializing JSON objects
@@ -52,6 +48,12 @@ public class TwitterServer extends RIONode {
     // Generate a user-level synoptic event to indicate that the node started.
     logSynopticEvent("started");
 
+    // server might just recover from a failure, so need to check
+    // tmp file in case of it was in the middle of something when it crashed
+    File f = new File(TEMP_FILENAME);
+    if (f.exists()) {
+      resumeAppendExecution();
+    }
   }
 
   /**
@@ -74,7 +76,6 @@ public class TwitterServer extends RIONode {
    * @param msg the message
    */
   @Override
-  @SuppressWarnings("unchecked")
   public void onRIOReceive(Integer from, int protocol, byte[] msg) {
     // first check whether it is a valid protocol or not
     if (!Protocol.isPktProtocolValid(protocol)) {
@@ -83,27 +84,22 @@ public class TwitterServer extends RIONode {
     }
 
     String jsonStr = packetBytesToString(msg);
+    TwitterProtocolMessage result = gson.fromJson(jsonStr, TwitterProtocolMessage.class);
 
-    Map<String, Object> result = gson.fromJson(jsonStr, Map.class);
-
-    String method = (String) result.get(METHOD);
-    String collection = (String) result.get(COLLECTION);
-    Map<String, Object> data = (Map<String, Object>) result.get(DATA);
-
-    if (method.equals(CREATE)) {
+    if (result.getMethod().equals(CREATE)) {
       Utils.logOutput(super.addr, "Creating a tweet entry...");
-      createEntry(collection, data);
-    } else if (method.equals(READ)) {
+      createEntry(result.getCollection(), result.getData());
+    } else if (result.getMethod().equals(READ)) {
       Utils.logOutput(super.addr, "Reading a file...");
-    } else if (method.equals(UPDATE)) {
+      String entries = readEntries(result.getCollection(), result.getData());
+    } else if (result.getMethod().equals(UPDATE)) {
       Utils.logOutput(super.addr, "Updating a file...");
-    } else if (method.equals(DELETE)) {
+    } else if (result.getMethod().equals(DELETE)) {
       Utils.logOutput(super.addr, "Deleting a file...");
 
     } else {
       throw new RuntimeException("Command not supported by the server");
     }
-
   }
 
   /**
@@ -116,22 +112,37 @@ public class TwitterServer extends RIONode {
 
   // appends the file with the tweet data
   // writing to user-[collectionName]
-  @SuppressWarnings("unchecked")
   private void createEntry(String collectionName, Map<String, Object> data) {
     // assuming that username field is always going to be there
-    String username = (String) data.get("username");
-    String filename = username + "-" + collectionName;
+    String filename = generateFilename(collectionName, data);
     try {
-      PersistentStorageWriter writer = super.getWriter(filename, true);
+      PersistentStorageReader reader = super.getReader(filename);
+      PersistentStorageWriter writer = super.getWriter(filename, false);
+      PersistentStorageWriter tempFileWriter = super.getWriter(TEMP_FILENAME, false);
+      StringBuilder oldContent = new StringBuilder(filename + "\n"); // so we know which file to restore
+      readWholeFile(reader, oldContent);
 
+      tempFileWriter.delete();
+      // close all the file connections
+      reader.close();
+      writer.close();
+      tempFileWriter.close();
     } catch (IOException e) {
       Utils.logError(super.addr, e.getMessage());
     }
   }
 
   // returns all the entries from the file associated to the reader object
-  private void readEntries(PersistentStorageReader reader) {
-
+  private String readEntries(String collectionName, Map<String, Object> data) {
+    String filename = generateFilename(collectionName, data);
+    StringBuilder fileContent = new StringBuilder();
+    try {
+      PersistentStorageReader reader = super.getReader(filename);
+      readWholeFile(reader, fileContent);
+    } catch (IOException e) {
+      Utils.logError(super.addr, e.getMessage());
+    }
+    return fileContent.toString();
   }
 
   private void updateFile(PersistentStorageWriter writer) {
@@ -139,15 +150,49 @@ public class TwitterServer extends RIONode {
   }
 
   private void deleteEntry(String collectionName, Map<String, Object> data) {
-    // assuming that username field is always going to be there
-    String username = (String) data.get("username");
-    String filename = username + "-" + collectionName;
+    String filename = generateFilename(collectionName, data);
     try {
       PersistentStorageWriter writer = super.getWriter(filename, false);
-      writer.delete();
-      writer.close();
+
     } catch (IOException e) {
       Utils.logError(super.addr, e.getMessage());
     }
+  }
+
+  // Called when there is a temp file in the system after recovery
+  // need to continue with all the appends
+  private void resumeAppendExecution() {
+    try {
+      PersistentStorageReader reader = super.getReader(TEMP_FILENAME);
+      PersistentStorageWriter tmpFileWriter = super.getWriter(TEMP_FILENAME, false);
+      if (reader.ready()) {
+        String filename = reader.readLine();
+        StringBuilder oldContent = new StringBuilder();
+        readWholeFile(reader, oldContent);
+        PersistentStorageWriter revertFile = super.getWriter(filename, false);
+        char[] oldContentChars = new char[oldContent.length()];
+        oldContent.getChars(0, oldContent.length(), oldContentChars, 0);
+        revertFile.write(oldContentChars);
+      }
+      tmpFileWriter.delete();
+      tmpFileWriter.close();
+    } catch (IOException e) {
+      Utils.logError(super.addr, e.getMessage());
+    }
+  }
+
+  // reads the whole file in the reader into the oldContent variable
+  private void readWholeFile(PersistentStorageReader reader, StringBuilder oldContent) throws IOException {
+    String temp = "";
+    while ((temp = reader.readLine()) != null) {
+      oldContent.append(temp);
+    }
+  }
+
+  // generates the filename in the following format: username-collectionName
+  private String generateFilename(String collectionName, Map<String, Object> data) {
+    String username = (String) data.get("username");
+    String filename = username + "-" + collectionName;
+    return filename;
   }
 }
