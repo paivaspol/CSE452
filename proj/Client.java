@@ -48,15 +48,15 @@ public class Client extends RIONode {
 			}
 			String name = sc.findInLine(pattern);
 			if (name == null) {
-				logError("create <username> <name> <password> <serveraddress>");
+				logError("signup <username> <name> <password> <serveraddress>");
 			}
 			String password = sc.findInLine(pattern);
 			if (password == null) {
-				logError("create <username> <name> <password> <serveraddress>");
+				logError("signup <username> <name> <password> <serveraddress>");
 			}
 			String server = sc.findInLine(pattern);
 			if (server == null) {
-				logError("create <username> <name> <password> <serveraddress>");
+				logError("signup <username> <name> <password> <serveraddress>");
 			}
 			int serverAddress = Integer.valueOf(server);
 			// TODO(leelee): machine id 0 for now
@@ -101,22 +101,41 @@ public class Client extends RIONode {
 			}
 			TwitterProtocol result = gson.fromJson(clientData.toString(), TwitterProtocol.class);
 			User userCollection = (User) result.getData();
-
+			// set user to login to true
+			userCollection.setIsLogin(true);
 			// update entry, user login logout
-			TwitterProtocol tpUpdate = new TwitterProtocol("updateEntry", "user", userCollection); 
+			TwitterProtocol tpUpdate = new TwitterProtocol("updateEntry", "user", userCollection);
+			sendLater(serverAddress, Protocol.DATA, gson.toJson(tpUpdate).toString().getBytes());
 			logOutput("You are login!");
 		} else if (token.equalsIgnoreCase("logout")) {
+			String username = sc.findInLine(pattern);
+			if (username == null) {
+				logError("logout <username> <serveraddress>");
+			}
 			String server = sc.findInLine(pattern);
 			if (server == null) {
-				logError("logout <serveraddress>");
+				logError("logout <usernmae> <serveraddress>");
 			}
 			int serverAddress = Integer.valueOf(server);
 			logOutput("Logging out");
 			// get from the map this username
-
-			// if null, syso user is not login
-
+			User user = new User(0);
+			user.setUserName(username);
+			TwitterProtocol tpQuery = new TwitterProtocol("queryEntry", "user", user);
+			byte[] clientData = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpQuery).toString().getBytes());
+			// clientData is empty if the client does not exist.
+			if (clientData.length == 0) {
+				logError("username:" + " " + username + " does not exist." );
+				return;
+			}
+			TwitterProtocol result = gson.fromJson(clientData.toString(), TwitterProtocol.class);
+			User userCollection = (User) result.getData();
+			userCollection.setIsLogin(false);
+			// update entry, user login logout
+			TwitterProtocol tpUpdate = new TwitterProtocol("updateEntry", "user", userCollection); 
+			
 			// else logout
+			logOutput("You are logout!");
 		} else if (token.equalsIgnoreCase("tweet")) {
 			String content = sc.findInLine(pattern);
 			if (content == null) {
