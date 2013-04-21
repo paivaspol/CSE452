@@ -1,3 +1,5 @@
+import com.google.gson.JsonObject;
+
 
 /**
  * Holds the structure for a request for GSON to parse and put it into this object structure
@@ -10,7 +12,9 @@ public class TwitterProtocol {
 
   private final String method;
   private final String collection;
-  private final Entry data;
+  private final JsonObject data;
+  private final String key;
+  private final String operation;
 
   /**
    * Constructs a new structure to hold for communication
@@ -19,10 +23,12 @@ public class TwitterProtocol {
    * @param collection the target collection
    * @param data extra information
    */
-  public TwitterProtocol(String method, String collection, Entry data) {
+  public TwitterProtocol(String method, String collection, String key, String operation, JsonObject data) {
     this.method = method;
     this.collection = collection;
     this.data = data;
+    this.key = key;
+    this.operation = operation;
   }
 
   /**
@@ -42,7 +48,15 @@ public class TwitterProtocol {
   /**
    * @return the data hold in this request
    */
-  public Entry getData() {
+  public JsonObject getData() {
     return data;
+  }
+  
+  public String getKey() {
+	  return key;
+  }
+  
+  public String getOperation() {
+	  return operation;
   }
 }
