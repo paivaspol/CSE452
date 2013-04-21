@@ -1,17 +1,16 @@
-import com.google.gson.JsonObject;
-
-
 /**
- * 
- * @author leelee
+ * Holds the JSON Representation for the Twitter protocol
  * 
  */
 
 public class TwitterProtocol {
 
-  private final String method;
-  private final String collection;
-  private final String data;
+  /** method name */
+  private String method;
+  /** collection (filename) */
+  private String collection;
+  /** data */
+  private String data;
 
   /**
    * Constructs a new structure to hold for communication
@@ -25,6 +24,17 @@ public class TwitterProtocol {
     this.method = method;
     this.collection = collection;
     this.data = data;
+  }
+
+  /**
+   * Constructs a new structure to hold for communication
+   * 
+   * @param twitterProtocol another twitter protocol
+   */
+  public TwitterProtocol(TwitterProtocol twitterProtocol) {
+    method = twitterProtocol.method;
+    collection = twitterProtocol.collection;
+    data = twitterProtocol.data;
   }
 
   /**
@@ -46,5 +56,32 @@ public class TwitterProtocol {
    */
   public String getData() {
     return data;
+  }
+
+  /**
+   * Sets the method
+   * 
+   * @param method the method being set
+   */
+  public void setMethod(String method) {
+    this.method = method;
+  }
+
+  /**
+   * Sets the collection
+   * 
+   * @param collection the collection being set
+   */
+  public void setCollection(String collection) {
+    this.collection = collection;
+  }
+
+  /**
+   * Sets the data
+   * 
+   * @param data the data being set
+   */
+  public void setData(String data) {
+    this.data = data;
   }
 }
