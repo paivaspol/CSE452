@@ -1,3 +1,4 @@
+
 /**
  * 
  * @author leelee
@@ -8,8 +9,9 @@ public class TwitterProtocol {
 
   private final String method;
   private final String collection;
-  private final Entry data;
-  private final String operator;
+  private final JsonObject data;
+  private final String key;
+  private final String operation;
 
   /**
    * Constructs a new structure to hold for communication
@@ -19,11 +21,12 @@ public class TwitterProtocol {
    * @param data extra information
    * @param operator the operator for getting the data
    */
-  public TwitterProtocol(String method, String collection, Entry data, String operator) {
+  public TwitterProtocol(String method, String collection, Entry data) {
     this.method = method;
     this.collection = collection;
     this.data = data;
-    this.operator = operator;
+    this.key = key;
+    this.operation = operation;
   }
 
   /**
@@ -43,15 +46,15 @@ public class TwitterProtocol {
   /**
    * @return the data hold in this request
    */
-  public Entry getData() {
+  public JsonObject getData() {
     return data;
   }
-
-  /**
-   * @return the operator for querying the data from the server
-   */
-  public String getOperator() {
-    return operator;
+  
+  public String getKey() {
+	  return key;
   }
-
+  
+  public String getOperation() {
+	  return operation;
+  }
 }

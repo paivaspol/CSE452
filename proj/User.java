@@ -1,21 +1,21 @@
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * 
  * @author leelee
  *
  */
 public class User extends Entry {
-	
-	private static final String USERNAME_KEY = "username";
 	private static final String NAME_KEY = "name";
 	private static final String PASSWORD_KEY = "password";
 	private static final String IS_LOGIN_KEY = "islogin";
+	private static final String USERNAME_KEY = "username";
+	
+	private Map<User, Long> followerToTime = new HashMap<User, Long>();
 	
 	public User(int machineId) {
 		super(machineId);
-	}
-	
-	public String getUserName() {
-		return jsonObject.get(USERNAME_KEY).getAsString();
 	}
 	
 	public String getName() {
@@ -26,12 +26,12 @@ public class User extends Entry {
 		return jsonObject.get(PASSWORD_KEY).getAsString();
 	}
 	
-	public boolean isLogin() {
-		return jsonObject.get(IS_LOGIN_KEY).getAsBoolean();
+	public String getUsername() {
+		return jsonObject.get(USERNAME_KEY).getAsString();
 	}
 	
-	public void setUserName(String username) {
-		jsonObject.addProperty(USERNAME_KEY, username);
+	public boolean isLogin() {
+		return jsonObject.get(IS_LOGIN_KEY).getAsBoolean();
 	}
 	
 	public void setName(String name) {
@@ -44,5 +44,21 @@ public class User extends Entry {
 	
 	public void setIsLogin(boolean isLogin) {
 		jsonObject.addProperty(IS_LOGIN_KEY, isLogin);
+	}
+	
+	public void setUsername(String username) {
+		jsonObject.addProperty(USERNAME_KEY, username);
+	}
+	
+	public Map<User, Long> getFollowersInfo() {
+		return new HashMap<User, Long>(followerToTime);
+	}
+	
+	/**
+	 * 
+	 * @param followeToTime is expected to map from user to time in long.
+	 */
+	public void setFollowersInfo(Map<User, Long> followerToTime) {
+		this.followerToTime = followerToTime;
 	}
 }

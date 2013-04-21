@@ -6,17 +6,15 @@
  */
 public class Tweet extends Entry {
 
-	private String content;
-	
 	public Tweet(int machineId) {
 		super(machineId);
 	}
 	
 	public void setContent(String content) {
-		this.content = content;
+		jsonObject.addProperty("content", content);
 	}
 	
 	public String getContent() {
-		return this.content;
+		return jsonObject.get("content").getAsString();
 	}
 }
