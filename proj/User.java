@@ -10,11 +10,12 @@ public class User extends Entry {
 	private static final String NAME_KEY = "name";
 	private static final String PASSWORD_KEY = "password";
 	private static final String IS_LOGIN_KEY = "islogin";
+	private static final String USERNAME_KEY = "username";
 	
 	private Map<User, Long> followerToTime = new HashMap<User, Long>();
 	
-	public User(int machineId, String username) {
-		super(machineId, username);
+	public User(int machineId) {
+		super(machineId);
 	}
 	
 	public String getName() {
@@ -23,6 +24,10 @@ public class User extends Entry {
 	
 	public String getPassword() {
 		return jsonObject.get(PASSWORD_KEY).getAsString();
+	}
+	
+	public String getUsername() {
+		return jsonObject.get(USERNAME_KEY).getAsString();
 	}
 	
 	public boolean isLogin() {
@@ -39,6 +44,10 @@ public class User extends Entry {
 	
 	public void setIsLogin(boolean isLogin) {
 		jsonObject.addProperty(IS_LOGIN_KEY, isLogin);
+	}
+	
+	public void setUsername(String username) {
+		jsonObject.addProperty(USERNAME_KEY, username);
 	}
 	
 	public Map<User, Long> getFollowersInfo() {
