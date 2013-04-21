@@ -1,4 +1,3 @@
-import java.util.Map;
 
 /**
  * Holds the structure for a request for GSON to parse and put it into this object structure
@@ -43,7 +42,7 @@ public class TwitterProtocol {
   /**
    * @return the data hold in this request
    */
-  public Map<String, Object> getData() {
+  public Entry getData() {
     return data;
   }
 
