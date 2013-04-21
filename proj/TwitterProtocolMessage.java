@@ -7,11 +7,13 @@ import java.util.Map;
  * 
  */
 
-public class TwitterProtocol {
+public class TwitterProtocolMessage {
 
+  private final long hash;
+  private final long id;
   private final String method;
   private final String collection;
-  private final Entry data;
+  private final Map<String, Object> data;
 
   /**
    * Constructs a new structure to hold for communication
@@ -20,10 +22,26 @@ public class TwitterProtocol {
    * @param collection the target collection
    * @param data extra information
    */
-  public TwitterProtocol(String method, String collection, Entry data) {
+  public TwitterProtocolMessage(String method, String collection, Map<String, Object> data, String hash, String id) {
+    this.hash = Long.parseLong(hash);
+    this.id = Long.parseLong(id);
     this.method = method;
     this.collection = collection;
     this.data = data;
+  }
+
+  /**
+   * @return the id
+   */
+  public long getId() {
+    return id;
+  }
+
+  /**
+   * @return the hash
+   */
+  public long getHash() {
+    return hash;
   }
 
   /**
