@@ -8,8 +8,8 @@ public class Tweet extends Entry {
 
 	private String content;
 	
-	public Tweet(int machineId) {
-		super(machineId);
+	public Tweet(int machineId, String username) {
+		super(machineId, username);
 	}
 	
 	public void setContent(String content) {
