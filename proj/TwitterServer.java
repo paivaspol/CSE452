@@ -87,7 +87,9 @@ public class TwitterServer extends RIONode {
 
     String jsonStr = packetBytesToString(msg);
     TwitterProtocol result = gson.fromJson(jsonStr, TwitterProtocol.class);
-    Entry data = result.getData();
+    JsonObject data = result.getData();
+    String key = result.getKey();
+    String operation = result.getCollection();
     if (result.getMethod().equals(CREATE)) {
       Utils.logOutput(super.addr, "Creating a tweet entry...");
       createEntry(result.getCollection(), data);

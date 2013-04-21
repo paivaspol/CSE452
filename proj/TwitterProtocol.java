@@ -1,3 +1,4 @@
+import com.google.gson.JsonObject;
 
 /**
  * 
@@ -21,7 +22,7 @@ public class TwitterProtocol {
    * @param data extra information
    * @param operator the operator for getting the data
    */
-  public TwitterProtocol(String method, String collection, Entry data) {
+  public TwitterProtocol(String method, String collection, JsonObject data, String key, String operation) {
     this.method = method;
     this.collection = collection;
     this.data = data;
@@ -49,12 +50,12 @@ public class TwitterProtocol {
   public JsonObject getData() {
     return data;
   }
-  
+
   public String getKey() {
-	  return key;
+    return key;
   }
-  
+
   public String getOperation() {
-	  return operation;
+    return operation;
   }
 }
