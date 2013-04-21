@@ -14,20 +14,18 @@ public class Entry {
 	private int counter;
 	protected JsonObject jsonObject;
 	private String hash;
-	private String username;
 	
 	private static int counterGenerator = 0;
 	
 	// A hash is consist of 32 bits for time,
 	// 12 bits for machine identification
 	// (for future assignments that involved multiple machines), 20 (1048576) bits for counter
-	public Entry(int machineId, String username) {
+	public Entry(int machineId) {
 		if (machineId < 0 || machineId >= 4096) {
 			throw new IllegalArgumentException("machindId should be within 0 to 4095");
 		}
 		this.time = new Date();
 		this.machineId = machineId;
-		this.username = username;
 
 		this.counter = counterGenerator++;
 		if (counterGenerator >= 1048576) {
@@ -76,9 +74,5 @@ public class Entry {
 	
 	public Date getTime() {
 		return time;
-	}
-	
-	public String getUsername() {
-		return username;
 	}
 }
