@@ -82,9 +82,16 @@ public class Client extends RIONode {
 			}
 			int serverAddress = Integer.valueOf(server);
 			logOutput("Logging in");
-			// get from the map this username
+			// query from user to get the user object from server
+			// TODO(leelee): machine id 0 for now.
+			User user = new User(0);
+			user.setUserName(username);
+			user.setPassword(password);
+			TwitterProtocol tp = new TwitterProtocol("queryEntry", "user", user.getJsonObject());
+			byte[] clientData = sendLater(serverAddress, Protocol.DATA, tp.getBytes());
+			// TODO(leelee): serialize this using TwitterProtocol that takes in bytes;
+			TwitterProtocol clientDataDeserialized = new TwitterProtocol(clientData);
 			
-			// RIOSEND.....
 			
 			// update entry, user login logout
 
