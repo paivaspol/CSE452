@@ -4,7 +4,6 @@ import java.util.regex.Pattern;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
 
 /**
  * 
@@ -16,6 +15,8 @@ public class Client extends RIONode {
 	/** to get the response from on receive */
 	private byte[] response = null; 
 	private Gson gson;
+	private String loginUsername;
+	private static final String USERS_FILE = "users.txt";
 
 	@Override
 	public void onRIOReceive(Integer from, int protocol, byte[] msg) {
@@ -30,6 +31,7 @@ public class Client extends RIONode {
 		// Generate a user-level synoptic event to indicate that the node started.
 		logSynopticEvent("started");
 		gson = new GsonBuilder().create();
+		loginUsername = null;
 	}
 
 	@Override
@@ -60,18 +62,22 @@ public class Client extends RIONode {
 				logError("signup <username> <name> <password> <serveraddress>");
 			}
 			int serverAddress = Integer.valueOf(server);
-			// TODO(leelee): machine id 0 for now
-			// create entry user.
-			User user = new User(0);
-			user.setUsername(username);
-			user.setName(name);
-			user.setPassword(password);
-			user.setIsLogin(false);
-			// create TwitterProtocol.
-			TwitterProtocol tp = new TwitterProtocol("createEntry", "user", null, null, user.getJsonObject());
+			
 			logOutput("Creating a user, name:" + name);
-			// send to the server the tp as bytes array
-			sendLater(serverAddress, Protocol.DATA, gson.toJson(tp).toString().getBytes());
+			// create user file that stores tweet
+			TwitterProtocol tpCreateUserFile = new TwitterProtocol("create", username + ".txt", null);
+			sendLater(serverAddress, Protocol.DATA, gson.toJson(tpCreateUserFile).toString().getBytes());
+			
+			// create user file that stores users that he/she is following
+			TwitterProtocol tpCreateFollowingFile = new TwitterProtocol("create", username + "_" + "following.txt", null);
+			sendLater(serverAddress, Protocol.DATA, gson.toJson(tpCreateFollowingFile).toString().getBytes());
+			
+			// append this user information to users.txt
+			String userInfo = username + "\t" + password + "\t" + name + "\n"; 
+			TwitterProtocol tpAppendUserInfo = new TwitterProtocol("append", USERS_FILE, userInfo);
+			sendLater(serverAddress, Protocol.DATA, gson.toJson(tpAppendUserInfo).toString().getBytes());
+			
+			// TODO(leelee): check if the username is being created successfully, if not retry again.
 			
 		} else if (token.equalsIgnoreCase("login")) {
 			String username = sc.findInLine(pattern);
@@ -88,57 +94,57 @@ public class Client extends RIONode {
 			}
 			int serverAddress = Integer.valueOf(server);
 			logOutput("Logging in");
-			// query from user to get the user object from server
-			// TODO(leelee): machine id 0 for now.
-			User user = new User(0);
-			user.setUsername(username);
-			user.setPassword(password);
-			TwitterProtocol tpQuery = new TwitterProtocol("queryEntry", "user", "username", "=", user.getJsonObject());
-			byte[] clientData = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpQuery).toString().getBytes());
-			// clientData is empty if the client does not exist.
-			if (clientData.length == 0) {
+			
+			// check if the user exists
+			TwitterProtocol tpCheckUser = new TwitterProtocol("read", USERS_FILE, null);
+			String usersList = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpCheckUser).toString().getBytes()).toString();
+			String[] names = usersList.split("\n");
+			boolean isValidUser = false;
+			for (int i = 0; i < names.length; i++) {
+				if (names[i].startsWith(username)) {
+					String[] info = names[i].split("\t");
+					if (info[1].equals(password)) {
+						isValidUser = true;
+						break;
+					}
+				}
+			}
+			if (!isValidUser) {
 				logError("username:" + " " + username + " password: " + password + " does not exist." );
 				return;
 			}
-			TwitterProtocol result = gson.fromJson(clientData.toString(), TwitterProtocol.class);
-			JsonObject userJsonObject = result.getData();
-			User userCollection = new User(userJsonObject);
-			// set user to login to true
-			userCollection.setIsLogin(true);
-			// update entry, user login logout
-			TwitterProtocol tpUpdate = new TwitterProtocol("updateEntry", "user", "username", "=", userCollection.getJsonObject());
-			sendLater(serverAddress, Protocol.DATA, gson.toJson(tpUpdate).toString().getBytes());
+			
+			// correct username and password so proceed with login user
+			TwitterProtocol tpQuery = new TwitterProtocol("append", "login.txt", username + "\n");
+			sendLater(serverAddress, Protocol.DATA, gson.toJson(tpQuery).toString().getBytes());
+			
+			// TODO(leelee): check if user actually log in succesfully
+			loginUsername = username;
 			logOutput("You are login!");
 		} else if (token.equalsIgnoreCase("logout")) {
-			String username = sc.findInLine(pattern);
-			if (username == null) {
-				logError("logout <username> <serveraddress>");
+			if (loginUsername == null) {
+				logError("you are not login");
+				return;
 			}
 			String server = sc.findInLine(pattern);
 			if (server == null) {
-				logError("logout <usernmae> <serveraddress>");
+				logError("logout <serveraddress>");
 			}
 			int serverAddress = Integer.valueOf(server);
 			logOutput("Logging out");
-			// get from the map this username
-			User user = new User(0);
-			user.setUsername(username);
-			TwitterProtocol tpQuery = new TwitterProtocol("queryEntry", "user", "username", "=", user.getJsonObject());
-			byte[] clientData = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpQuery).toString().getBytes());
-			// clientData is empty if the client does not exist.
-			if (clientData.length == 0) {
-				logError("username:" + " " + username + " does not exist." );
-				return;
-			}
-			TwitterProtocol result = gson.fromJson(clientData.toString(), TwitterProtocol.class);
-			User userCollection = new User(result.getData());
-			userCollection.setIsLogin(false);
-			// update entry, user login logout
-			TwitterProtocol tpUpdate = new TwitterProtocol("updateEntry", "user", "username", "=", userCollection.getJsonObject()); 
-			sendLater(serverAddress, Protocol.DATA, gson.toJson(tpUpdate).toString().getBytes());
-			// else logout
+			
+			// delete this user's username from login.txt
+			TwitterProtocol tpQuery = new TwitterProtocol("delete_lines", "login.txt", loginUsername);
+			sendLater(serverAddress, Protocol.DATA, gson.toJson(tpQuery).toString().getBytes());
+			loginUsername = null;
+			// TODO(leelee): check if user actually log out succesfully
+			
 			logOutput("You are logout!");
 		} else if (token.equalsIgnoreCase("tweet")) {
+			if (loginUsername == null) {
+				logError("You are not login.");
+				return;
+			}
 			String content = sc.findInLine(pattern);
 			if (content == null) {
 				logError("tweet <content> <serveraddress>");
@@ -148,11 +154,22 @@ public class Client extends RIONode {
 				logError("tweet <content> <serveraddress>");
 			}
 			int serverAddress = Integer.valueOf(server);
+			
 			logOutput("Posting tweet");
-			// create a new entry in tweet collection
+			// append the tweet to user's tweet file
+			TwitterProtocol tpAppendTweet = new TwitterProtocol("append", loginUsername + ".txt", System.currentTimeMillis() + "\t" + content + "\n");
+			sendLater(serverAddress, Protocol.DATA, gson.toJson(tpAppendTweet).toString().getBytes());
+			// TODO(leelee): check if user actually tweet succesfully
+			
+			logOutput("Your tweet is posted. :)");
+			
 		} else if (token.equalsIgnoreCase("follow")) {
-			String follower = sc.findInLine(pattern);
-			if (follower == null) {
+			if (loginUsername == null) {
+				logError("You are not login.");
+				return;
+			}
+			String userToFollow = sc.findInLine(pattern);
+			if (userToFollow == null) {
 				logError("follow <username> <serveraddress>");
 			}
 			String server = sc.findInLine(pattern);
@@ -160,15 +177,39 @@ public class Client extends RIONode {
 				logError("follow <username> <serveraddress>");
 			}
 			int serverAddress = Integer.valueOf(server);
-			// check if follower is a valid user name
-
-			// if yes, syso: adding follower
-			// create a new entry in follower
-
-			// if no, syso: username not found, continue
+			
+			// check if user to follow is a valid user name
+			TwitterProtocol tpCheckUser = new TwitterProtocol("read", USERS_FILE, null);
+			String usersList = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpCheckUser).toString().getBytes()).toString();
+			String[] names = usersList.split("\n");
+			boolean isValidUser = false;
+			for (int i = 0; i < names.length; i++) {
+				if (names[i].startsWith(userToFollow)) {
+					isValidUser = true;
+					break;
+				}
+			}
+			if (!isValidUser) {
+				logError("username:" + " " + userToFollow  + " does not exist." );
+				return;
+			}
+			
+			// adding follower
+			logOutput("adding " + userToFollow);
+			String userToFollowInfo = userToFollow + "\t" + System.currentTimeMillis() + "\n";
+			TwitterProtocol tpAddToFollowing = new TwitterProtocol("append", loginUsername + ".txt", userToFollowInfo);
+			sendLater(serverAddress, Protocol.DATA, gson.toJson(tpAddToFollowing).toString().getBytes());
+			// TODO(leelee): check if userToAdd actually added succesfully
+			
+			logOutput("Congratulation! You are now following " + userToFollow);
+			
 		} else if (token.equalsIgnoreCase("unfollow")) {
-			String follower = sc.findInLine(pattern);
-			if (follower == null) {
+			if (loginUsername == null) {
+				logError("You are not login.");
+				return;
+			}
+			String userToUnfollow = sc.findInLine(pattern);
+			if (userToUnfollow == null) {
 				logError("unfollow <username> <serveraddress>");
 			}
 			String server = sc.findInLine(pattern);
@@ -176,23 +217,75 @@ public class Client extends RIONode {
 				logError("unfollow <username> <serveraddress>");
 			}
 			int serverAddress = Integer.valueOf(server);
+			
+			// check if user to unfollow is a valid user name
+			TwitterProtocol tpCheckUser = new TwitterProtocol("read", USERS_FILE, null);
+			String usersList = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpCheckUser).toString().getBytes()).toString();
+			String[] names = usersList.split("\n");
+			boolean isValidUser = false;
+			for (int i = 0; i < names.length; i++) {
+				if (names[i].startsWith(userToUnfollow)) {
+					isValidUser = true;
+					break;
+				}
+			}
+			if (!isValidUser) {
+				logError("username:" + " " + userToUnfollow  + " does not exist." );
+				return;
+			}
+			
 			// delete entry from follower collection
-			logOutput(follower + " is being removed from your follower list");
-		} else if (token.equalsIgnoreCase("quit")) {
-			String server = sc.findInLine(pattern);
-			if (server == null) {
-				logError("quit <serveraddress>");
-			}
-			int serverAddress = Integer.valueOf(server);
-			logOutput("Bye");
+			TwitterProtocol tpUnfollow = new TwitterProtocol("delete_lines", loginUsername + ".txt", userToUnfollow);
+			sendLater(serverAddress, Protocol.DATA, getBytesFromTwitterProtocol(tpUnfollow));
+			// TODO(leelee): check if userToUnfollow actually being removed succesfully
+			logOutput("You are no longer following " + userToUnfollow);
 		} else if (token.equalsIgnoreCase("read")) {
+			if (loginUsername == null) {
+				logError("You are not login.");
+				return;
+			}
 			String server = sc.findInLine(pattern);
 			if (server == null) {
 				logError("read <serveraddress>");
 			}
 			int serverAddress = Integer.valueOf(server);
 			logOutput("Fecthing unread post");
-			// get all the unread post
+			
+			// get the list of username that user is following
+			TwitterProtocol tpGetFollowing = new TwitterProtocol("read", loginUsername + "_following.txt", null);
+			String followingList = sendLater(serverAddress, Protocol.DATA, getBytesFromTwitterProtocol(tpGetFollowing)).toString();
+			String[] eachFollowing = followingList.split("\n");
+			String newFollowingList = "";
+			// get all the tweets from the user that this person is following
+			for (String f : eachFollowing) {
+				String[] info = f.split("\t");
+				long timeFollow = Long.valueOf(info[1]);
+				TwitterProtocol tpGetTweets = new TwitterProtocol("read", info[0] + ".txt", null);
+				String tweets = sendLater(serverAddress, Protocol.DATA, getBytesFromTwitterProtocol(tpGetTweets)).toString();
+				String[] tweetsSplited = tweets.split("\n");
+				int i = 0;
+				for (; i < tweetsSplited.length; i++) {
+					String[] tSplit = tweetsSplited[i].split("\t");
+					long tweetFollow = Long.valueOf(tSplit[1]);
+					if (tweetFollow >= timeFollow) {
+						break;
+					}
+				}
+				// display all the unread posts
+				for (int j = i; j < tweetsSplited.length; j++) {
+					logOutput(info[0] + ": " + tweetsSplited[j]);
+				}
+				newFollowingList += info[0] + "\t" + System.currentTimeMillis() + "\n";
+			}
+			
+			// update the following list time by delete the the original following file and create the new one
+			// with the new time
+			TwitterProtocol tpDeleteFollowing = new TwitterProtocol("delete", loginUsername + "_following.txt", null);
+			sendLater(serverAddress, Protocol.DATA, getBytesFromTwitterProtocol(tpDeleteFollowing));
+			TwitterProtocol tpUpdateFollowing = new TwitterProtocol("create", loginUsername + "_following.txt", newFollowingList);
+			sendLater(serverAddress, Protocol.DATA, getBytesFromTwitterProtocol(tpUpdateFollowing));
+			
+			logOutput("You have no more unread post.");
 		}
 	}
 	
@@ -223,6 +316,10 @@ public class Client extends RIONode {
 
 	public void log(String output, PrintStream stream) {
 		stream.println("Node " + addr + ": " + output);
+	}
+	
+	private byte[] getBytesFromTwitterProtocol(TwitterProtocol tp) {
+		return gson.toJson(tp).toString().getBytes();
 	}
 
 }
