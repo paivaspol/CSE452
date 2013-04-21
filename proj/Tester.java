@@ -15,6 +15,7 @@ public class Tester {
     Map<String, Object> tester = new HashMap<String, Object>();
     JsonObject obj = new JsonObject();
     tester.put("test_id", "hello!");
-    System.out.println(gson.toJson(new TwitterProtocolMessage("test", "col1", tester, "1", "2")));
+    Entry entry = new Entry(1);
+    System.out.println(gson.toJson(entry));
   }
 }

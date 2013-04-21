@@ -1,9 +1,11 @@
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
+import java.util.LinkedList;
+import java.util.List;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 
 import edu.washington.cs.cse490h.lib.PersistentStorageReader;
 import edu.washington.cs.cse490h.lib.PersistentStorageWriter;
@@ -84,14 +86,14 @@ public class TwitterServer extends RIONode {
     }
 
     String jsonStr = packetBytesToString(msg);
-    TwitterProtocolMessage result = gson.fromJson(jsonStr, TwitterProtocolMessage.class);
-
+    TwitterProtocol result = gson.fromJson(jsonStr, TwitterProtocol.class);
+    Entry data = result.getData();
     if (result.getMethod().equals(CREATE)) {
       Utils.logOutput(super.addr, "Creating a tweet entry...");
-      createEntry(result.getCollection(), result.getData());
+      createEntry(result.getCollection(), data);
     } else if (result.getMethod().equals(READ)) {
       Utils.logOutput(super.addr, "Reading a file...");
-      String entries = readEntries(result.getCollection(), result.getData());
+      String entries = readEntries(result.getCollection(), data);
     } else if (result.getMethod().equals(UPDATE)) {
       Utils.logOutput(super.addr, "Updating a file...");
     } else if (result.getMethod().equals(DELETE)) {
@@ -112,16 +114,18 @@ public class TwitterServer extends RIONode {
 
   // appends the file with the tweet data
   // writing to user-[collectionName]
-  private void createEntry(String collectionName, Map<String, Object> data) {
+  private void createEntry(String collectionName, Entry data) {
     // assuming that username field is always going to be there
     String filename = generateFilename(collectionName, data);
     try {
       PersistentStorageReader reader = super.getReader(filename);
       PersistentStorageWriter writer = super.getWriter(filename, false);
       PersistentStorageWriter tempFileWriter = super.getWriter(TEMP_FILENAME, false);
-      StringBuilder oldContent = new StringBuilder(filename + "\n"); // so we know which file to restore
-      readWholeFile(reader, oldContent);
-
+      List<JsonObject> oldContent = new LinkedList<JsonObject>();
+      readWholeFile(reader, oldContent, collectionName);
+      StringBuilder builder = generateFile(collectionName, data, filename, oldContent);
+      // append the new content
+      writer.write(builder.toString());
       tempFileWriter.delete();
       // close all the file connections
       reader.close();
@@ -132,8 +136,17 @@ public class TwitterServer extends RIONode {
     }
   }
 
+  private StringBuilder generateFile(String collectionName, Entry data, String filename, List<JsonObject> oldContent) {
+    StringBuilder builder = new StringBuilder(filename + "\n" + collectionName + "\n");
+    for (JsonObject entry : oldContent) {
+      builder.append(gson.toJson(entry) + "\n");
+    }
+    builder.append(gson.toJson(data));
+    return builder;
+  }
+
   // returns all the entries from the file associated to the reader object
-  private String readEntries(String collectionName, Map<String, Object> data) {
+  private List<Entry> readEntries(String collectionName, Entry data) {
     String filename = generateFilename(collectionName, data);
     StringBuilder fileContent = new StringBuilder();
     try {
@@ -149,7 +162,7 @@ public class TwitterServer extends RIONode {
 
   }
 
-  private void deleteEntry(String collectionName, Map<String, Object> data) {
+  private void deleteEntry(String collectionName, Entry data) {
     String filename = generateFilename(collectionName, data);
     try {
       PersistentStorageWriter writer = super.getWriter(filename, false);
@@ -167,11 +180,11 @@ public class TwitterServer extends RIONode {
       PersistentStorageWriter tmpFileWriter = super.getWriter(TEMP_FILENAME, false);
       if (reader.ready()) {
         String filename = reader.readLine();
-        StringBuilder oldContent = new StringBuilder();
-        readWholeFile(reader, oldContent);
+        List<JsonObject> oldContent = new LinkedList<JsonObject>();
+        readWholeFile(reader, oldContent, collection);
         PersistentStorageWriter revertFile = super.getWriter(filename, false);
-        char[] oldContentChars = new char[oldContent.length()];
-        oldContent.getChars(0, oldContent.length(), oldContentChars, 0);
+        char[] oldContentChars = new char[oldContent.size()];
+        oldContent.getChars(0, oldContent.size(), oldContentChars, 0);
         revertFile.write(oldContentChars);
       }
       tmpFileWriter.delete();
@@ -182,16 +195,18 @@ public class TwitterServer extends RIONode {
   }
 
   // reads the whole file in the reader into the oldContent variable
-  private void readWholeFile(PersistentStorageReader reader, StringBuilder oldContent) throws IOException {
+  private void readWholeFile(PersistentStorageReader reader, List<JsonObject> oldContent, String collection)
+      throws IOException {
     String temp = "";
     while ((temp = reader.readLine()) != null) {
-      oldContent.append(temp);
+      JsonObject obj = gson.fromJson(temp, JsonObject.class);
+      oldContent.add(obj);
     }
   }
 
   // generates the filename in the following format: username-collectionName
-  private String generateFilename(String collectionName, Map<String, Object> data) {
-    String username = (String) data.get("username");
+  private String generateFilename(String collectionName, Entry data) {
+    String username = ((User) data).getUserName();
     String filename = username + "-" + collectionName;
     return filename;
   }
