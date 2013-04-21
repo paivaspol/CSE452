@@ -1,5 +1,6 @@
 import com.google.gson.JsonObject;
 
+
 /**
  * 
  * @author leelee
@@ -10,9 +11,7 @@ public class TwitterProtocol {
 
   private final String method;
   private final String collection;
-  private final JsonObject data;
-  private final String key;
-  private final String operation;
+  private final String data;
 
   /**
    * Constructs a new structure to hold for communication
@@ -22,12 +21,10 @@ public class TwitterProtocol {
    * @param data extra information
    * @param operator the operator for getting the data
    */
-  public TwitterProtocol(String method, String collection, JsonObject data, String key, String operation) {
+  public TwitterProtocol(String method, String collection, String data) {
     this.method = method;
     this.collection = collection;
     this.data = data;
-    this.key = key;
-    this.operation = operation;
   }
 
   /**
@@ -47,15 +44,7 @@ public class TwitterProtocol {
   /**
    * @return the data hold in this request
    */
-  public JsonObject getData() {
+  public String getData() {
     return data;
-  }
-
-  public String getKey() {
-    return key;
-  }
-
-  public String getOperation() {
-    return operation;
   }
 }
