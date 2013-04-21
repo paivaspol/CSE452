@@ -1,11 +1,8 @@
 import java.io.File;
 import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
 
 import edu.washington.cs.cse490h.lib.PersistentStorageReader;
 import edu.washington.cs.cse490h.lib.PersistentStorageWriter;
@@ -13,7 +10,7 @@ import edu.washington.cs.cse490h.lib.PersistentStorageWriter;
 /**
  * Twitter Server that will handle requests from Twitter Client
  * 
- * @author vaspol
+ * @author vaspol, leelee
  */
 
 public class TwitterServer extends RIONode {
@@ -23,10 +20,23 @@ public class TwitterServer extends RIONode {
    */
   public static final String CREATE = "create";
   public static final String READ = "read";
-  public static final String UPDATE = "update";
+  public static final String APPEND = "append";
   public static final String DELETE = "delete";
+  public static final String DELETE_LINES = "deletelines";
+  public static final String CHECK_LAST_UPDATE = "checklastupdate";
 
+  /**
+   * Response indicators
+   */
+  public static final String SUCCESS = "SUCCESS\n";
+  public static final String FAILURE = "FAILURE\n";
+
+  /**
+   * File names
+   */
   private static final String TEMP_FILENAME = ".tmp";
+  private static final String USERS_FILENAME = "users.txt";
+  private static final String LOGIN_FILENAME = "login.txt";
 
   /**
    * An instance of GSON for serializing and deserializing JSON objects
@@ -55,6 +65,23 @@ public class TwitterServer extends RIONode {
     File f = new File(TEMP_FILENAME);
     if (f.exists()) {
       resumeAppendExecution();
+    }
+
+    File userFile = new File(USERS_FILENAME);
+    File loginFile = new File(LOGIN_FILENAME);
+    try {
+      if (!userFile.exists()) {
+        if (!userFile.createNewFile()) {
+          throw new IOException("cannot create file: " + userFile.getName());
+        }
+      }
+      if (!loginFile.exists()) {
+        if (!loginFile.createNewFile()) {
+          throw new IOException("cannot create file: " + loginFile.getName());
+        }
+      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
   }
 
@@ -86,24 +113,33 @@ public class TwitterServer extends RIONode {
     }
 
     String jsonStr = packetBytesToString(msg);
-    TwitterProtocol result = gson.fromJson(jsonStr, TwitterProtocol.class);
-    JsonObject data = result.getData();
-    String key = result.getKey();
-    String operation = result.getCollection();
-    if (result.getMethod().equals(CREATE)) {
-      Utils.logOutput(super.addr, "Creating a tweet entry...");
-      createEntry(result.getCollection(), data);
-    } else if (result.getMethod().equals(READ)) {
-      Utils.logOutput(super.addr, "Reading a file...");
-      String entries = readEntries(result.getCollection(), data);
-    } else if (result.getMethod().equals(UPDATE)) {
-      Utils.logOutput(super.addr, "Updating a file...");
-    } else if (result.getMethod().equals(DELETE)) {
-      Utils.logOutput(super.addr, "Deleting a file...");
-
-    } else {
-      throw new RuntimeException("Command not supported by the server");
+    TwitterProtocol request = gson.fromJson(jsonStr, TwitterProtocol.class);
+    String collection = request.getCollection();
+    String data = request.getData();
+    String responseData = SUCCESS;
+    try {
+      if (request.getMethod().equals(CREATE)) {
+        Utils.logOutput(super.addr, "Creating a tweet entry...");
+        if (!createFile(collection, data)) {
+          responseData = FAILURE;
+        }
+      } else if (request.getMethod().equals(READ)) {
+        responseData += readFile(collection);
+      } else if (request.getMethod().equals(APPEND)) {
+        appendFile(collection, data);
+      } else if (request.getMethod().equals(DELETE)) {
+        deleteFile(collection);
+      } else if (request.getMethod().equals(DELETE_LINES)) {
+        responseData += deleteEntries(collection, data);
+      } else {
+        throw new RuntimeException("Command not supported by the server");
+      }
+    } catch (IOException e) {
+      responseData = "FAIL\n";
     }
+    // send back the damn respond!
+    TwitterProtocol response = new TwitterProtocol(request);
+    response.setData(responseData);
   }
 
   /**
@@ -111,82 +147,101 @@ public class TwitterServer extends RIONode {
    */
   @Override
   public void onCommand(String command) {
-
+    // server shouldn't be accepting any command.
   }
 
-  // appends the file with the tweet data
-  // writing to user-[collectionName]
-  private void createEntry(String collectionName, Entry data) {
-    // assuming that username field is always going to be there
-    String filename = generateFilename(collectionName, data);
-    try {
-      PersistentStorageReader reader = super.getReader(filename);
-      PersistentStorageWriter writer = super.getWriter(filename, false);
-      PersistentStorageWriter tempFileWriter = super.getWriter(TEMP_FILENAME, false);
-      List<JsonObject> oldContent = new LinkedList<JsonObject>();
-      readWholeFile(reader, oldContent, collectionName);
-      StringBuilder builder = generateFile(collectionName, data, filename, oldContent);
-      // append the new content
-      writer.write(builder.toString());
-      tempFileWriter.delete();
-      // close all the file connections
-      reader.close();
-      writer.close();
-      tempFileWriter.close();
-    } catch (IOException e) {
-      Utils.logError(super.addr, e.getMessage());
-    }
-  }
-
-  private StringBuilder generateFile(String collectionName, Entry data, String filename, List<JsonObject> oldContent) {
-    StringBuilder builder = new StringBuilder(filename + "\n" + collectionName + "\n");
-    for (JsonObject entry : oldContent) {
-      builder.append(gson.toJson(entry) + "\n");
-    }
-    builder.append(gson.toJson(data));
-    return builder;
+  // creates a file with the collection name
+  private boolean createFile(String collectionName, String data) throws IOException {
+    File newFile = new File(collectionName);
+    return newFile.createNewFile();
   }
 
   // returns all the entries from the file associated to the reader object
-  private List<Entry> readEntries(String collectionName, Entry data) {
-    String filename = generateFilename(collectionName, data);
+  private String readFile(String collectionName) throws IOException {
     StringBuilder fileContent = new StringBuilder();
-    try {
-      PersistentStorageReader reader = super.getReader(filename);
-      readWholeFile(reader, fileContent);
-    } catch (IOException e) {
-      Utils.logError(super.addr, e.getMessage());
-    }
+    PersistentStorageReader reader = super.getReader(collectionName);
+    readWholeFile(reader, fileContent);
     return fileContent.toString();
   }
 
-  private void updateFile(PersistentStorageWriter writer) {
-
+  /**
+   * Append a data to the end of the file
+   * 
+   * @param collectionName the filename
+   * @param data the line to be appended at the end of the file
+   * @throws IOException
+   */
+  private void appendFile(String collectionName, String data) throws IOException {
+    PersistentStorageReader reader = super.getReader(collectionName);
+    PersistentStorageWriter writer = super.getWriter(collectionName, false);
+    PersistentStorageWriter tempFileWriter = super.getWriter(TEMP_FILENAME, false);
+    StringBuilder oldContent = new StringBuilder(collectionName + "\n");
+    readWholeFile(reader, oldContent);
+    // first, write the tmp file
+    tempFileWriter.write(oldContent.toString());
+    // append the new content
+    writer.write(oldContent.append(data).toString());
+    tempFileWriter.delete();
+    // close all the file connections
+    reader.close();
+    writer.close();
+    tempFileWriter.close();
   }
 
-  private void deleteEntry(String collectionName, Entry data) {
-    String filename = generateFilename(collectionName, data);
-    try {
-      PersistentStorageWriter writer = super.getWriter(filename, false);
+  /**
+   * Delete the whole file
+   * 
+   * @param collectionName the filename to be deleted
+   * @throws IOException
+   */
+  private void deleteFile(String collectionName) throws IOException {
+    PersistentStorageWriter writer = super.getWriter(collectionName, false);
+    writer.delete();
+    writer.close();
+  }
 
-    } catch (IOException e) {
-      Utils.logError(super.addr, e.getMessage());
+  /**
+   * Deletes all the entries that starts with the targetString
+   * 
+   * @param collectionName the filename
+   * @param targetString the target string to be deleted
+   * @return the lines that were deleted
+   * @throws IOException
+   */
+  private String deleteEntries(String collectionName, String targetString) throws IOException {
+    PersistentStorageWriter writer = super.getWriter(collectionName, false);
+    PersistentStorageReader reader = super.getReader(collectionName);
+    String temp = "";
+    StringBuilder newFile = new StringBuilder();
+    StringBuilder linesDeleted = new StringBuilder();
+    while ((temp = reader.readLine()) != null) {
+      if (!temp.startsWith(targetString)) {
+        newFile.append(temp);
+      } else {
+        linesDeleted.append(temp);
+      }
     }
+    writer.write(newFile.toString());
+    reader.close();
+    writer.flush();
+    writer.close();
+    return linesDeleted.toString();
   }
 
-  // Called when there is a temp file in the system after recovery
-  // need to continue with all the appends
+  /*
+   * Helper method for resuming append after server crash
+   */
   private void resumeAppendExecution() {
     try {
       PersistentStorageReader reader = super.getReader(TEMP_FILENAME);
       PersistentStorageWriter tmpFileWriter = super.getWriter(TEMP_FILENAME, false);
       if (reader.ready()) {
         String filename = reader.readLine();
-        List<JsonObject> oldContent = new LinkedList<JsonObject>();
-        readWholeFile(reader, oldContent, collection);
+        StringBuilder oldContent = new StringBuilder();
+        readWholeFile(reader, oldContent);
         PersistentStorageWriter revertFile = super.getWriter(filename, false);
-        char[] oldContentChars = new char[oldContent.size()];
-        oldContent.getChars(0, oldContent.size(), oldContentChars, 0);
+        char[] oldContentChars = new char[oldContent.length()];
+        oldContent.getChars(0, oldContent.length(), oldContentChars, 0);
         revertFile.write(oldContentChars);
       }
       tmpFileWriter.delete();
@@ -197,19 +252,11 @@ public class TwitterServer extends RIONode {
   }
 
   // reads the whole file in the reader into the oldContent variable
-  private void readWholeFile(PersistentStorageReader reader, List<JsonObject> oldContent, String collection)
-      throws IOException {
+  private void readWholeFile(PersistentStorageReader reader, StringBuilder builder) throws IOException {
     String temp = "";
     while ((temp = reader.readLine()) != null) {
-      JsonObject obj = gson.fromJson(temp, JsonObject.class);
-      oldContent.add(obj);
+      builder.append(temp);
     }
   }
 
-  // generates the filename in the following format: username-collectionName
-  private String generateFilename(String collectionName, Entry data) {
-    String username = ((User) data).getUserName();
-    String filename = username + "-" + collectionName;
-    return filename;
-  }
 }
