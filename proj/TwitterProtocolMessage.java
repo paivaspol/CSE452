@@ -9,8 +9,6 @@ import java.util.Map;
 
 public class TwitterProtocolMessage {
 
-  private final long hash;
-  private final long id;
   private final String method;
   private final String collection;
   private final Map<String, Object> data;
@@ -22,26 +20,10 @@ public class TwitterProtocolMessage {
    * @param collection the target collection
    * @param data extra information
    */
-  public TwitterProtocolMessage(String method, String collection, Map<String, Object> data, String hash, String id) {
-    this.hash = Long.parseLong(hash);
-    this.id = Long.parseLong(id);
+  public TwitterProtocolMessage(String method, String collection, Map<String, Object> data, AnotherClass temp) {
     this.method = method;
     this.collection = collection;
     this.data = data;
-  }
-
-  /**
-   * @return the id
-   */
-  public long getId() {
-    return id;
-  }
-
-  /**
-   * @return the hash
-   */
-  public long getHash() {
-    return hash;
   }
 
   /**
