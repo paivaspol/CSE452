@@ -57,7 +57,6 @@ public class RIOTester extends RIONode {
 
   @Override
   public void onCommand(String command) {
-    logOutput("LEE LEE! \n");
     if (command.equals("begin")) {
       for (int i = 0; i < RIOTester.NUM_NODES; ++i) {
         nextNum.put(i, 0);

@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.util.Map;
 
 import com.google.gson.Gson;
@@ -73,6 +74,7 @@ public class TwitterServer extends RIONode {
    * @param msg the message
    */
   @Override
+  @SuppressWarnings("unchecked")
   public void onRIOReceive(Integer from, int protocol, byte[] msg) {
     // first check whether it is a valid protocol or not
     if (!Protocol.isPktProtocolValid(protocol)) {
@@ -81,19 +83,16 @@ public class TwitterServer extends RIONode {
     }
 
     String jsonStr = packetBytesToString(msg);
-    @SuppressWarnings("unchecked")
+
     Map<String, Object> result = gson.fromJson(jsonStr, Map.class);
 
     String method = (String) result.get(METHOD);
     String collection = (String) result.get(COLLECTION);
     Map<String, Object> data = (Map<String, Object>) result.get(DATA);
 
-    PersistentStorageWriter storageWriter;
-    PersistentStorageReader storageReader;
-
     if (method.equals(CREATE)) {
       Utils.logOutput(super.addr, "Creating a tweet entry...");
-
+      createEntry(collection, data);
     } else if (method.equals(READ)) {
       Utils.logOutput(super.addr, "Reading a file...");
     } else if (method.equals(UPDATE)) {
@@ -116,7 +115,18 @@ public class TwitterServer extends RIONode {
   }
 
   // appends the file with the tweet data
-  private void createEntry(PersistentStorageWriter writer) {
+  // writing to user-[collectionName]
+  @SuppressWarnings("unchecked")
+  private void createEntry(String collectionName, Map<String, Object> data) {
+    // assuming that username field is always going to be there
+    String username = (String) data.get("username");
+    String filename = username + "-" + collectionName;
+    try {
+      PersistentStorageWriter writer = super.getWriter(filename, true);
+
+    } catch (IOException e) {
+      Utils.logError(super.addr, e.getMessage());
+    }
   }
 
   // returns all the entries from the file associated to the reader object
@@ -128,7 +138,16 @@ public class TwitterServer extends RIONode {
 
   }
 
-  private void deleteFile(PersistentStorageWriter writer) {
-
+  private void deleteEntry(String collectionName, Map<String, Object> data) {
+    // assuming that username field is always going to be there
+    String username = (String) data.get("username");
+    String filename = username + "-" + collectionName;
+    try {
+      PersistentStorageWriter writer = super.getWriter(filename, false);
+      writer.delete();
+      writer.close();
+    } catch (IOException e) {
+      Utils.logError(super.addr, e.getMessage());
+    }
   }
 }
