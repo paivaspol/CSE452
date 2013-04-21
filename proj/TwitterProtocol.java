@@ -1,4 +1,3 @@
-import java.util.Map;
 
 /**
  * 
@@ -42,7 +41,7 @@ public class TwitterProtocol {
   /**
    * @return the data hold in this request
    */
-  public Map<String, Object> getData() {
+  public Entry getData() {
     return data;
   }
 
