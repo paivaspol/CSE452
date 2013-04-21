@@ -4,6 +4,7 @@ import java.util.regex.Pattern;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 
 /**
  * 
@@ -62,12 +63,12 @@ public class Client extends RIONode {
 			// TODO(leelee): machine id 0 for now
 			// create entry user.
 			User user = new User(0);
-			user.setUserName(username);
+			user.setUsername(username);
 			user.setName(name);
 			user.setPassword(password);
 			user.setIsLogin(false);
 			// create TwitterProtocol.
-			TwitterProtocol tp = new TwitterProtocol("createEntry", "user", user);
+			TwitterProtocol tp = new TwitterProtocol("createEntry", "user", null, null, user.getJsonObject());
 			logOutput("Creating a user, name:" + name);
 			// send to the server the tp as bytes array
 			sendLater(serverAddress, Protocol.DATA, gson.toJson(tp).toString().getBytes());
@@ -90,9 +91,9 @@ public class Client extends RIONode {
 			// query from user to get the user object from server
 			// TODO(leelee): machine id 0 for now.
 			User user = new User(0);
-			user.setUserName(username);
+			user.setUsername(username);
 			user.setPassword(password);
-			TwitterProtocol tpQuery = new TwitterProtocol("queryEntry", "user", user);
+			TwitterProtocol tpQuery = new TwitterProtocol("queryEntry", "user", "username", "=", user.getJsonObject());
 			byte[] clientData = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpQuery).toString().getBytes());
 			// clientData is empty if the client does not exist.
 			if (clientData.length == 0) {
@@ -100,11 +101,12 @@ public class Client extends RIONode {
 				return;
 			}
 			TwitterProtocol result = gson.fromJson(clientData.toString(), TwitterProtocol.class);
-			User userCollection = (User) result.getData();
+			JsonObject userJsonObject = result.getData();
+			User userCollection = new User(userJsonObject);
 			// set user to login to true
 			userCollection.setIsLogin(true);
 			// update entry, user login logout
-			TwitterProtocol tpUpdate = new TwitterProtocol("updateEntry", "user", userCollection);
+			TwitterProtocol tpUpdate = new TwitterProtocol("updateEntry", "user", "username", "=", userCollection.getJsonObject());
 			sendLater(serverAddress, Protocol.DATA, gson.toJson(tpUpdate).toString().getBytes());
 			logOutput("You are login!");
 		} else if (token.equalsIgnoreCase("logout")) {
@@ -120,8 +122,8 @@ public class Client extends RIONode {
 			logOutput("Logging out");
 			// get from the map this username
 			User user = new User(0);
-			user.setUserName(username);
-			TwitterProtocol tpQuery = new TwitterProtocol("queryEntry", "user", user);
+			user.setUsername(username);
+			TwitterProtocol tpQuery = new TwitterProtocol("queryEntry", "user", "username", "=", user.getJsonObject());
 			byte[] clientData = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpQuery).toString().getBytes());
 			// clientData is empty if the client does not exist.
 			if (clientData.length == 0) {
@@ -129,11 +131,11 @@ public class Client extends RIONode {
 				return;
 			}
 			TwitterProtocol result = gson.fromJson(clientData.toString(), TwitterProtocol.class);
-			User userCollection = (User) result.getData();
+			User userCollection = new User(result.getData());
 			userCollection.setIsLogin(false);
 			// update entry, user login logout
-			TwitterProtocol tpUpdate = new TwitterProtocol("updateEntry", "user", userCollection); 
-			
+			TwitterProtocol tpUpdate = new TwitterProtocol("updateEntry", "user", "username", "=", userCollection.getJsonObject()); 
+			sendLater(serverAddress, Protocol.DATA, gson.toJson(tpUpdate).toString().getBytes());
 			// else logout
 			logOutput("You are logout!");
 		} else if (token.equalsIgnoreCase("tweet")) {

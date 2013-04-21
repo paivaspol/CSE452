@@ -1,6 +1,8 @@
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.gson.JsonObject;
+
 /**
  * 
  * @author leelee
@@ -16,6 +18,11 @@ public class User extends Entry {
 	
 	public User(int machineId) {
 		super(machineId);
+	}
+	
+	public User(JsonObject jsonObject) {
+		// TODO(leelee): to be changed in the future
+		super(null, jsonObject);
 	}
 	
 	public String getName() {
