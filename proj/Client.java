@@ -10,7 +10,7 @@ import com.google.gson.GsonBuilder;
  * @author leelee
  *
  */
-public class Client extends RIONode {
+public class Client {
 	
 	/** to get the response from on receive */
 	private byte[] response = null; 
@@ -18,24 +18,26 @@ public class Client extends RIONode {
 	private String loginUsername;
 	private static final String USERS_FILE = "users.txt";
 	private static final int NUM_RETRY = 10;
+	private int counterRetry;
+	private TwitterNodeWrapper tnw;
+	
+	public Client(TwitterNodeWrapper tnw) {
+		this.tnw = tnw;
+	}
 
-	@Override
 	public void onRIOReceive(Integer from, int protocol, byte[] msg) {
 		// TODO(leelee): figure out how to get from onCommand to here.
 		response = msg;
 	}
 
-	@Override
 	public void start() {
-		logOutput("Starting up...");
-
-		// Generate a user-level synoptic event to indicate that the node started.
-		logSynopticEvent("started");
+		logOutput("Starting up client...");
+		logOutput("client started");
 		gson = new GsonBuilder().create();
 		loginUsername = null;
+		counterRetry = 0;
 	}
 
-	@Override
 	public void onCommand(String command) {
 		Pattern pattern = Pattern.compile("\"[^\"]*\"|'[^']*'|[A-Za-z']+");
 		Scanner sc = new Scanner(command);
@@ -66,19 +68,54 @@ public class Client extends RIONode {
 			
 			logOutput("Creating a user, name:" + name);
 			// create user file that stores tweet
+			String responseString = null;
+
+			// RIOSend in sendLater takes care of the retry
 			TwitterProtocol tpCreateUserFile = new TwitterProtocol("create", username + ".txt", null);
-			sendLater(serverAddress, Protocol.DATA, gson.toJson(tpCreateUserFile).toString().getBytes());
-			
+			byte[] responseData = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpCreateUserFile).toString().getBytes());
+			if (responseData == null) {
+				logError("Error issuing request to server.");
+				return;
+			}
+			String tempString = responseData.toString();
+			responseString = tempString.split("\n")[0];
+			if (!responseString.equalsIgnoreCase("success")) {
+				logError("Error issuing request to server.");
+				return;
+			}
+			responseString = null;
+
 			// create user file that stores users that he/she is following
 			TwitterProtocol tpCreateFollowingFile = new TwitterProtocol("create", username + "_" + "following.txt", null);
-			sendLater(serverAddress, Protocol.DATA, gson.toJson(tpCreateFollowingFile).toString().getBytes());
+			responseData = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpCreateFollowingFile).toString().getBytes());
+			if (responseData == null) {
+				logError("Error issuing request to server.");
+				return;
+			}
+			responseString = responseData.toString();
+			if (!responseString.startsWith("success")) {
+				logError("Error issuing request to server.");
+				return;
+			}
+			
+			responseString = null;
+			counterRetry = 0;
 			
 			// append this user information to users.txt
 			String userInfo = username + "\t" + password + "\t" + name + "\n"; 
 			TwitterProtocol tpAppendUserInfo = new TwitterProtocol("append", USERS_FILE, userInfo);
-			sendLater(serverAddress, Protocol.DATA, gson.toJson(tpAppendUserInfo).toString().getBytes());
+			responseData = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpAppendUserInfo).toString().getBytes());
+			if (responseData == null) {
+				logError("Error issuing request to server.");
+				return;
+			}
+			responseString = responseData.toString();
+			if (!responseString.startsWith("success")) {
+				logError("Error issuing request to server.");
+				return;
+			}
 			
-			// TODO(leelee): check if the username is being created successfully, if not retry again.
+			logOutput("You are signed up!");
 			
 		} else if (token.equalsIgnoreCase("login")) {
 			String username = sc.findInLine(pattern);
@@ -98,7 +135,17 @@ public class Client extends RIONode {
 			
 			// check if the user exists
 			TwitterProtocol tpCheckUser = new TwitterProtocol("read", USERS_FILE, null);
-			String usersList = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpCheckUser).toString().getBytes()).toString();
+			byte[] responseData = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpCheckUser).toString().getBytes());
+			if (responseData == null) {
+				logError("Error issuing request to server.");
+				return;
+			}
+			String responseString = responseData.toString();
+			if (!responseString.startsWith("success")) {
+				logError("Error issuing request to server.");
+				return;
+			}
+			String usersList = responseString.substring(8);
 			String[] names = usersList.split("\n");
 			boolean isValidUser = false;
 			for (int i = 0; i < names.length; i++) {
@@ -117,9 +164,17 @@ public class Client extends RIONode {
 			
 			// correct username and password so proceed with login user
 			TwitterProtocol tpQuery = new TwitterProtocol("append", "login.txt", username + "\n");
-			sendLater(serverAddress, Protocol.DATA, gson.toJson(tpQuery).toString().getBytes());
+			responseData = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpQuery).toString().getBytes());
+			if (responseData == null) {
+				logError("Error issuing request to server.");
+				return;
+			}
+			responseString = responseData.toString();
+			if (!responseString.startsWith("success")) {
+				logError("Error issuing request to server.");
+				return;
+			}
 			
-			// TODO(leelee): check if user actually log in succesfully
 			loginUsername = username;
 			logOutput("You are login!");
 		} else if (token.equalsIgnoreCase("logout")) {
@@ -136,9 +191,17 @@ public class Client extends RIONode {
 			
 			// delete this user's username from login.txt
 			TwitterProtocol tpQuery = new TwitterProtocol("delete_lines", "login.txt", loginUsername);
-			sendLater(serverAddress, Protocol.DATA, gson.toJson(tpQuery).toString().getBytes());
+			byte[] responseData = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpQuery).toString().getBytes());
+			if (responseData == null) {
+				logError("Error issuing request to server.");
+				return;
+			}
+			String responseString = responseData.toString();
+			if (!responseString.startsWith("success")) {
+				logError("Error issuing request to server.");
+				return;
+			}
 			loginUsername = null;
-			// TODO(leelee): check if user actually log out succesfully
 			
 			logOutput("You are logout!");
 		} else if (token.equalsIgnoreCase("tweet")) {
@@ -159,9 +222,16 @@ public class Client extends RIONode {
 			logOutput("Posting tweet");
 			// append the tweet to user's tweet file
 			TwitterProtocol tpAppendTweet = new TwitterProtocol("append", loginUsername + ".txt", System.currentTimeMillis() + "\t" + content + "\n");
-			sendLater(serverAddress, Protocol.DATA, gson.toJson(tpAppendTweet).toString().getBytes());
-			// TODO(leelee): check if user actually tweet succesfully
-			
+			byte[] responseData = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpAppendTweet).toString().getBytes());
+			if (responseData == null) {
+				logError("Error issuing request to server.");
+				return;
+			}
+			String responseString = responseData.toString();
+			if (!responseString.startsWith("success")) {
+				logError("Error issuing request to server.");
+				return;
+			}
 			logOutput("Your tweet is posted. :)");
 			
 		} else if (token.equalsIgnoreCase("follow")) {
@@ -181,7 +251,17 @@ public class Client extends RIONode {
 			
 			// check if user to follow is a valid user name
 			TwitterProtocol tpCheckUser = new TwitterProtocol("read", USERS_FILE, null);
-			String usersList = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpCheckUser).toString().getBytes()).toString();
+			byte[] responseData = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpCheckUser).toString().getBytes());
+			if (responseData == null) {
+				logError("Error issuing request to server.");
+				return;
+			}
+			String responseString = responseData.toString();
+			if (!responseString.startsWith("success")) {
+				logError("Error issuing request to server.");
+				return;
+			}
+			String usersList = responseString.substring(8);
 			String[] names = usersList.split("\n");
 			boolean isValidUser = false;
 			for (int i = 0; i < names.length; i++) {
@@ -199,9 +279,16 @@ public class Client extends RIONode {
 			logOutput("adding " + userToFollow);
 			String userToFollowInfo = userToFollow + "\t" + System.currentTimeMillis() + "\n";
 			TwitterProtocol tpAddToFollowing = new TwitterProtocol("append", loginUsername + ".txt", userToFollowInfo);
-			sendLater(serverAddress, Protocol.DATA, gson.toJson(tpAddToFollowing).toString().getBytes());
-			// TODO(leelee): check if userToAdd actually added succesfully
-			
+			responseData = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpAddToFollowing).toString().getBytes());
+			if (responseData == null) {
+				logError("Error issuing request to server.");
+				return;
+			}
+			responseString = responseData.toString();
+			if (!responseString.startsWith("success")) {
+				logError("Error issuing request to server.");
+				return;
+			}
 			logOutput("Congratulation! You are now following " + userToFollow);
 			
 		} else if (token.equalsIgnoreCase("unfollow")) {
@@ -221,7 +308,17 @@ public class Client extends RIONode {
 			
 			// check if user to unfollow is a valid user name
 			TwitterProtocol tpCheckUser = new TwitterProtocol("read", USERS_FILE, null);
-			String usersList = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpCheckUser).toString().getBytes()).toString();
+			byte[] responseData = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpCheckUser).toString().getBytes());
+			if (responseData == null) {
+				logError("Error issuing request to server.");
+				return;
+			}
+			String responseString = responseData.toString();
+			if (!responseString.startsWith("success")) {
+				logError("Error issuing request to server.");
+				return;
+			}
+			String usersList = responseString.substring(8);
 			String[] names = usersList.split("\n");
 			boolean isValidUser = false;
 			for (int i = 0; i < names.length; i++) {
@@ -237,8 +334,16 @@ public class Client extends RIONode {
 			
 			// delete entry from follower collection
 			TwitterProtocol tpUnfollow = new TwitterProtocol("delete_lines", loginUsername + ".txt", userToUnfollow);
-			sendLater(serverAddress, Protocol.DATA, getBytesFromTwitterProtocol(tpUnfollow));
-			// TODO(leelee): check if userToUnfollow actually being removed succesfully
+			responseData = sendLater(serverAddress, Protocol.DATA, getBytesFromTwitterProtocol(tpUnfollow));
+			if (responseData == null) {
+				logError("Error issuing request to server.");
+				return;
+			}
+			responseString = responseData.toString();
+			if (!responseString.startsWith("success")) {
+				logError("Error issuing request to server.");
+				return;
+			}
 			logOutput("You are no longer following " + userToUnfollow);
 		} else if (token.equalsIgnoreCase("read")) {
 			if (loginUsername == null) {
@@ -254,7 +359,17 @@ public class Client extends RIONode {
 			
 			// get the list of username that user is following
 			TwitterProtocol tpGetFollowing = new TwitterProtocol("read", loginUsername + "_following.txt", null);
-			String followingList = sendLater(serverAddress, Protocol.DATA, getBytesFromTwitterProtocol(tpGetFollowing)).toString();
+			byte[] responseData = sendLater(serverAddress, Protocol.DATA, getBytesFromTwitterProtocol(tpGetFollowing));
+			if (responseData == null) {
+				logError("Error issuing request to server.");
+				return;
+			}
+			String responseString = responseData.toString();
+			if (!responseString.startsWith("success")) {
+				logError("Error issuing request to server.");
+				return;
+			}
+			String followingList = responseString.substring(8);
 			String[] eachFollowing = followingList.split("\n");
 			String newFollowingList = "";
 			// get all the tweets from the user that this person is following
@@ -282,11 +397,30 @@ public class Client extends RIONode {
 			// update the following list time by delete the the original following file and create the new one
 			// with the new time
 			TwitterProtocol tpDeleteFollowing = new TwitterProtocol("delete", loginUsername + "_following.txt", null);
-			sendLater(serverAddress, Protocol.DATA, getBytesFromTwitterProtocol(tpDeleteFollowing));
+			responseData = sendLater(serverAddress, Protocol.DATA, getBytesFromTwitterProtocol(tpDeleteFollowing));
+			if (responseData == null) {
+				logError("Error issuing request to server.");
+				return;
+			}
+			responseString = responseData.toString();
+			if (!responseString.startsWith("success")) {
+				logError("Error issuing request to server.");
+				return;
+			}
 			TwitterProtocol tpUpdateFollowing = new TwitterProtocol("create", loginUsername + "_following.txt", newFollowingList);
-			sendLater(serverAddress, Protocol.DATA, getBytesFromTwitterProtocol(tpUpdateFollowing));
-			
+			responseData = sendLater(serverAddress, Protocol.DATA, getBytesFromTwitterProtocol(tpUpdateFollowing));
+			if (responseData == null) {
+				logError("Error issuing request to server.");
+				return;
+			}
+			responseString = responseData.toString();
+			if (!responseString.startsWith("success")) {
+				logError("Error issuing request to server.");
+				return;
+			}
 			logOutput("You have no more unread post.");
+		} else {
+			logError("Invalid command");
 		}
 	}
 	
@@ -295,15 +429,20 @@ public class Client extends RIONode {
 	 * @param destAddr
 	 * @param protocol
 	 * @param payload
-	 * @return
+	 * @return the response 
 	 */
 	public byte[] sendLater(int destAddr, int protocol, byte[] payload) {
-		RIOSend(destAddr, protocol, payload);
-		super.addTimeout(cb, 300);
+		tnw.RIOSend(destAddr, protocol, payload);
 		byte[] response = null;
-		while (this.response == null) {
+		long start = System.currentTimeMillis();
+		long end = System.currentTimeMillis();
+		long interval = end - start;
+		while (this.response == null && interval < 60000) {
 		}
 		response = this.response;
+		if (response == null) {
+			return response;
+		}
 		this.response = null;
 		return response;
 	}
@@ -317,7 +456,7 @@ public class Client extends RIONode {
 	}
 
 	public void log(String output, PrintStream stream) {
-		stream.println("Node " + addr + ": " + output);
+		stream.println(output);
 	}
 	
 	private byte[] getBytesFromTwitterProtocol(TwitterProtocol tp) {
