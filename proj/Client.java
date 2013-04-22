@@ -17,6 +17,7 @@ public class Client extends RIONode {
 	private Gson gson;
 	private String loginUsername;
 	private static final String USERS_FILE = "users.txt";
+	private static final int NUM_RETRY = 10;
 
 	@Override
 	public void onRIOReceive(Integer from, int protocol, byte[] msg) {
@@ -298,6 +299,7 @@ public class Client extends RIONode {
 	 */
 	public byte[] sendLater(int destAddr, int protocol, byte[] payload) {
 		RIOSend(destAddr, protocol, payload);
+		super.addTimeout(cb, 300);
 		byte[] response = null;
 		while (this.response == null) {
 		}
