@@ -32,13 +32,13 @@ public class TwitterNodeWrapper extends RIONode {
       // assuming that it is a server
       server = new TwitterServer(this);
     } else if (super.addr == 1) {
-      client = new Client();
+      client = new Client(this);
     }
   }
 
   @Override
   public void onCommand(String command) {
-
+	  client.onCommand(command);
   }
 
   /**
