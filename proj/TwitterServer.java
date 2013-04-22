@@ -13,7 +13,7 @@ import edu.washington.cs.cse490h.lib.PersistentStorageWriter;
  * @author vaspol, leelee
  */
 
-public class TwitterServer extends RIONode {
+public class TwitterServer {
 
   /**
    * Method name constants for server RPC
@@ -43,23 +43,21 @@ public class TwitterServer extends RIONode {
    */
   private final Gson gson;
 
+  /** An instance of the wrapper for the nodes */
+  private final TwitterNodeWrapper wrapper;
+
   /**
    * Constructs the server side
    */
-  public TwitterServer() {
+  public TwitterServer(TwitterNodeWrapper wrapper) {
     gson = new GsonBuilder().create();
+    this.wrapper = wrapper;
   }
 
   /**
    * Call upon starting the server
    */
-  @Override
   public void start() {
-    Utils.logOutput(super.addr, "Starting up...");
-
-    // Generate a user-level synoptic event to indicate that the node started.
-    logSynopticEvent("started");
-
     // server might just recover from a failure, so need to check
     // tmp file in case of it was in the middle of something when it crashed
     File f = new File(TEMP_FILENAME);
@@ -86,25 +84,12 @@ public class TwitterServer extends RIONode {
   }
 
   /**
-   * Parsing the bytes array to string representation
-   */
-  @Override
-  public String packetBytesToString(byte[] bytes) {
-    RIOPacket packet = RIOPacket.unpack(bytes);
-    if (packet == null) {
-      return super.packetBytesToString(bytes);
-    }
-    return packet.toString();
-  }
-
-  /**
    * Called when the server received a packet
    * 
    * @param from the node it received the packet from
    * @param protocol which protocol it conforms to
    * @param msg the message
    */
-  @Override
   public void onRIOReceive(Integer from, int protocol, byte[] msg) {
     // first check whether it is a valid protocol or not
     if (!Protocol.isPktProtocolValid(protocol)) {
@@ -112,14 +97,14 @@ public class TwitterServer extends RIONode {
       return;
     }
 
-    String jsonStr = packetBytesToString(msg);
+    String jsonStr = wrapper.packetBytesToString(msg);
     TwitterProtocol request = gson.fromJson(jsonStr, TwitterProtocol.class);
     String collection = request.getCollection();
     String data = request.getData();
     String responseData = SUCCESS;
     try {
       if (request.getMethod().equals(CREATE)) {
-        Utils.logOutput(super.addr, "Creating a tweet entry...");
+        Utils.logOutput(wrapper.getAddr(), "Creating a tweet entry...");
         if (!createFile(collection, data)) {
           responseData = FAILURE;
         }
@@ -145,7 +130,6 @@ public class TwitterServer extends RIONode {
   /**
    * accept commands
    */
-  @Override
   public void onCommand(String command) {
     // server shouldn't be accepting any command.
   }
@@ -159,7 +143,7 @@ public class TwitterServer extends RIONode {
   // returns all the entries from the file associated to the reader object
   private String readFile(String collectionName) throws IOException {
     StringBuilder fileContent = new StringBuilder();
-    PersistentStorageReader reader = super.getReader(collectionName);
+    PersistentStorageReader reader = wrapper.getReader(collectionName);
     readWholeFile(reader, fileContent);
     return fileContent.toString();
   }
@@ -172,9 +156,9 @@ public class TwitterServer extends RIONode {
    * @throws IOException
    */
   private void appendFile(String collectionName, String data) throws IOException {
-    PersistentStorageReader reader = super.getReader(collectionName);
-    PersistentStorageWriter writer = super.getWriter(collectionName, false);
-    PersistentStorageWriter tempFileWriter = super.getWriter(TEMP_FILENAME, false);
+    PersistentStorageReader reader = wrapper.getReader(collectionName);
+    PersistentStorageWriter writer = wrapper.getWriter(collectionName, false);
+    PersistentStorageWriter tempFileWriter = wrapper.getWriter(TEMP_FILENAME, false);
     StringBuilder oldContent = new StringBuilder(collectionName + "\n");
     readWholeFile(reader, oldContent);
     // first, write the tmp file
@@ -195,7 +179,7 @@ public class TwitterServer extends RIONode {
    * @throws IOException
    */
   private void deleteFile(String collectionName) throws IOException {
-    PersistentStorageWriter writer = super.getWriter(collectionName, false);
+    PersistentStorageWriter writer = wrapper.getWriter(collectionName, false);
     writer.delete();
     writer.close();
   }
@@ -209,8 +193,8 @@ public class TwitterServer extends RIONode {
    * @throws IOException
    */
   private String deleteEntries(String collectionName, String targetString) throws IOException {
-    PersistentStorageWriter writer = super.getWriter(collectionName, false);
-    PersistentStorageReader reader = super.getReader(collectionName);
+    PersistentStorageWriter writer = wrapper.getWriter(collectionName, false);
+    PersistentStorageReader reader = wrapper.getReader(collectionName);
     String temp = "";
     StringBuilder newFile = new StringBuilder();
     StringBuilder linesDeleted = new StringBuilder();
@@ -233,13 +217,13 @@ public class TwitterServer extends RIONode {
    */
   private void resumeAppendExecution() {
     try {
-      PersistentStorageReader reader = super.getReader(TEMP_FILENAME);
-      PersistentStorageWriter tmpFileWriter = super.getWriter(TEMP_FILENAME, false);
+      PersistentStorageReader reader = wrapper.getReader(TEMP_FILENAME);
+      PersistentStorageWriter tmpFileWriter = wrapper.getWriter(TEMP_FILENAME, false);
       if (reader.ready()) {
         String filename = reader.readLine();
         StringBuilder oldContent = new StringBuilder();
         readWholeFile(reader, oldContent);
-        PersistentStorageWriter revertFile = super.getWriter(filename, false);
+        PersistentStorageWriter revertFile = wrapper.getWriter(filename, false);
         char[] oldContentChars = new char[oldContent.length()];
         oldContent.getChars(0, oldContent.length(), oldContentChars, 0);
         revertFile.write(oldContentChars);
@@ -247,7 +231,7 @@ public class TwitterServer extends RIONode {
       tmpFileWriter.delete();
       tmpFileWriter.close();
     } catch (IOException e) {
-      Utils.logError(super.addr, e.getMessage());
+      Utils.logError(wrapper.getAddr(), e.getMessage());
     }
   }
 
