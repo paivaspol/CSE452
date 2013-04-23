@@ -1,7 +1,8 @@
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
@@ -26,7 +27,8 @@ public class Client {
 	private int counterRetry;
 	private TwitterNodeWrapper tnw;
 	private List<Callback> eventList;
-	private int eventIndex; 
+	private Queue<List<Callback>> commandQueue;
+	public int eventIndex; 
 	private byte[] responseData = null;
 	
 	
@@ -35,19 +37,30 @@ public class Client {
 	}
 
 	public void onRIOReceive(Integer from, int protocol, byte[] msg) {
-		if (eventList != null && eventList.get(eventIndex) != null) {
+		logOutput("at onRIOReceive queue size index " + commandQueue.size() + " " + eventIndex);
+		if (protocol == 1) {
+			logOutput("Client line 41 ack received!");
+		}
+		if (eventList != null && eventIndex < eventList.size() && eventList.get(eventIndex) != null) {
 			Callback cb = eventList.get(eventIndex);
 			TwitterProtocol tp = TwitterNodeWrapper.GSON.fromJson(new String(msg), TwitterProtocol.class);
 			cb.setParams(new Object[] {tp.getData()});
 			try {
+				logOutput("Client eventIndex: " + eventIndex);
 				cb.invoke();
 			} catch (Exception e) {
 				e.printStackTrace();
 				tnw.fail();
 			}
-			eventIndex++;
 		} else {
-			logOutput("no event to invoke.");
+			logOutput("no event to invoke in onRIOReceive");
+			if (eventList == null) {
+				logOutput("eventList is null");
+			} else if (eventIndex > eventList.size()) {
+				logOutput("eventIndex size too big");
+			} else if (eventList.get(eventIndex) == null) {
+				logOutput("the callback is null");
+			}
 		}
 	}
 
@@ -59,6 +72,7 @@ public class Client {
 		counterRetry = 0;
 		eventIndex = 0;
 		eventList = null;
+		commandQueue = new LinkedList<List<Callback>>();
 	}
 
 	public void onCommand(String command) throws IllegalAccessException, InvocationTargetException {
@@ -93,102 +107,45 @@ public class Client {
 				logError("signup <username> <name> <password> <serveraddress>");
 			}
 			int serverAddress = Integer.valueOf(server);
-			CreateUser createUser = new CreateUser(tnw, serverAddress, USERS_FILE, name, username, password);
-			eventList = createUser.init();
-			eventIndex = 1;
-			createUser.start();
+			CreateUser createUser = new CreateUser(this, tnw, serverAddress, USERS_FILE, name, username, password);
+			commandQueue.add(createUser.init());
+			processQueue();
 			
 		} else if (token.equalsIgnoreCase("login")) {
 			String username = sc.findInLine(pattern);
-//			String username = tokens[1];
 			if (username == null) {
 				logError("login <username> <password> <serveraddress>");
 			}
 			String password = sc.findInLine(pattern);
-//			String password = tokens[2];
 			if (password == null) {
 				logError("login <username> <password> <serveraddress>");
 			}
 			String server = sc.findInLine(pattern);
-//			String server = tokens[3];
 			if (server == null) {
 				logError("login <username> <password> <serveraddress>");
 			}
 			int serverAddress = Integer.valueOf(server);
 			logOutput("Logging in");
-			
-			// check if the user exists
-			TwitterProtocol tpCheckUser = new TwitterProtocol(TwitterServer.READ, USERS_FILE, null);
-			tnw.RIOSend(serverAddress, Protocol.DATA, gson.toJson(tpCheckUser).toString().getBytes());
-			if (responseData == null) {
-				logError("Error issuing request to server.");
-				return;
-			}
-			String responseString = responseData.toString();
-			if (!responseString.startsWith("success")) {
-				logError("Error issuing request to server.");
-				return;
-			}
-			String usersList = responseString.substring(8);
-			String[] names = usersList.split("\n");
-			boolean isValidUser = false;
-			for (int i = 0; i < names.length; i++) {
-				if (names[i].startsWith(username)) {
-					String[] info = names[i].split("\t");
-					if (info[1].equals(password)) {
-						isValidUser = true;
-						break;
-					}
-				}
-			}
-			if (!isValidUser) {
-				logError("username:" + " " + username + " password: " + password + " does not exist." );
-				return;
-			}
-			
-			// correct username and password so proceed with login user
-			TwitterProtocol tpQuery = new TwitterProtocol(TwitterServer.APPEND, "login.txt", username + "\n");
-			tnw.RIOSend(serverAddress, Protocol.DATA, gson.toJson(tpQuery).toString().getBytes());
-			if (responseData == null) {
-				logError("Error issuing request to server.");
-				return;
-			}
-			responseString = responseData.toString();
-			if (!responseString.startsWith("success")) {
-				logError("Error issuing request to server.");
-				return;
-			}
-			
-			loginUsername = username;
-			logOutput("You are login!");
+			Login login = new Login(this, tnw, serverAddress, USERS_FILE, username, password);
+			commandQueue.add(login.init());
+			processQueue();
+
 		} else if (token.equalsIgnoreCase("logout")) {
-			if (loginUsername == null) {
-				logError("you are not login");
-				return;
+			String username = sc.findInLine(pattern);
+			if (username == null) {
+				logError("logout <username> <serveraddress>");
 			}
 			String server = sc.findInLine(pattern);
-//			String server = tokens[1];
 			if (server == null) {
-				logError("logout <serveraddress>");
+				logError("logout <username> <serveraddress>");
 			}
 			int serverAddress = Integer.valueOf(server);
 			logOutput("Logging out");
 			
-			// delete this user's username from login.txt
-			TwitterProtocol tpQuery = new TwitterProtocol(TwitterServer.DELETE_LINES, "login.txt", loginUsername);
-			tnw.RIOSend(serverAddress, Protocol.DATA, gson.toJson(tpQuery).toString().getBytes());
-			if (responseData == null) {
-				logError("Error issuing request to server.");
-				return;
-			}
-			String responseString = responseData.toString();
-			if (!responseString.startsWith("success")) {
-				logError("Error issuing request to server.");
-				return;
-			}
-			loginUsername = null;
+			Logout logout = new Logout(this, tnw, serverAddress, username);
+			commandQueue.add(logout.init());
+			processQueue();
 			
-			logOutput("You are logout!");
 		} else if (token.equalsIgnoreCase("tweet")) {
 			if (loginUsername == null) {
 				logError("You are not login.");
@@ -439,5 +396,39 @@ public class Client {
 		}
 		tnw.addTimeout(new Callback(Callback.getMethod("processEvent", this, null), this, null), 1);
 	}
-
+	
+	/**
+	 * Dequeue to call the start of the next call back and reset the index.
+	 * @throws InvocationTargetException 
+	 * @throws IllegalAccessException 
+	 */
+	public void completeCommand() {
+		logOutput("in complete command with queue size " + commandQueue.size());
+		if (commandQueue.size() == 0) {
+			logError("no event to invoke in completeCommand");
+		} else if (commandQueue.size() == 1) {
+			commandQueue.poll();
+			eventList = null;
+		} else {
+			commandQueue.poll();
+			eventList = commandQueue.peek();
+			try {
+				eventIndex = 1;
+				eventList.get(0).invoke();
+			} catch (Exception e) {
+				e.printStackTrace();
+				tnw.fail();
+			}
+		}
+	}
+	
+	public void processQueue() throws IllegalAccessException, InvocationTargetException {
+		if (commandQueue.size() == 0) {
+			logError("no event to invoke in processQueue");
+		} else if (commandQueue.size() == 1) {
+			eventList = commandQueue.peek();
+			eventIndex = 1;
+			eventList.get(0).invoke();
+		}
+	}
 }
