@@ -15,11 +15,13 @@ public abstract class Function {
 	protected RIONode rioNode;
 	private Gson gson;
 	protected List<Callback> eventList;
+	protected Client client;
 	
-	public Function(RIONode rioNode) {
+	public Function(Client client, RIONode rioNode) {
 		this.rioNode = rioNode;
 		gson = new Gson();
 		eventList = null;
+		this.client = client;
 	}
 	
 	public abstract List<Callback> init();

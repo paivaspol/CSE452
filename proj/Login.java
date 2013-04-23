@@ -3,7 +3,11 @@ import java.util.List;
 
 import edu.washington.cs.cse490h.lib.Callback;
 
-
+/**
+ * 
+ * @author leelee
+ *
+ */
 public class Login extends Function {
 	
 	private int serverAddress;
@@ -11,8 +15,8 @@ public class Login extends Function {
 	private String username;
 	private String password;
 
-	public Login(RIONode rioNode, int serverAddress, String usersFile, String username, String password) {
-		super(rioNode);
+	public Login(Client client, RIONode rioNode, int serverAddress, String usersFile, String username, String password) {
+		super(client, rioNode);
 		this.serverAddress = serverAddress;
 		this.usersFile = usersFile;
 		this.username = username;
@@ -38,6 +42,7 @@ public class Login extends Function {
 		// check if the user exists
 		TwitterProtocol tpCheckUser = new TwitterProtocol(TwitterServer.READ, usersFile, null);
 		rioNode.RIOSend(serverAddress, Protocol.DATA, tpCheckUser.toBytes());
+		client.eventIndex = 1;
 	}
 	
 	public void step2(String responseString) {
@@ -60,12 +65,14 @@ public class Login extends Function {
 		}
 		if (!isValidUser) {
 			logError("username:" + " " + username + " password: " + password + " does not exist." );
+			client.completeCommand();
 			return;
 		}
 		
 		// correct username and password so proceed with login user
 		TwitterProtocol tpQuery = new TwitterProtocol(TwitterServer.APPEND, "login.txt", username + "\n");
 		rioNode.RIOSend(serverAddress, Protocol.DATA, tpQuery.toBytes());
+		client.eventIndex = 2;
 	}
 	
 	public void step3(String responseString) {
@@ -74,5 +81,7 @@ public class Login extends Function {
 			return;
 		}
 		logOutput("You are login!");
+		client.eventIndex = 0;
+		client.completeCommand();
 	}
 }

@@ -3,7 +3,11 @@ import java.util.List;
 
 import edu.washington.cs.cse490h.lib.Callback;
 
-
+/**
+ * 
+ * @author leelee
+ *
+ */
 public class CreateUser extends Function {
 	
 	private int serverAddress;
@@ -12,9 +16,8 @@ public class CreateUser extends Function {
 	private String username;
 	private String password;
 	
-	
-	public CreateUser(RIONode rioNode, int serverAddress, String usersFile, String name, String username, String password) {
-		super(rioNode);
+	public CreateUser(Client client, RIONode rioNode, int serverAddress, String usersFile, String name, String username, String password) {
+		super(client, rioNode);
 		this.serverAddress = serverAddress;
 		this.usersFile = usersFile;
 		this.name = name;
@@ -27,10 +30,15 @@ public class CreateUser extends Function {
 		// do a read
 		TwitterProtocol tpCheckUser = new TwitterProtocol(TwitterServer.READ, usersFile, null);
 		rioNode.RIOSend(serverAddress, Protocol.DATA, tpCheckUser.toBytes());
+		client.eventIndex = 1;
 	}
 	
 	public void step2(String responseString) {
+		if (responseString == null) {
+			logOutput("responseString is null");
+		}
 		String[] tokens = responseString.split("\n");
+		logOutput("CreateUser tokens[0] " + tokens[0]);
 		if (!tokens[0].equals(TwitterServer.SUCCESS)) {
 			rioNode.fail();
 			return;
@@ -44,15 +52,18 @@ public class CreateUser extends Function {
 		}
 		if (alreadyExist) {
 			logOutput("User already created.");
+			client.completeCommand();
 			return;
 		}
 		logOutput("Creating a user, name:" + name);
 		// create the new user's text file
 		TwitterProtocol tpCreateUserFile = new TwitterProtocol(TwitterServer.CREATE, username + ".txt", null);
 		rioNode.RIOSend(serverAddress, Protocol.DATA,tpCreateUserFile.toBytes());
+		client.eventIndex = 2;
 	}
 	
 	public void step3(String responseString) {
+		logOutput("CreateUser step3");
 		if (!responseString.startsWith(TwitterServer.SUCCESS)) {
 			rioNode.fail();
 			return;
@@ -60,21 +71,27 @@ public class CreateUser extends Function {
 		// create user file that stores users that he/she is following
 		TwitterProtocol tpCreateFollowingFile = new TwitterProtocol(TwitterServer.CREATE, username + "_" + "following.txt", null);
 		rioNode.RIOSend(serverAddress, Protocol.DATA, tpCreateFollowingFile.toBytes());
+		client.eventIndex = 3;
 	}
 	
 	public void step4(String responseString) {
+		logOutput("CreateUser step4");
 		// append this user information to users.txt
 		String userInfo = username + "\t" + password + "\t" + name + "\n"; 
 		TwitterProtocol tpAppendUserInfo = new TwitterProtocol(TwitterServer.APPEND, usersFile, userInfo);
 		rioNode.RIOSend(serverAddress, Protocol.DATA, tpAppendUserInfo.toBytes());
+		client.eventIndex = 4;
 	}
 	
 	public void step5(String responseString) {
+		logOutput("CreateUser step5");
 		if (!responseString.startsWith(TwitterServer.SUCCESS)) {
 			rioNode.fail();
 			return;
 		}
 		logOutput("You are signed up!");
+		client.eventIndex = 0;
+		client.completeCommand();
 	}
 
 	@Override
