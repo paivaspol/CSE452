@@ -1,0 +1,20 @@
+start 0
+start 1
+time
+1	signup	leelee	leelee	a2345	1
+time
+1	login	leelee	a2345	1
+time
+1	tweet	"hello world!"	0
+time
+1	logout	0
+time
+1	signup	vaspol	pai	a2345	0
+time
+1	login	vaspol	a2345	0
+time
+1	follow	leelee	0
+time
+1	read	0
+time
+1	logout	0

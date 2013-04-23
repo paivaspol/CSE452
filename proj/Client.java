@@ -1,9 +1,14 @@
 import java.io.PrintStream;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
+import edu.washington.cs.cse490h.lib.Callback;
 
 /**
  * 
@@ -20,14 +25,30 @@ public class Client {
 	private static final int NUM_RETRY = 10;
 	private int counterRetry;
 	private TwitterNodeWrapper tnw;
+	private List<Callback> eventList;
+	private int eventIndex; 
+	private byte[] responseData = null;
+	
 	
 	public Client(TwitterNodeWrapper tnw) {
 		this.tnw = tnw;
 	}
 
 	public void onRIOReceive(Integer from, int protocol, byte[] msg) {
-		// TODO(leelee): figure out how to get from onCommand to here.
-		response = msg;
+		if (eventList != null && eventList.get(eventIndex) != null) {
+			Callback cb = eventList.get(eventIndex);
+			TwitterProtocol tp = TwitterNodeWrapper.GSON.fromJson(new String(msg), TwitterProtocol.class);
+			cb.setParams(new Object[] {tp.getData()});
+			try {
+				cb.invoke();
+			} catch (Exception e) {
+				e.printStackTrace();
+				tnw.fail();
+			}
+			eventIndex++;
+		} else {
+			logOutput("no event to invoke.");
+		}
 	}
 
 	public void start() {
@@ -36,12 +57,17 @@ public class Client {
 		gson = new GsonBuilder().create();
 		loginUsername = null;
 		counterRetry = 0;
+		eventIndex = 0;
+		eventList = null;
 	}
 
-	public void onCommand(String command) {
-		Pattern pattern = Pattern.compile("\"[^\"]*\"|'[^']*'|[A-Za-z']+");
+	public void onCommand(String command) throws IllegalAccessException, InvocationTargetException {
+		// p
+		logOutput("client: " + command);
+		Pattern pattern = Pattern.compile("[A-Za-z0-9]+|\"[^\"]*\"");
 		Scanner sc = new Scanner(command);
 		String token = sc.findInLine(pattern);
+		logOutput("token: " + token);
 		if (token == null) {
 			throw new RuntimeException();
 		}
@@ -62,71 +88,29 @@ public class Client {
 			}
 			String server = sc.findInLine(pattern);
 			if (server == null) {
+				// p " "
+				logOutput("server is not a string");
 				logError("signup <username> <name> <password> <serveraddress>");
 			}
 			int serverAddress = Integer.valueOf(server);
-			
-			logOutput("Creating a user, name:" + name);
-			// create user file that stores tweet
-			String responseString = null;
-
-			// RIOSend in sendLater takes care of the retry
-			TwitterProtocol tpCreateUserFile = new TwitterProtocol("create", username + ".txt", null);
-			byte[] responseData = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpCreateUserFile).toString().getBytes());
-			if (responseData == null) {
-				logError("Error issuing request to server.");
-				return;
-			}
-			String tempString = responseData.toString();
-			responseString = tempString.split("\n")[0];
-			if (!responseString.equalsIgnoreCase("success")) {
-				logError("Error issuing request to server.");
-				return;
-			}
-			responseString = null;
-
-			// create user file that stores users that he/she is following
-			TwitterProtocol tpCreateFollowingFile = new TwitterProtocol("create", username + "_" + "following.txt", null);
-			responseData = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpCreateFollowingFile).toString().getBytes());
-			if (responseData == null) {
-				logError("Error issuing request to server.");
-				return;
-			}
-			responseString = responseData.toString();
-			if (!responseString.startsWith("success")) {
-				logError("Error issuing request to server.");
-				return;
-			}
-			
-			responseString = null;
-			counterRetry = 0;
-			
-			// append this user information to users.txt
-			String userInfo = username + "\t" + password + "\t" + name + "\n"; 
-			TwitterProtocol tpAppendUserInfo = new TwitterProtocol("append", USERS_FILE, userInfo);
-			responseData = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpAppendUserInfo).toString().getBytes());
-			if (responseData == null) {
-				logError("Error issuing request to server.");
-				return;
-			}
-			responseString = responseData.toString();
-			if (!responseString.startsWith("success")) {
-				logError("Error issuing request to server.");
-				return;
-			}
-			
-			logOutput("You are signed up!");
+			CreateUser createUser = new CreateUser(tnw, serverAddress, USERS_FILE, name, username, password);
+			eventList = createUser.init();
+			eventIndex = 1;
+			createUser.start();
 			
 		} else if (token.equalsIgnoreCase("login")) {
 			String username = sc.findInLine(pattern);
+//			String username = tokens[1];
 			if (username == null) {
 				logError("login <username> <password> <serveraddress>");
 			}
 			String password = sc.findInLine(pattern);
+//			String password = tokens[2];
 			if (password == null) {
 				logError("login <username> <password> <serveraddress>");
 			}
 			String server = sc.findInLine(pattern);
+//			String server = tokens[3];
 			if (server == null) {
 				logError("login <username> <password> <serveraddress>");
 			}
@@ -134,8 +118,8 @@ public class Client {
 			logOutput("Logging in");
 			
 			// check if the user exists
-			TwitterProtocol tpCheckUser = new TwitterProtocol("read", USERS_FILE, null);
-			byte[] responseData = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpCheckUser).toString().getBytes());
+			TwitterProtocol tpCheckUser = new TwitterProtocol(TwitterServer.READ, USERS_FILE, null);
+			tnw.RIOSend(serverAddress, Protocol.DATA, gson.toJson(tpCheckUser).toString().getBytes());
 			if (responseData == null) {
 				logError("Error issuing request to server.");
 				return;
@@ -163,8 +147,8 @@ public class Client {
 			}
 			
 			// correct username and password so proceed with login user
-			TwitterProtocol tpQuery = new TwitterProtocol("append", "login.txt", username + "\n");
-			responseData = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpQuery).toString().getBytes());
+			TwitterProtocol tpQuery = new TwitterProtocol(TwitterServer.APPEND, "login.txt", username + "\n");
+			tnw.RIOSend(serverAddress, Protocol.DATA, gson.toJson(tpQuery).toString().getBytes());
 			if (responseData == null) {
 				logError("Error issuing request to server.");
 				return;
@@ -183,6 +167,7 @@ public class Client {
 				return;
 			}
 			String server = sc.findInLine(pattern);
+//			String server = tokens[1];
 			if (server == null) {
 				logError("logout <serveraddress>");
 			}
@@ -190,8 +175,8 @@ public class Client {
 			logOutput("Logging out");
 			
 			// delete this user's username from login.txt
-			TwitterProtocol tpQuery = new TwitterProtocol("delete_lines", "login.txt", loginUsername);
-			byte[] responseData = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpQuery).toString().getBytes());
+			TwitterProtocol tpQuery = new TwitterProtocol(TwitterServer.DELETE_LINES, "login.txt", loginUsername);
+			tnw.RIOSend(serverAddress, Protocol.DATA, gson.toJson(tpQuery).toString().getBytes());
 			if (responseData == null) {
 				logError("Error issuing request to server.");
 				return;
@@ -210,10 +195,12 @@ public class Client {
 				return;
 			}
 			String content = sc.findInLine(pattern);
+//			String content = tokens[1];
 			if (content == null) {
 				logError("tweet <content> <serveraddress>");
 			}
 			String server = sc.findInLine(pattern);
+//			String server = tokens[2];
 			if (server == null) {
 				logError("tweet <content> <serveraddress>");
 			}
@@ -221,8 +208,8 @@ public class Client {
 			
 			logOutput("Posting tweet");
 			// append the tweet to user's tweet file
-			TwitterProtocol tpAppendTweet = new TwitterProtocol("append", loginUsername + ".txt", System.currentTimeMillis() + "\t" + content + "\n");
-			byte[] responseData = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpAppendTweet).toString().getBytes());
+			TwitterProtocol tpAppendTweet = new TwitterProtocol(TwitterServer.APPEND, loginUsername + ".txt", System.currentTimeMillis() + "\t" + content + "\n");
+			tnw.RIOSend(serverAddress, Protocol.DATA, gson.toJson(tpAppendTweet).toString().getBytes());
 			if (responseData == null) {
 				logError("Error issuing request to server.");
 				return;
@@ -240,18 +227,20 @@ public class Client {
 				return;
 			}
 			String userToFollow = sc.findInLine(pattern);
+//			String userToFollow = tokens[1];
 			if (userToFollow == null) {
 				logError("follow <username> <serveraddress>");
 			}
 			String server = sc.findInLine(pattern);
+//			String server = tokens[2];
 			if (server == null) {
 				logError("follow <username> <serveraddress>");
 			}
 			int serverAddress = Integer.valueOf(server);
 			
 			// check if user to follow is a valid user name
-			TwitterProtocol tpCheckUser = new TwitterProtocol("read", USERS_FILE, null);
-			byte[] responseData = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpCheckUser).toString().getBytes());
+			TwitterProtocol tpCheckUser = new TwitterProtocol(TwitterServer.READ, USERS_FILE, null);
+			tnw.RIOSend(serverAddress, Protocol.DATA, gson.toJson(tpCheckUser).toString().getBytes());
 			if (responseData == null) {
 				logError("Error issuing request to server.");
 				return;
@@ -278,8 +267,8 @@ public class Client {
 			// adding follower
 			logOutput("adding " + userToFollow);
 			String userToFollowInfo = userToFollow + "\t" + System.currentTimeMillis() + "\n";
-			TwitterProtocol tpAddToFollowing = new TwitterProtocol("append", loginUsername + ".txt", userToFollowInfo);
-			responseData = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpAddToFollowing).toString().getBytes());
+			TwitterProtocol tpAddToFollowing = new TwitterProtocol(TwitterServer.APPEND, loginUsername + ".txt", userToFollowInfo);
+			tnw.RIOSend(serverAddress, Protocol.DATA, gson.toJson(tpAddToFollowing).toString().getBytes());
 			if (responseData == null) {
 				logError("Error issuing request to server.");
 				return;
@@ -297,18 +286,20 @@ public class Client {
 				return;
 			}
 			String userToUnfollow = sc.findInLine(pattern);
+//			String userToUnfollow = tokens[1];
 			if (userToUnfollow == null) {
 				logError("unfollow <username> <serveraddress>");
 			}
 			String server = sc.findInLine(pattern);
+//			String server = tokens[1];
 			if (server == null) {
 				logError("unfollow <username> <serveraddress>");
 			}
 			int serverAddress = Integer.valueOf(server);
 			
 			// check if user to unfollow is a valid user name
-			TwitterProtocol tpCheckUser = new TwitterProtocol("read", USERS_FILE, null);
-			byte[] responseData = sendLater(serverAddress, Protocol.DATA, gson.toJson(tpCheckUser).toString().getBytes());
+			TwitterProtocol tpCheckUser = new TwitterProtocol(TwitterServer.READ, USERS_FILE, null);
+			tnw.RIOSend(serverAddress, Protocol.DATA, gson.toJson(tpCheckUser).toString().getBytes());
 			if (responseData == null) {
 				logError("Error issuing request to server.");
 				return;
@@ -333,8 +324,8 @@ public class Client {
 			}
 			
 			// delete entry from follower collection
-			TwitterProtocol tpUnfollow = new TwitterProtocol("delete_lines", loginUsername + ".txt", userToUnfollow);
-			responseData = sendLater(serverAddress, Protocol.DATA, getBytesFromTwitterProtocol(tpUnfollow));
+			TwitterProtocol tpUnfollow = new TwitterProtocol(TwitterServer.DELETE_LINES, loginUsername + ".txt", userToUnfollow);
+			tnw.RIOSend(serverAddress, Protocol.DATA, getBytesFromTwitterProtocol(tpUnfollow));
 			if (responseData == null) {
 				logError("Error issuing request to server.");
 				return;
@@ -351,6 +342,7 @@ public class Client {
 				return;
 			}
 			String server = sc.findInLine(pattern);
+//			String server = tokens[1];
 			if (server == null) {
 				logError("read <serveraddress>");
 			}
@@ -358,8 +350,8 @@ public class Client {
 			logOutput("Fecthing unread post");
 			
 			// get the list of username that user is following
-			TwitterProtocol tpGetFollowing = new TwitterProtocol("read", loginUsername + "_following.txt", null);
-			byte[] responseData = sendLater(serverAddress, Protocol.DATA, getBytesFromTwitterProtocol(tpGetFollowing));
+			TwitterProtocol tpGetFollowing = new TwitterProtocol(TwitterServer.READ, loginUsername + "_following.txt", null);
+			tnw.RIOSend(serverAddress, Protocol.DATA, getBytesFromTwitterProtocol(tpGetFollowing));
 			if (responseData == null) {
 				logError("Error issuing request to server.");
 				return;
@@ -376,9 +368,10 @@ public class Client {
 			for (String f : eachFollowing) {
 				String[] info = f.split("\t");
 				long timeFollow = Long.valueOf(info[1]);
-				TwitterProtocol tpGetTweets = new TwitterProtocol("read", info[0] + ".txt", null);
-				String tweets = sendLater(serverAddress, Protocol.DATA, getBytesFromTwitterProtocol(tpGetTweets)).toString();
-				String[] tweetsSplited = tweets.split("\n");
+				TwitterProtocol tpGetTweets = new TwitterProtocol(TwitterServer.READ, info[0] + ".txt", null);
+				tnw.RIOSend(serverAddress, Protocol.DATA, getBytesFromTwitterProtocol(tpGetTweets));
+//				String[] tweetsSplited = tweets.split("\n");
+				String[] tweetsSplited = new String[0];
 				int i = 0;
 				for (; i < tweetsSplited.length; i++) {
 					String[] tSplit = tweetsSplited[i].split("\t");
@@ -396,8 +389,8 @@ public class Client {
 			
 			// update the following list time by delete the the original following file and create the new one
 			// with the new time
-			TwitterProtocol tpDeleteFollowing = new TwitterProtocol("delete", loginUsername + "_following.txt", null);
-			responseData = sendLater(serverAddress, Protocol.DATA, getBytesFromTwitterProtocol(tpDeleteFollowing));
+			TwitterProtocol tpDeleteFollowing = new TwitterProtocol(TwitterServer.DELETE, loginUsername + "_following.txt", null);
+			tnw.RIOSend(serverAddress, Protocol.DATA, getBytesFromTwitterProtocol(tpDeleteFollowing));
 			if (responseData == null) {
 				logError("Error issuing request to server.");
 				return;
@@ -407,8 +400,8 @@ public class Client {
 				logError("Error issuing request to server.");
 				return;
 			}
-			TwitterProtocol tpUpdateFollowing = new TwitterProtocol("create", loginUsername + "_following.txt", newFollowingList);
-			responseData = sendLater(serverAddress, Protocol.DATA, getBytesFromTwitterProtocol(tpUpdateFollowing));
+			TwitterProtocol tpUpdateFollowing = new TwitterProtocol(TwitterServer.APPEND, loginUsername + "_following.txt", newFollowingList);
+			tnw.RIOSend(serverAddress, Protocol.DATA, getBytesFromTwitterProtocol(tpUpdateFollowing));
 			if (responseData == null) {
 				logError("Error issuing request to server.");
 				return;
@@ -422,29 +415,6 @@ public class Client {
 		} else {
 			logError("Invalid command");
 		}
-	}
-	
-	/**
-	 * Note: this only works for one server, one client.
-	 * @param destAddr
-	 * @param protocol
-	 * @param payload
-	 * @return the response 
-	 */
-	public byte[] sendLater(int destAddr, int protocol, byte[] payload) {
-		tnw.RIOSend(destAddr, protocol, payload);
-		byte[] response = null;
-		long start = System.currentTimeMillis();
-		long end = System.currentTimeMillis();
-		long interval = end - start;
-		while (this.response == null && interval < 60000) {
-		}
-		response = this.response;
-		if (response == null) {
-			return response;
-		}
-		this.response = null;
-		return response;
 	}
 	
 	public void logError(String output) {
@@ -461,6 +431,13 @@ public class Client {
 	
 	private byte[] getBytesFromTwitterProtocol(TwitterProtocol tp) {
 		return gson.toJson(tp).toString().getBytes();
+	}
+	
+	public void processEvent() throws IllegalAccessException, InvocationTargetException, SecurityException, ClassNotFoundException, NoSuchMethodException {
+		for (Callback cb : eventList) {
+			cb.invoke();
+		}
+		tnw.addTimeout(new Callback(Callback.getMethod("processEvent", this, null), this, null), 1);
 	}
 
 }
