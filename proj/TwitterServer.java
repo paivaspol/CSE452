@@ -31,14 +31,16 @@ public class TwitterServer {
    */
   public static final String SUCCESS = "SUCCESS";
   public static final String FAILURE = "FAILURE";
-
+  public static final String RESTART = "RESTART";
+  
   /**
    * File names
    */
   private static final String TEMP_FILENAME = ".tmp";
   private static final String USERS_FILENAME = "users.txt";
   private static final String LOGIN_FILENAME = "login.txt";
-
+  private static final String CONTACTED_CLIENTS = "clients.txt";
+  
   /**
    * An instance of GSON for serializing and deserializing JSON objects
    */
