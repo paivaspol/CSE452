@@ -6,6 +6,7 @@ import com.google.gson.GsonBuilder;
 
 import edu.washington.cs.cse490h.lib.PersistentStorageReader;
 import edu.washington.cs.cse490h.lib.PersistentStorageWriter;
+import edu.washington.cs.cse490h.lib.Utility;
 
 /**
  * Twitter Server that will handle requests from Twitter Client
@@ -28,8 +29,8 @@ public class TwitterServer {
   /**
    * Response indicators
    */
-  public static final String SUCCESS = "SUCCESS\n";
-  public static final String FAILURE = "FAILURE\n";
+  public static final String SUCCESS = "SUCCESS";
+  public static final String FAILURE = "FAILURE";
 
   /**
    * File names
@@ -68,15 +69,13 @@ public class TwitterServer {
     File userFile = new File(USERS_FILENAME);
     File loginFile = new File(LOGIN_FILENAME);
     try {
-      if (!userFile.exists()) {
-        if (!userFile.createNewFile()) {
-          throw new IOException("cannot create file: " + userFile.getName());
-        }
+    	if (!Utility.fileExists(wrapper, USERS_FILENAME)) {
+    	  PersistentStorageWriter writer = wrapper.getWriter(USERS_FILENAME, false);
+    	  writer.write(new char[] {});
       }
-      if (!loginFile.exists()) {
-        if (!loginFile.createNewFile()) {
-          throw new IOException("cannot create file: " + loginFile.getName());
-        }
+    	if (!Utility.fileExists(wrapper, LOGIN_FILENAME)) {
+    	  PersistentStorageWriter writer = wrapper.getWriter(LOGIN_FILENAME, false);
+    	  writer.write(new char[] {});
       }
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -96,17 +95,18 @@ public class TwitterServer {
       Utils.logError(from, "unknown protocol: " + protocol);
       return;
     }
-
-    String jsonStr = wrapper.packetBytesToString(msg);
+    Utils.logOutput(wrapper.getAddr(), "received something");
+    String jsonStr = new String(msg);
+    Utils.logOutput(wrapper.getAddr(), jsonStr);
     TwitterProtocol request = gson.fromJson(jsonStr, TwitterProtocol.class);
     String collection = request.getCollection();
     String data = request.getData();
-    String responseData = SUCCESS;
+    String responseData = SUCCESS + "\n";
     try {
       if (request.getMethod().equals(CREATE)) {
         Utils.logOutput(wrapper.getAddr(), "Creating a tweet entry...");
         if (!createFile(collection, data)) {
-          responseData = FAILURE;
+          responseData = FAILURE + "\n";
         }
       } else if (request.getMethod().equals(READ)) {
         responseData += readFile(collection);
@@ -121,10 +121,13 @@ public class TwitterServer {
       }
     } catch (IOException e) {
       responseData = "FAIL\n";
+      e.printStackTrace();
     }
     // send back the damn respond!
     TwitterProtocol response = new TwitterProtocol(request);
     response.setData(responseData);
+    wrapper.RIOSend(from, protocol, gson.toJson(response).getBytes());
+//    wrapper.send(from, protocol, gson.toJson(response).getBytes());
   }
 
   /**
@@ -136,8 +139,13 @@ public class TwitterServer {
 
   // creates a file with the collection name
   private boolean createFile(String collectionName, String data) throws IOException {
-    File newFile = new File(collectionName);
-    return newFile.createNewFile();
+	  if (!Utility.fileExists(wrapper, collectionName)) {
+		  PersistentStorageWriter writer = wrapper.getWriter(collectionName, false);
+		  writer.write(new char[] {});
+		  return true;
+	  } else {
+		  return true;
+	  }
   }
 
   // returns all the entries from the file associated to the reader object
@@ -156,20 +164,21 @@ public class TwitterServer {
    * @throws IOException
    */
   private void appendFile(String collectionName, String data) throws IOException {
-    PersistentStorageReader reader = wrapper.getReader(collectionName);
-    PersistentStorageWriter writer = wrapper.getWriter(collectionName, false);
-    PersistentStorageWriter tempFileWriter = wrapper.getWriter(TEMP_FILENAME, false);
-    StringBuilder oldContent = new StringBuilder(collectionName + "\n");
-    readWholeFile(reader, oldContent);
-    // first, write the tmp file
-    tempFileWriter.write(oldContent.toString());
-    // append the new content
-    writer.write(oldContent.append(data).toString());
-    tempFileWriter.delete();
-    // close all the file connections
-    reader.close();
-    writer.close();
-    tempFileWriter.close();
+	  PersistentStorageReader reader = wrapper.getReader(collectionName);
+	  PersistentStorageWriter writer = wrapper.getWriter(collectionName, false);
+	  PersistentStorageWriter tempFileWriter = wrapper.getWriter(TEMP_FILENAME, false);
+	  StringBuilder tempContent = new StringBuilder(collectionName + "\n");
+	  StringBuilder oldContent = new StringBuilder();
+	  readWholeFile(reader, oldContent);
+	  // first, write the tmp file
+	  tempFileWriter.write(tempContent.append(oldContent).toString());
+	  // append the new content
+	  writer.write(oldContent.append(data).toString());
+	  tempFileWriter.delete();
+	  // close all the file connections
+	  reader.close();
+	  writer.close();
+	  tempFileWriter.close();
   }
 
   /**
