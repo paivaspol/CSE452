@@ -1,5 +1,7 @@
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -40,7 +42,7 @@ public class TwitterServer {
   private static final String USERS_FILENAME = "users.txt";
   private static final String LOGIN_FILENAME = "login.txt";
   private static final String CONTACTED_CLIENTS = "clients.txt";
-  
+
   /**
    * An instance of GSON for serializing and deserializing JSON objects
    */
@@ -68,16 +70,24 @@ public class TwitterServer {
       resumeAppendExecution();
     }
 
-    File userFile = new File(USERS_FILENAME);
-    File loginFile = new File(LOGIN_FILENAME);
     try {
-    	if (!Utility.fileExists(wrapper, USERS_FILENAME)) {
-    	  PersistentStorageWriter writer = wrapper.getWriter(USERS_FILENAME, false);
-    	  writer.write(new char[] {});
+      if (!Utility.fileExists(wrapper, USERS_FILENAME)) {
+        createFile(USERS_FILENAME);
       }
-    	if (!Utility.fileExists(wrapper, LOGIN_FILENAME)) {
-    	  PersistentStorageWriter writer = wrapper.getWriter(LOGIN_FILENAME, false);
-    	  writer.write(new char[] {});
+      if (!Utility.fileExists(wrapper, LOGIN_FILENAME)) {
+        createFile(LOGIN_FILENAME);
+      }
+
+      // should tell all the clients (nodes) after upon restart, so they know that you're back :)
+      if (Utility.fileExists(wrapper, CONTACTED_CLIENTS)) {
+        PersistentStorageReader reader = wrapper.getReader(CONTACTED_CLIENTS);
+        String clientNode = "";
+        while ((clientNode = reader.readLine()) != null) {
+          int nodeId = Integer.parseInt(clientNode);
+          TwitterProtocol msg = new TwitterProtocol(RESTART, RESTART, RESTART);
+          wrapper.RIOSend(nodeId, Protocol.DATA, gson.toJson(msg).getBytes());
+          contactedNodes.add(nodeId);
+        }
       }
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -97,9 +107,17 @@ public class TwitterServer {
       Utils.logError(from, "unknown protocol: " + protocol);
       return;
     }
-    Utils.logOutput(wrapper.getAddr(), "received something");
-    String jsonStr = new String(msg);
-    Utils.logOutput(wrapper.getAddr(), jsonStr);
+
+    try {
+      if (!Utility.fileExists(wrapper, CONTACTED_CLIENTS)) {
+        createFile(CONTACTED_CLIENTS);
+      }
+      appendFile(CONTACTED_CLIENTS, String.valueOf(from));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    String jsonStr = wrapper.packetBytesToString(msg);
     TwitterProtocol request = gson.fromJson(jsonStr, TwitterProtocol.class);
     String collection = request.getCollection();
     String data = request.getData();
@@ -107,8 +125,8 @@ public class TwitterServer {
     try {
       if (request.getMethod().equals(CREATE)) {
         Utils.logOutput(wrapper.getAddr(), "Creating a tweet entry...");
-        if (!createFile(collection, data)) {
-          responseData = FAILURE + "\n";
+        if (!createFile(collection)) {
+          responseData = FAILURE;
         }
       } else if (request.getMethod().equals(READ)) {
         responseData += readFile(collection);
@@ -128,8 +146,6 @@ public class TwitterServer {
     // send back the damn respond!
     TwitterProtocol response = new TwitterProtocol(request);
     response.setData(responseData);
-    wrapper.RIOSend(from, protocol, gson.toJson(response).getBytes());
-//    wrapper.send(from, protocol, gson.toJson(response).getBytes());
   }
 
   /**
@@ -140,14 +156,12 @@ public class TwitterServer {
   }
 
   // creates a file with the collection name
-  private boolean createFile(String collectionName, String data) throws IOException {
-	  if (!Utility.fileExists(wrapper, collectionName)) {
-		  PersistentStorageWriter writer = wrapper.getWriter(collectionName, false);
-		  writer.write(new char[] {});
-		  return true;
-	  } else {
-		  return true;
-	  }
+  private boolean createFile(String collectionName) throws IOException {
+    if (!Utility.fileExists(wrapper, collectionName)) {
+      PersistentStorageWriter writer = wrapper.getWriter(collectionName, false);
+      writer.write(new char[] {});
+    }
+    return true;
   }
 
   // returns all the entries from the file associated to the reader object
@@ -166,21 +180,21 @@ public class TwitterServer {
    * @throws IOException
    */
   private void appendFile(String collectionName, String data) throws IOException {
-	  PersistentStorageReader reader = wrapper.getReader(collectionName);
-	  PersistentStorageWriter writer = wrapper.getWriter(collectionName, false);
-	  PersistentStorageWriter tempFileWriter = wrapper.getWriter(TEMP_FILENAME, false);
-	  StringBuilder tempContent = new StringBuilder(collectionName + "\n");
-	  StringBuilder oldContent = new StringBuilder();
-	  readWholeFile(reader, oldContent);
-	  // first, write the tmp file
-	  tempFileWriter.write(tempContent.append(oldContent).toString());
-	  // append the new content
-	  writer.write(oldContent.append(data).toString());
-	  tempFileWriter.delete();
-	  // close all the file connections
-	  reader.close();
-	  writer.close();
-	  tempFileWriter.close();
+    PersistentStorageReader reader = wrapper.getReader(collectionName);
+    PersistentStorageWriter writer = wrapper.getWriter(collectionName, false);
+    PersistentStorageWriter tempFileWriter = wrapper.getWriter(TEMP_FILENAME, false);
+    StringBuilder tempContent = new StringBuilder(collectionName + "\n");
+    StringBuilder oldContent = new StringBuilder();
+    readWholeFile(reader, oldContent);
+    // first, write the tmp file
+    tempFileWriter.write(tempContent.append(oldContent).toString());
+    // append the new content
+    writer.write(oldContent.append(data).toString());
+    tempFileWriter.delete();
+    // close all the file connections
+    reader.close();
+    writer.close();
+    tempFileWriter.close();
   }
 
   /**
