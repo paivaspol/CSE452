@@ -89,20 +89,22 @@ public class Client {
       String username = sc.findInLine(pattern);
       if (username == null) {
         logError("signup <username> <name> <password> <serveraddress>");
+        return;
       }
       String name = sc.findInLine(pattern);
       if (name == null) {
         logError("signup <username> <name> <password> <serveraddress>");
+        return;
       }
       String password = sc.findInLine(pattern);
       if (password == null) {
         logError("signup <username> <name> <password> <serveraddress>");
+        return;
       }
       String server = sc.findInLine(pattern);
       if (server == null) {
-        // p " "
-        logOutput("server is not a string");
         logError("signup <username> <name> <password> <serveraddress>");
+        return;
       }
       int serverAddress = Integer.valueOf(server);
       CreateUser createUser = new CreateUser(this, tnw, serverAddress, USERS_FILE, name, username, password);
@@ -113,14 +115,17 @@ public class Client {
       String username = sc.findInLine(pattern);
       if (username == null) {
         logError("login <username> <password> <serveraddress>");
+        return;
       }
       String password = sc.findInLine(pattern);
       if (password == null) {
         logError("login <username> <password> <serveraddress>");
+        return;
       }
       String server = sc.findInLine(pattern);
       if (server == null) {
         logError("login <username> <password> <serveraddress>");
+        return;
       }
       int serverAddress = Integer.valueOf(server);
       logOutput("Logging in");
@@ -132,10 +137,12 @@ public class Client {
       String username = sc.findInLine(pattern);
       if (username == null) {
         logError("logout <username> <serveraddress>");
+        return;
       }
       String server = sc.findInLine(pattern);
       if (server == null) {
         logError("logout <username> <serveraddress>");
+        return;
       }
       int serverAddress = Integer.valueOf(server);
       logOutput("Logging out");
@@ -145,79 +152,88 @@ public class Client {
       processQueue();
 
     } else if (token.equalsIgnoreCase("tweet")) {
-      if (loginUsername == null) {
-        logError("You are not login.");
+        String username = sc.findInLine(pattern);
+        if (username == null) {
+          logError("tweet <username> <content> <serveraddress>");
+          return;
+        }
+      String content = sc.findInLine(pattern);
+      if (content == null) {
+        logError("tweet <username> <content> <serveraddress>");
         return;
       }
-      String content = sc.findInLine(pattern);
-      // String content = tokens[1];
-      if (content == null) {
-        logError("tweet <content> <serveraddress>");
-      }
       String server = sc.findInLine(pattern);
-      // String server = tokens[2];
       if (server == null) {
-        logError("tweet <content> <serveraddress>");
+        logError("tweet <username> <content> <serveraddress>");
+        return;
       }
       int serverAddress = Integer.valueOf(server);
 
-      logOutput("Posting tweet");
-      // append the tweet to user's tweet file
-      Tweet tweet = new Tweet(this, tnw, serverAddress, loginUsername, content);
+      Tweet tweet = new Tweet(this, tnw, serverAddress, username + ".txt", content, username);
       commandQueue.add(tweet.init());
       processQueue();
+      
     } else if (token.equalsIgnoreCase("follow")) {
-      if (loginUsername == null) {
-        logError("You are not login.");
-        return;
-      }
+        String username = sc.findInLine(pattern);
+        if (username == null) {
+          logError("follow <username> <username to follow> <serveraddress>");
+          return;
+        }
       String userToFollow = sc.findInLine(pattern);
       if (userToFollow == null) {
-        logError("follow <username> <serveraddress>");
+        logError("follow <username> <username to follow> <serveraddress>");
+        return;
       }
       String server = sc.findInLine(pattern);
       if (server == null) {
-        logError("follow <username> <serveraddress>");
+        logError("follow <username> <username to follow> <serveraddress>");
+        return;
       }
       int serverAddress = Integer.valueOf(server);
 
-      Follow unfollow = new Follow(this, tnw, serverAddress, loginUsername + "_following.txt", userToFollow);
+      Follow unfollow = new Follow(this, tnw, serverAddress, username + "_following.txt", userToFollow, username);
       commandQueue.add(unfollow.init());
       processQueue();
 
     } else if (token.equalsIgnoreCase("unfollow")) {
-      if (loginUsername == null) {
-        logError("You are not login.");
-        return;
-      }
+        String username = sc.findInLine(pattern);
+        if (username == null) {
+          logError("unfollow <username> <username to unfollow> <serveraddress>");
+          return;
+        }
       String userToUnfollow = sc.findInLine(pattern);
       // String userToUnfollow = tokens[1];
       if (userToUnfollow == null) {
-        logError("unfollow <username> <serveraddress>");
+    	  logError("unfollow <username> <username to unfollow> <serveraddress>");
+    	  return;
       }
       String server = sc.findInLine(pattern);
       // String server = tokens[1];
       if (server == null) {
-        logError("unfollow <username> <serveraddress>");
+    	  logError("unfollow <username> <username to unfollow> <serveraddress>");
+    	  return;
       }
       int serverAddress = Integer.valueOf(server);
-      Unfollow unfollow = new Unfollow(this, tnw, serverAddress, loginUsername + "_following.txt", userToUnfollow);
+      Unfollow unfollow = new Unfollow(this, tnw, serverAddress, username + "_following.txt", userToUnfollow, username);
       commandQueue.add(unfollow.init());
       processQueue();
+      
     } else if (token.equalsIgnoreCase("read")) {
-      if (loginUsername == null) {
-        logError("You are not login.");
-        return;
+      String username = sc.findInLine(pattern);
+      if (username == null) {
+    	  logError("read <username> <serveraddress>");
+    	  return;
       }
       String server = sc.findInLine(pattern);
       // String server = tokens[1];
       if (server == null) {
         logError("read <serveraddress>");
+        return;
       }
       int serverAddress = Integer.valueOf(server);
       logOutput("Fecthing unread post");
       // file to read from: [username]_following.txt
-      Read read = new Read(this, tnw, serverAddress, loginUsername + "_following.txt");
+      Read read = new Read(this, tnw, serverAddress, username + "_following.txt", username);
       commandQueue.add(read.init());
       processQueue();
     } else {
@@ -236,10 +252,6 @@ public class Client {
 
   public void log(String output, PrintStream stream) {
     stream.println(output);
-  }
-
-  private byte[] getBytesFromTwitterProtocol(TwitterProtocol tp) {
-    return gson.toJson(tp).toString().getBytes();
   }
 
   public void processEvent() throws IllegalAccessException, InvocationTargetException, SecurityException,

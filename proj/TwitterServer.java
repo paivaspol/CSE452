@@ -67,6 +67,7 @@ public class TwitterServer {
     // tmp file in case of it was in the middle of something when it crashed
     File f = new File(TEMP_FILENAME);
     if (f.exists()) {
+    	Utils.logOutput(wrapper.getAddr(), "Restoring file after crash at append");
       resumeAppendExecution();
     }
 
@@ -86,7 +87,6 @@ public class TwitterServer {
           int nodeId = Integer.parseInt(clientNode);
           TwitterProtocol msg = new TwitterProtocol(RESTART, RESTART, RESTART);
           wrapper.RIOSend(nodeId, Protocol.DATA, gson.toJson(msg).getBytes());
-          contactedNodes.add(nodeId);
         }
       }
     } catch (IOException e) {
@@ -107,7 +107,7 @@ public class TwitterServer {
       Utils.logError(from, "unknown protocol: " + protocol);
       return;
     }
-
+    Utils.logOutput(wrapper.getAddr(), "received something!!");
     try {
       if (!Utility.fileExists(wrapper, CONTACTED_CLIENTS)) {
         createFile(CONTACTED_CLIENTS);
@@ -146,6 +146,7 @@ public class TwitterServer {
     // send back the damn respond!
     TwitterProtocol response = new TwitterProtocol(request);
     response.setData(responseData);
+    wrapper.RIOSend(from, protocol, response.toBytes());
   }
 
   /**
@@ -181,15 +182,17 @@ public class TwitterServer {
    */
   private void appendFile(String collectionName, String data) throws IOException {
     PersistentStorageReader reader = wrapper.getReader(collectionName);
-    PersistentStorageWriter writer = wrapper.getWriter(collectionName, false);
     PersistentStorageWriter tempFileWriter = wrapper.getWriter(TEMP_FILENAME, false);
     StringBuilder tempContent = new StringBuilder(collectionName + "\n");
     StringBuilder oldContent = new StringBuilder();
     readWholeFile(reader, oldContent);
     // first, write the tmp file
-    tempFileWriter.write(tempContent.append(oldContent).toString());
+    tempContent = tempContent.append(oldContent);
+    tempFileWriter.write(tempContent.toString());
     // append the new content
-    writer.write(oldContent.append(data).toString());
+    oldContent = oldContent.append(data);
+    PersistentStorageWriter writer = wrapper.getWriter(collectionName, false);
+    writer.write(oldContent.toString());
     tempFileWriter.delete();
     // close all the file connections
     reader.close();
@@ -218,7 +221,6 @@ public class TwitterServer {
    * @throws IOException
    */
   private String deleteEntries(String collectionName, String targetString) throws IOException {
-    PersistentStorageWriter writer = wrapper.getWriter(collectionName, false);
     PersistentStorageReader reader = wrapper.getReader(collectionName);
     String temp = "";
     StringBuilder newFile = new StringBuilder();
@@ -230,6 +232,7 @@ public class TwitterServer {
         linesDeleted.append(temp);
       }
     }
+    PersistentStorageWriter writer = wrapper.getWriter(collectionName, false);
     writer.write(newFile.toString());
     reader.close();
     writer.flush();
@@ -243,7 +246,6 @@ public class TwitterServer {
   private void resumeAppendExecution() {
     try {
       PersistentStorageReader reader = wrapper.getReader(TEMP_FILENAME);
-      PersistentStorageWriter tmpFileWriter = wrapper.getWriter(TEMP_FILENAME, false);
       if (reader.ready()) {
         String filename = reader.readLine();
         StringBuilder oldContent = new StringBuilder();
@@ -253,6 +255,7 @@ public class TwitterServer {
         oldContent.getChars(0, oldContent.length(), oldContentChars, 0);
         revertFile.write(oldContentChars);
       }
+      PersistentStorageWriter tmpFileWriter = wrapper.getWriter(TEMP_FILENAME, false);
       tmpFileWriter.delete();
       tmpFileWriter.close();
     } catch (IOException e) {
@@ -262,9 +265,10 @@ public class TwitterServer {
 
   // reads the whole file in the reader into the oldContent variable
   private void readWholeFile(PersistentStorageReader reader, StringBuilder builder) throws IOException {
-    String temp = "";
+    Utils.logOutput(wrapper.getAddr(), "EXEC!");
+	String temp = "";
     while ((temp = reader.readLine()) != null) {
-      builder.append(temp);
+      builder = builder.append(temp + "\n");
     }
   }
 }

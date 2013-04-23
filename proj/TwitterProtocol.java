@@ -1,3 +1,4 @@
+
 /**
  * Holds the JSON Representation for the Twitter protocol
  * 
@@ -83,5 +84,9 @@ public class TwitterProtocol {
    */
   public void setData(String data) {
     this.data = data;
+  }
+  
+  public byte[] toBytes() {
+	  return TwitterNodeWrapper.GSON.toJson(this).getBytes();
   }
 }

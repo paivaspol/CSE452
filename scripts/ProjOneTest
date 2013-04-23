@@ -1,20 +1,10 @@
-start 0
-start 1
+start 3
+start 4
 time
-1	signup	leelee	leelee	a2345	1
+4	signup	leelee	leelee	a2345	3
 time
-1	login	leelee	a2345	1
+4	login	leelee	a2345	3
 time
-1	tweet	"hello world!"	0
+4	tweet	leelee	"first tweet"	3
 time
-1	logout	0
-time
-1	signup	vaspol	pai	a2345	0
-time
-1	login	vaspol	a2345	0
-time
-1	follow	leelee	0
-time
-1	read	0
-time
-1	logout	0
+4	logout	leelee	3

@@ -47,6 +47,12 @@ public class Login extends Function {
 	
 	public void step2(String responseString) {
 		logOutput("Login " + responseString);
+		  if (responseString.startsWith(TwitterServer.RESTART)) {
+				TwitterProtocol tpCheckUser = new TwitterProtocol(TwitterServer.READ, usersFile, null);
+				rioNode.RIOSend(serverAddress, Protocol.DATA, tpCheckUser.toBytes());
+				client.eventIndex = 1;
+			  return;
+		  }
 		if (!responseString.startsWith(TwitterServer.SUCCESS)) {
 			rioNode.fail();
 			return;
@@ -76,6 +82,13 @@ public class Login extends Function {
 	}
 	
 	public void step3(String responseString) {
+		  if (responseString.startsWith(TwitterServer.RESTART)) {
+				// correct username and password so proceed with login user
+				TwitterProtocol tpQuery = new TwitterProtocol(TwitterServer.APPEND, "login.txt", username + "\n");
+				rioNode.RIOSend(serverAddress, Protocol.DATA, tpQuery.toBytes());
+				client.eventIndex = 2;
+			  return;
+		  }
 		if (!responseString.startsWith(TwitterServer.SUCCESS)) {
 			rioNode.fail();
 			return;

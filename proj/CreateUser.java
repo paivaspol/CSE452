@@ -34,9 +34,12 @@ public class CreateUser extends Function {
 	}
 	
 	public void step2(String responseString) {
-		if (responseString == null) {
-			logOutput("responseString is null");
-		}
+		  if (responseString.startsWith(TwitterServer.RESTART)) {
+				TwitterProtocol tpCheckUser = new TwitterProtocol(TwitterServer.READ, usersFile, null);
+				rioNode.RIOSend(serverAddress, Protocol.DATA, tpCheckUser.toBytes());
+				client.eventIndex = 1;
+			  return;
+		  }
 		String[] tokens = responseString.split("\n");
 		logOutput("CreateUser tokens[0] " + tokens[0]);
 		if (!tokens[0].equals(TwitterServer.SUCCESS)) {
@@ -64,6 +67,12 @@ public class CreateUser extends Function {
 	
 	public void step3(String responseString) {
 		logOutput("CreateUser step3");
+		  if (responseString.startsWith(TwitterServer.RESTART)) {
+				TwitterProtocol tpCreateUserFile = new TwitterProtocol(TwitterServer.CREATE, username + ".txt", null);
+				rioNode.RIOSend(serverAddress, Protocol.DATA,tpCreateUserFile.toBytes());
+				client.eventIndex = 2;
+			  return;
+		  }
 		if (!responseString.startsWith(TwitterServer.SUCCESS)) {
 			rioNode.fail();
 			return;
@@ -76,6 +85,13 @@ public class CreateUser extends Function {
 	
 	public void step4(String responseString) {
 		logOutput("CreateUser step4");
+		  if (responseString.startsWith(TwitterServer.RESTART)) {
+			// create user file that stores users that he/she is following
+				TwitterProtocol tpCreateFollowingFile = new TwitterProtocol(TwitterServer.CREATE, username + "_" + "following.txt", null);
+				rioNode.RIOSend(serverAddress, Protocol.DATA, tpCreateFollowingFile.toBytes());
+				client.eventIndex = 3;
+			  return;
+		  }
 		// append this user information to users.txt
 		String userInfo = username + "\t" + password + "\t" + name + "\n"; 
 		TwitterProtocol tpAppendUserInfo = new TwitterProtocol(TwitterServer.APPEND, usersFile, userInfo);
@@ -85,6 +101,14 @@ public class CreateUser extends Function {
 	
 	public void step5(String responseString) {
 		logOutput("CreateUser step5");
+		  if (responseString.startsWith(TwitterServer.RESTART)) {
+				// append this user information to users.txt
+				String userInfo = username + "\t" + password + "\t" + name + "\n"; 
+				TwitterProtocol tpAppendUserInfo = new TwitterProtocol(TwitterServer.APPEND, usersFile, userInfo);
+				rioNode.RIOSend(serverAddress, Protocol.DATA, tpAppendUserInfo.toBytes());
+				client.eventIndex = 4;
+			  return;
+		  }
 		if (!responseString.startsWith(TwitterServer.SUCCESS)) {
 			rioNode.fail();
 			return;

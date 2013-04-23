@@ -41,6 +41,13 @@ public class Logout extends Function {
 	}
 	
 	public void step2(String responseString) {
+		  if (responseString.startsWith(TwitterServer.RESTART)) {
+			// delete this user's username from login.txt
+				TwitterProtocol tpQuery = new TwitterProtocol(TwitterServer.DELETE_LINES, "login.txt", username);
+				rioNode.RIOSend(serverAddress, Protocol.DATA, tpQuery.toBytes());
+				client.eventIndex = 1;
+			  return;
+		  }
 		if (!responseString.startsWith(TwitterServer.SUCCESS)) {
 			logError("Error issuing request to server.");
 			return;
