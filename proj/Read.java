@@ -136,36 +136,6 @@ public class Read extends Function {
 		}
 	}
 
-	//  public void step4(String responseString) {
-	//    String[] followeeInfo = following[curFollowIndex].split("\t");
-	//    Long fromTime = Long.parseLong(followeeInfo[1]);
-	//    // got all the tweets for that particular user
-	//    String[] tweetsToBeDisplayed = responseString.split("\n");
-	//    int i = 0;
-	//    for (; i < tweetsToBeDisplayed.length; i++) {
-	//      String[] tSplit = tweetsToBeDisplayed[i].split("\t");
-	//      long tweetFollow = Long.valueOf(tSplit[1]);
-	//      if (tweetFollow >= fromTime) {
-	//        break;
-	//      }
-	//    }
-	//    // display all the unread posts
-	//    for (int j = i; j < tweetsToBeDisplayed.length; j++) {
-	//      logOutput(followeeInfo[0] + ": " + tweetsToBeDisplayed[j]);
-	//    }
-	//    newFollowingList.append(followeeInfo[0] + "\t" + System.currentTimeMillis() + "\n");
-	//    ++curFollowIndex;
-	//    if (curFollowIndex == following.length) {
-	//      // update the following list time by delete the the original following file and create the new one
-	//      // with the new time
-	//      TwitterProtocol tpDeleteFollowing = new TwitterProtocol(TwitterServer.DELETE, usersFile, null);
-	//      rioNode.RIOSend(serverAddress, Protocol.DATA, getBytesFromTwitterProtocol(tpDeleteFollowing));
-	//      client.eventIndex = 5;
-	//    } else {
-	//    	
-	//    }
-	//  }
-
 	public void step5(String responseString) {
 		if (responseString.startsWith(TwitterServer.RESTART)) {
 			TwitterProtocol tpDeleteFollowing = new TwitterProtocol(TwitterServer.DELETE, usersFile, null);
