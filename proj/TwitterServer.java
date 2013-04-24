@@ -113,7 +113,7 @@ public class TwitterServer {
       Utils.logError(from, "unknown protocol: " + protocol);
       return;
     }
-    Utils.logOutput(wrapper.getAddr(), "received something!!");
+
     try {
       if (!Utility.fileExists(wrapper, CONTACTED_CLIENTS)) {
         createFile(CONTACTED_CLIENTS);
