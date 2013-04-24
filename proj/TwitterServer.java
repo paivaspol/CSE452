@@ -41,6 +41,7 @@ public class TwitterServer {
   private static final String USERS_FILENAME = "users.txt";
   private static final String LOGIN_FILENAME = "login.txt";
   private static final String CONTACTED_CLIENTS = "clients.txt";
+  private static final String LOG_FILENAME = "logs.txt";
 
   /**
    * An instance of GSON for serializing and deserializing JSON objects
@@ -49,8 +50,8 @@ public class TwitterServer {
 
   /** An instance of the wrapper for the nodes */
   private final TwitterNodeWrapper wrapper;
-
   private final Set<Integer> connectedNodes;
+  private final Set<String> pastRequests;
 
   /**
    * Constructs the server side
@@ -59,6 +60,7 @@ public class TwitterServer {
     gson = new GsonBuilder().create();
     this.wrapper = wrapper;
     connectedNodes = new HashSet<Integer>();
+    pastRequests = new HashSet<String>();
   }
 
   /**
@@ -78,6 +80,15 @@ public class TwitterServer {
       }
       if (!Utility.fileExists(wrapper, LOGIN_FILENAME)) {
         createFile(LOGIN_FILENAME);
+      }
+      if (!Utility.fileExists(wrapper, LOG_FILENAME)) {
+        createFile(LOG_FILENAME);
+      } else {
+        String pastRequest = "";
+        PersistentStorageReader reader = wrapper.getReader(LOG_FILENAME);
+        while ((pastRequest = reader.readLine()) != null) {
+          pastRequests.add(pastRequest);
+        }
       }
 
       // should tell all the clients (nodes) after upon restart, so they know that you're back :)
@@ -110,7 +121,7 @@ public class TwitterServer {
       Utils.logError(from, "unknown protocol: " + protocol);
       return;
     }
-    
+
     try {
       if (!Utility.fileExists(wrapper, CONTACTED_CLIENTS)) {
         createFile(CONTACTED_CLIENTS);
@@ -128,6 +139,7 @@ public class TwitterServer {
     String collection = request.getCollection();
     String data = request.getData();
     String responseData = SUCCESS + "\n";
+    String hash = request.getHash();
     try {
       if (request.getMethod().equals(CREATE)) {
         Utils.logOutput(wrapper.getAddr(), "Creating a tweet entry...");
@@ -137,15 +149,18 @@ public class TwitterServer {
       } else if (request.getMethod().equals(READ)) {
         responseData += readFile(collection);
       } else if (request.getMethod().equals(APPEND)) {
-        appendFile(collection, data);
+        if (!pastRequests.contains(hash)) {
+          appendFile(collection, data);
+        }
       } else if (request.getMethod().equals(DELETE)) {
         deleteFile(collection);
       } else if (request.getMethod().equals(DELETE_LINES)) {
         responseData += deleteEntries(collection, data);
-      } else if (request.getMethod().equals("TIMEOUT")){
-    	  TwitterProtocol response = new TwitterProtocol(RESTART, RESTART, RESTART, new Entry(wrapper.getAddr()).getHash());
-    	  wrapper.RIOSend(from, protocol, response.toBytes());
-    	  return;
+      } else if (request.getMethod().equals("TIMEOUT")) {
+        TwitterProtocol response =
+            new TwitterProtocol(RESTART, RESTART, RESTART, new Entry(wrapper.getAddr()).getHash());
+        wrapper.RIOSend(from, protocol, response.toBytes());
+        return;
       } else {
         throw new RuntimeException("Command not supported by the server");
       }
@@ -157,6 +172,12 @@ public class TwitterServer {
     TwitterProtocol response = new TwitterProtocol(request);
     response.setData(responseData);
     wrapper.RIOSend(from, protocol, response.toBytes());
+    pastRequests.add(hash);
+    try {
+      appendFile(LOG_FILENAME, hash + "\n");
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   /**
@@ -217,11 +238,11 @@ public class TwitterServer {
    * @throws IOException
    */
   private void deleteFile(String collectionName) throws IOException {
-	if (Utility.fileExists(wrapper, collectionName)) {
-	    PersistentStorageWriter writer = wrapper.getWriter(collectionName, false);
-	    writer.delete();
-	    writer.close();
-	}
+    if (Utility.fileExists(wrapper, collectionName)) {
+      PersistentStorageWriter writer = wrapper.getWriter(collectionName, false);
+      writer.delete();
+      writer.close();
+    }
   }
 
   /**
