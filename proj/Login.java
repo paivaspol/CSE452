@@ -14,6 +14,7 @@ public class Login extends Function {
 	private String usersFile;
 	private String username;
 	private String password;
+	private StringData strData;
 
 	public Login(Client client, RIONode rioNode, int serverAddress, String usersFile, String username, String password) {
 		super(client, rioNode);
@@ -40,14 +41,14 @@ public class Login extends Function {
 	
 	public void step1() {
 		// check if the user exists
-		TwitterProtocol tpCheckUser = new TwitterProtocol(TwitterServer.READ, usersFile, null);
+		TwitterProtocol tpCheckUser = new TwitterProtocol(TwitterServer.READ, usersFile, null, new Entry(rioNode.addr).getHash());
 		rioNode.RIOSend(serverAddress, Protocol.DATA, tpCheckUser.toBytes());
 		client.eventIndex = 1;
 	}
 	
 	public void step2(String responseString) {
 		  if (responseString.startsWith(TwitterServer.RESTART)) {
-				TwitterProtocol tpCheckUser = new TwitterProtocol(TwitterServer.READ, usersFile, null);
+				TwitterProtocol tpCheckUser = new TwitterProtocol(TwitterServer.READ, usersFile, null, new Entry(rioNode.addr).getHash());
 				rioNode.RIOSend(serverAddress, Protocol.DATA, tpCheckUser.toBytes());
 				client.eventIndex = 1;
 			  return;
@@ -77,7 +78,9 @@ public class Login extends Function {
 		}
 		
 		// correct username and password so proceed with login user
-		TwitterProtocol tpQuery = new TwitterProtocol(TwitterServer.APPEND, "login.txt", username + "\n");
+		strData = new StringData(rioNode.addr);
+		strData.setData(username + "\n");
+		TwitterProtocol tpQuery = new TwitterProtocol(TwitterServer.APPEND, "login.txt", strData.toString(), strData.getHash());
 		rioNode.RIOSend(serverAddress, Protocol.DATA, tpQuery.toBytes());
 		client.eventIndex = 2;
 	}
@@ -85,7 +88,7 @@ public class Login extends Function {
 	public void step3(String responseString) {
 		  if (responseString.startsWith(TwitterServer.RESTART)) {
 				// correct username and password so proceed with login user
-				TwitterProtocol tpQuery = new TwitterProtocol(TwitterServer.APPEND, "login.txt", username + "\n");
+				TwitterProtocol tpQuery = new TwitterProtocol(TwitterServer.APPEND, "login.txt", strData.toString(), strData.getHash());
 				rioNode.RIOSend(serverAddress, Protocol.DATA, tpQuery.toBytes());
 				client.eventIndex = 2;
 			  return;

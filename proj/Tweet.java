@@ -15,6 +15,7 @@ public class Tweet extends Function {
   private final int serverAddress;
   private final String usersFile;
   private final String username;
+  private StringData strData;
   
   public Tweet(Client client, RIONode rioNode, int serverAddress, String usersFile, String msg, String username) {
     super(client, rioNode);
@@ -26,14 +27,14 @@ public class Tweet extends Function {
 
   public void step1() {
 	  // get login usernames
-	  TwitterProtocol tpGetLogin = new TwitterProtocol(TwitterServer.READ, "login.txt", null);
+	  TwitterProtocol tpGetLogin = new TwitterProtocol(TwitterServer.READ, "login.txt", null, new Entry(rioNode.addr).getHash());
 	  rioNode.RIOSend(serverAddress, Protocol.DATA, tpGetLogin.toBytes());
 	  client.eventIndex = 1;
   }
   
   public void step2(String responseString) {
 	  if (responseString.startsWith(TwitterServer.RESTART)) {
-		  TwitterProtocol tpGetLogin = new TwitterProtocol(TwitterServer.READ, "login.txt", null);
+		  TwitterProtocol tpGetLogin = new TwitterProtocol(TwitterServer.READ, "login.txt", null, new Entry(rioNode.addr).getHash());
 		  rioNode.RIOSend(serverAddress, Protocol.DATA, tpGetLogin.toBytes());
 		  client.eventIndex = 1;
 		  return;
@@ -61,8 +62,10 @@ public class Tweet extends Function {
 	  
 	  logOutput("Posting tweet");
 	  // append the tweet to the file on the server
+	  strData = new StringData(rioNode.addr);
+	  strData.setData(System.currentTimeMillis() + "\t" + msg + "\n");
 	  TwitterProtocol tpAppendTweet =
-        new TwitterProtocol(TwitterServer.APPEND, usersFile, System.currentTimeMillis() + "\t" + msg + "\n");
+        new TwitterProtocol(TwitterServer.APPEND, usersFile, strData.toString(), strData.getHash());
 	  try {
 		  rioNode.RIOSend(serverAddress, Protocol.DATA, tpAppendTweet.toBytes());
 	  } catch(RuntimeException e) {
@@ -75,7 +78,7 @@ public class Tweet extends Function {
     // check response data
 	  if (responseString.startsWith(TwitterServer.RESTART)) {
 		  TwitterProtocol tpAppendTweet =
-			        new TwitterProtocol(TwitterServer.APPEND, usersFile, System.currentTimeMillis() + "\t" + msg + "\n");
+			        new TwitterProtocol(TwitterServer.APPEND, usersFile, strData.toString(), strData.getHash());
 				  rioNode.RIOSend(serverAddress, Protocol.DATA, tpAppendTweet.toBytes());
 		  client.eventIndex = 2;
 		  return;

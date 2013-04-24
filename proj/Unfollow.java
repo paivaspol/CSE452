@@ -26,14 +26,14 @@ public class Unfollow extends Function {
 
   public void step1() {
 	  // get login usernames
-	  TwitterProtocol tpGetLogin = new TwitterProtocol(TwitterServer.READ, "login.txt", null);
+	  TwitterProtocol tpGetLogin = new TwitterProtocol(TwitterServer.READ, "login.txt", null, new Entry(rioNode.addr).getHash());
 	  rioNode.RIOSend(serverAddress, Protocol.DATA, tpGetLogin.toBytes());
 	  client.eventIndex = 1;
   }
   
   public void step2(String responseString) {
 	  if (responseString.startsWith(TwitterServer.RESTART)) {
-		  TwitterProtocol tpGetLogin = new TwitterProtocol(TwitterServer.READ, "login.txt", null);
+		  TwitterProtocol tpGetLogin = new TwitterProtocol(TwitterServer.READ, "login.txt", null, new Entry(rioNode.addr).getHash());
 		  rioNode.RIOSend(serverAddress, Protocol.DATA, tpGetLogin.toBytes());
 		  client.eventIndex = 1;
 		  return;
@@ -61,7 +61,7 @@ public class Unfollow extends Function {
 
 	  logOutput("unfollowing " + followee);
     // delete the username to follow in the following file
-    TwitterProtocol tpAddToFollowing = new TwitterProtocol(TwitterServer.DELETE_LINES, usersFile, followee);
+    TwitterProtocol tpAddToFollowing = new TwitterProtocol(TwitterServer.DELETE_LINES, usersFile, followee, new Entry(rioNode.addr).getHash());
     rioNode.RIOSend(serverAddress, Protocol.DATA, tpAddToFollowing.toBytes());
     client.eventIndex = 2;
   }
@@ -70,7 +70,7 @@ public class Unfollow extends Function {
   public void step3(String responseString) {
     // check response data, if succeeded notify the user
 	  if (responseString.startsWith(TwitterServer.RESTART)) {
-		    TwitterProtocol tpAddToFollowing = new TwitterProtocol(TwitterServer.DELETE_LINES, usersFile, followee);
+		    TwitterProtocol tpAddToFollowing = new TwitterProtocol(TwitterServer.DELETE_LINES, usersFile, followee, new Entry(rioNode.addr).getHash());
 		    rioNode.RIOSend(serverAddress, Protocol.DATA, tpAddToFollowing.toBytes());
 		    client.eventIndex = 3;
 		  return;

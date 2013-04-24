@@ -36,7 +36,7 @@ public class Logout extends Function {
 	public void step1() {
 		logOutput("Logging out");
 		// delete this user's username from login.txt
-		TwitterProtocol tpQuery = new TwitterProtocol(TwitterServer.DELETE_LINES, "login.txt", username);
+		TwitterProtocol tpQuery = new TwitterProtocol(TwitterServer.DELETE_LINES, "login.txt", username, new Entry(rioNode.addr).getHash());
 		rioNode.RIOSend(serverAddress, Protocol.DATA, tpQuery.toBytes());
 		client.eventIndex = 1;
 	}
@@ -44,7 +44,7 @@ public class Logout extends Function {
 	public void step2(String responseString) {
 		  if (responseString.startsWith(TwitterServer.RESTART)) {
 			// delete this user's username from login.txt
-				TwitterProtocol tpQuery = new TwitterProtocol(TwitterServer.DELETE_LINES, "login.txt", username);
+				TwitterProtocol tpQuery = new TwitterProtocol(TwitterServer.DELETE_LINES, "login.txt", username, new Entry(rioNode.addr).getHash());
 				rioNode.RIOSend(serverAddress, Protocol.DATA, tpQuery.toBytes());
 				client.eventIndex = 1;
 			  return;
