@@ -9,7 +9,7 @@ import java.lang.reflect.InvocationTargetException;
  * Node -- Class defining the interface and basic functionality of a node. The
  * student should extend this class to provide additional functionality. The
  * visibility of each of the methods/variables are on purpose.
- * 
+ *
  * This code must be written as a state machine -- each upcall must do its work
  * and return so that other upcalls can be delivered
  */
@@ -29,7 +29,7 @@ public abstract class Node {
 	 * exception, which allows us to interrupt execution of the node opaquely.
 	 * This extends Error rather than RuntimeException in case some student
 	 * tries to catch Exception.
-	 * 
+	 *
 	 * The student should NOT try to catch this or Error, Throwable, etc.
 	 */
 	class NodeCrashException extends Error {
@@ -55,7 +55,7 @@ public abstract class Node {
 	 * not worry about this method. We do this here, rather than in the
 	 * constructor in order to avoid passing a manager to the student's
 	 * implementation
-	 * 
+	 *
 	 * @param manager
 	 *            The manager for the current simulation/emulation
 	 * @param addr
@@ -76,18 +76,21 @@ public abstract class Node {
 	/**
 	 * Stop the node and don't return. Please make sure to call this at the end
 	 * of any overriding fail.
-	 * 
+	 *
 	 * Overriding this method should only be used for logging purposes, since
 	 * you are not guaranteed that it will be called for each crash (especially
 	 * in an emulation)
 	 */
 	public void fail() {
+        for (StackTraceElement ste : Thread.currentThread().getStackTrace()) {
+            System.out.println(ste);
+        }
 		throw new NodeCrashException();
 	}
 
 	/**
 	 * Called by the manager when a packet has arrived for this node
-	 * 
+	 *
 	 * @param from
 	 *            The address of the node that has sent this message
 	 * @param protocol
@@ -100,7 +103,7 @@ public abstract class Node {
 	/**
 	 * Called by the manager when there is a command for this node from the user
 	 * or a file.
-	 * 
+	 *
 	 * @param command
 	 *            The command for this node
 	 */
@@ -108,7 +111,7 @@ public abstract class Node {
 
 	/**
 	 * This method should be the one called to send a message.
-	 * 
+	 *
 	 * @param destAddr
 	 *            The address of the destination
 	 * @param pkt
@@ -131,7 +134,7 @@ public abstract class Node {
 	/**
 	 * This method should be the one called to broadcast a message to all nodes
 	 * in the network.
-	 * 
+	 *
 	 * @param destAddr
 	 *            The address of the destination
 	 * @param pkt
@@ -148,7 +151,7 @@ public abstract class Node {
 	/**
 	 * Adds a timer interrupt for the current node. If timeout is 0, it just
 	 * invokes the method
-	 * 
+	 *
 	 * @param cb
 	 *            The callback object that should be invoked when the interrupt
 	 *            fires
@@ -177,7 +180,7 @@ public abstract class Node {
 
 	/**
 	 * Gets a PersistentStorageReader object for the filename specified.
-	 * 
+	 *
 	 * @param filename
 	 *            The file to open for reading
 	 * @return A PersistentStorageReader that can read the filename
@@ -191,7 +194,7 @@ public abstract class Node {
 
 	/**
 	 * Gets a PersistentStorageRInputStream object for the filename specified.
-	 * 
+	 *
 	 * @param filename
 	 *            The file to open for reading
 	 * @return A PersistentStorageInputStream that can read the filename
@@ -205,7 +208,7 @@ public abstract class Node {
 
 	/**
 	 * Gets a persistentStorageWriter object for the filename specified
-	 * 
+	 *
 	 * @param filename
 	 *            The file to open for writing
 	 * @param append
@@ -228,7 +231,7 @@ public abstract class Node {
 
 	/**
 	 * Gets a persistentStorageWriter object for the filename specified
-	 * 
+	 *
 	 * @param filename
 	 *            The file to open for writing
 	 * @param append
@@ -251,7 +254,7 @@ public abstract class Node {
 
 	/**
 	 * Called before any modification of persistent storage.
-	 * 
+	 *
 	 * @param description
 	 *            Helpful description of the operation that is being attempted.
 	 *            This is mostly to aid in debugging and user-specified crashes.
@@ -267,7 +270,7 @@ public abstract class Node {
 
 	/**
 	 * Called before any retrieval of state from persistent storage.
-	 * 
+	 *
 	 * @param description
 	 *            Helpful description of the operation that is being attempted.
 	 *            This is mostly to aid in debugging and user-specified crashes.
@@ -280,7 +283,7 @@ public abstract class Node {
 	/**
 	 * Returns a string representation of the packet bytes processed by the
 	 * simulator. Used to output simulator-observed payloads to synoptic logs
-	 * 
+	 *
 	 * @param bytes
 	 *            packet bytes observed by the simulator
 	 * @return string representation of the packet bytes
@@ -293,7 +296,7 @@ public abstract class Node {
 	 * Returns a string representation of the bytes written or read from
 	 * persistent storage. Used to output simulator-observed storage byte arrays
 	 * to synoptic logs
-	 * 
+	 *
 	 * @param bytes
 	 *            storage bytes observed by the simulator
 	 * @return string representation of the storage bytes
@@ -310,7 +313,7 @@ public abstract class Node {
 	/**
 	 * Returns a unique string identifier for this node that can be used in
 	 * synoptic log files.
-	 * 
+	 *
 	 * @return unique string identifying this node
 	 */
 	final public String toSynopticString() {
@@ -319,7 +322,7 @@ public abstract class Node {
 
 	/**
 	 * Generates a user-level synoptic event in the synoptic logs
-	 * 
+	 *
 	 * @param eventStr
 	 *            the string representing this event
 	 */

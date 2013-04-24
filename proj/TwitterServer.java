@@ -110,7 +110,7 @@ public class TwitterServer {
       Utils.logError(from, "unknown protocol: " + protocol);
       return;
     }
-    Utils.logOutput(wrapper.getAddr(), "received something!!");
+    
     try {
       if (!Utility.fileExists(wrapper, CONTACTED_CLIENTS)) {
         createFile(CONTACTED_CLIENTS);
@@ -142,6 +142,10 @@ public class TwitterServer {
         deleteFile(collection);
       } else if (request.getMethod().equals(DELETE_LINES)) {
         responseData += deleteEntries(collection, data);
+      } else if (request.getMethod().equals("TIMEOUT")){
+    	  TwitterProtocol response = new TwitterProtocol(RESTART, RESTART, RESTART);
+    	  wrapper.RIOSend(from, protocol, response.toBytes());
+    	  return;
       } else {
         throw new RuntimeException("Command not supported by the server");
       }
@@ -213,9 +217,11 @@ public class TwitterServer {
    * @throws IOException
    */
   private void deleteFile(String collectionName) throws IOException {
-    PersistentStorageWriter writer = wrapper.getWriter(collectionName, false);
-    writer.delete();
-    writer.close();
+	if (Utility.fileExists(wrapper, collectionName)) {
+	    PersistentStorageWriter writer = wrapper.getWriter(collectionName, false);
+	    writer.delete();
+	    writer.close();
+	}
   }
 
   /**

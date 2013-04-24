@@ -34,6 +34,7 @@ public class Logout extends Function {
 	}
 	
 	public void step1() {
+		logOutput("Logging out");
 		// delete this user's username from login.txt
 		TwitterProtocol tpQuery = new TwitterProtocol(TwitterServer.DELETE_LINES, "login.txt", username);
 		rioNode.RIOSend(serverAddress, Protocol.DATA, tpQuery.toBytes());
@@ -54,7 +55,7 @@ public class Logout extends Function {
 		      client.completeCommand();
 		      return;
 		}
-		logOutput("You are logout!");
+		logOutput("You are logout! " + username);
 		client.eventIndex = 0;
 		client.completeCommand();
 	}

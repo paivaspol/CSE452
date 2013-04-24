@@ -134,7 +134,6 @@ public class Client {
         return;
       }
       int serverAddress = Integer.valueOf(server);
-      logOutput("Logging in");
       Login login = new Login(this, tnw, serverAddress, USERS_FILE, username, password);
       commandQueue.add(login.init());
       processQueue();
@@ -151,7 +150,6 @@ public class Client {
         return;
       }
       int serverAddress = Integer.valueOf(server);
-      logOutput("Logging out");
 
       Logout logout = new Logout(this, tnw, serverAddress, username);
       commandQueue.add(logout.init());
@@ -237,7 +235,7 @@ public class Client {
         return;
       }
       int serverAddress = Integer.valueOf(server);
-      logOutput("Fecthing unread post");
+      
       // file to read from: [username]_following.txt
       Read read = new Read(this, tnw, serverAddress, username + "_following.txt", username);
       commandQueue.add(read.init());

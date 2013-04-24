@@ -46,7 +46,6 @@ public class Login extends Function {
 	}
 	
 	public void step2(String responseString) {
-		logOutput("Login " + responseString);
 		  if (responseString.startsWith(TwitterServer.RESTART)) {
 				TwitterProtocol tpCheckUser = new TwitterProtocol(TwitterServer.READ, usersFile, null);
 				rioNode.RIOSend(serverAddress, Protocol.DATA, tpCheckUser.toBytes());

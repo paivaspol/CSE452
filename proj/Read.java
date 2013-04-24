@@ -62,6 +62,7 @@ public class Read extends Function {
 			client.completeCommand(); 
 			return;
 		}
+		logOutput("Fecthing unread post");
 		// request the userlist
 		// get the list of username that user is following
 		TwitterProtocol tpGetFollowing = new TwitterProtocol(TwitterServer.READ, usersFile, null);
