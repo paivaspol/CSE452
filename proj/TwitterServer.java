@@ -165,7 +165,7 @@ public class TwitterServer {
         throw new RuntimeException("Command not supported by the server");
       }
     } catch (IOException e) {
-      responseData = "FAIL\n";
+      responseData = FAILURE + "\n";
       e.printStackTrace();
     }
     // send back the damn respond!
