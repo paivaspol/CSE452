@@ -41,6 +41,7 @@ public class TwitterServer {
   private static final String USERS_FILENAME = "users.txt";
   private static final String LOGIN_FILENAME = "login.txt";
   private static final String CONTACTED_CLIENTS = "clients.txt";
+  private static final String LOG_FILENAME = "logs.txt";
 
   /**
    * An instance of GSON for serializing and deserializing JSON objects
@@ -49,7 +50,6 @@ public class TwitterServer {
 
   /** An instance of the wrapper for the nodes */
   private final TwitterNodeWrapper wrapper;
-
   private final Set<Integer> connectedNodes;
 
   /**
@@ -78,6 +78,9 @@ public class TwitterServer {
       }
       if (!Utility.fileExists(wrapper, LOGIN_FILENAME)) {
         createFile(LOGIN_FILENAME);
+      }
+      if (!Utility.fileExists(wrapper, LOG_FILENAME)) {
+        createFile(LOG_FILENAME);
       }
 
       // should tell all the clients (nodes) after upon restart, so they know that you're back :)
@@ -110,7 +113,7 @@ public class TwitterServer {
       Utils.logError(from, "unknown protocol: " + protocol);
       return;
     }
-    
+    Utils.logOutput(wrapper.getAddr(), "received something!!");
     try {
       if (!Utility.fileExists(wrapper, CONTACTED_CLIENTS)) {
         createFile(CONTACTED_CLIENTS);
