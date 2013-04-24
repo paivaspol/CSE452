@@ -40,8 +40,10 @@ public class Tweet extends Function {
 	  }
 	  String[] tokens = responseString.split("\n");
 	  if (!tokens[0].startsWith(TwitterServer.SUCCESS)) {
-		  rioNode.fail();
-		  return;
+	      logError("Error issuing request to server.");
+	      client.eventIndex = 0;
+	      client.completeCommand();
+	      return;
 	  }
 	  boolean isLogin = false;
 	  for (int i = 1; i < tokens.length; i++) {
@@ -79,8 +81,10 @@ public class Tweet extends Function {
 		  return;
 	  }
 	  if (!responseString.startsWith(TwitterServer.SUCCESS)) {
-		  rioNode.fail();
-		  return;
+	      logError("Error issuing request to server.");
+	      client.eventIndex = 0;
+	      client.completeCommand();
+	      return;
 	  }
 	  logOutput("Your tweet is posted. :)");
 	  client.eventIndex = 0;

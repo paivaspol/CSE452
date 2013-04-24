@@ -39,9 +39,16 @@ public class Client {
     if (protocol == 1) {
       logOutput("Client line 41 ack received!");
     }
+    TwitterProtocol tp = TwitterNodeWrapper.GSON.fromJson(new String(msg), TwitterProtocol.class);
+    if (tp.getMethod().startsWith("TIMEOUT")) {
+    	logOutput("Timeout has occured while issuing request to server.");
+    	eventList = null;
+    	commandQueue.clear();
+    	return;
+    }
     if (eventList != null && eventIndex < eventList.size() && eventList.get(eventIndex) != null) {
       Callback cb = eventList.get(eventIndex);
-      TwitterProtocol tp = TwitterNodeWrapper.GSON.fromJson(new String(msg), TwitterProtocol.class);
+
       cb.setParams(new Object[] { tp.getData() });
       try {
         logOutput("Client eventIndex: " + eventIndex);

@@ -48,7 +48,4 @@ public abstract class RIONode extends Node {
     return RIOLayer.toString();
   }
 
-  public void stopResend() {
-    // throw new RuntimeException("the connection to the node is not present.");
-  }
 }

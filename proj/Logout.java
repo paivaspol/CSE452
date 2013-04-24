@@ -49,8 +49,10 @@ public class Logout extends Function {
 			  return;
 		  }
 		if (!responseString.startsWith(TwitterServer.SUCCESS)) {
-			logError("Error issuing request to server.");
-			return;
+		      logError("Error issuing request to server.");
+		      client.eventIndex = 0;
+		      client.completeCommand();
+		      return;
 		}
 		logOutput("You are logout!");
 		client.eventIndex = 0;

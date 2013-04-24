@@ -74,7 +74,11 @@ public class ReliableInOrderMsgLayer {
    */
   public void RIOAckReceive(int from, byte[] msg) {
     int seqNum = Integer.parseInt(Utility.byteArrayToString(msg));
-    outConnections.get(from).gotACK(seqNum);
+    if(outConnections.get(from) != null) {
+    	 outConnections.get(from).gotACK(seqNum);
+    } else {
+    	outConnections.put(from, new OutChannel(this, from));
+    }
   }
 
   /**
@@ -223,11 +227,10 @@ class OutChannel {
    */
   public void onTimeout(RIONode n, Integer seqNum) {
     if (unACKedPackets.containsKey(seqNum)) {
-      resendRIOPacket(n, seqNum);
       if (resendCounter.get(seqNum) > 0) {
-
+    	  resendRIOPacket(n, seqNum);
       } else {
-        n.stopResend();
+    	  stopResend(n, seqNum);
       }
     }
   }
@@ -261,5 +264,23 @@ class OutChannel {
     } catch (Exception e) {
       e.printStackTrace();
     }
+  }
+  
+
+  private void stopResend(RIONode rioNode, int seqNum) {
+	  // time out!
+	  try {
+		  Method onTimeoutMethod =
+				  Callback.getMethod("onTimeout", parent, new String[] { "java.lang.Integer", "java.lang.Integer" });
+		  TwitterProtocol tp = new TwitterProtocol("TIMEOUT", "TIMEOUT", "TIMEOUT");
+		  RIOPacket pck = new RIOPacket(Protocol.DATA, seqNum, tp.toBytes());
+		  rioNode.onReceive(destAddr, Protocol.DATA, pck.pack());
+		  unACKedPackets.remove(seqNum);
+		  resendCounter.remove(seqNum);
+		  rioNode.addTimeout(new Callback(onTimeoutMethod, parent, new Object[] { destAddr, seqNum }),
+				  ReliableInOrderMsgLayer.TIMEOUT);
+	  } catch (Exception e) {
+		  e.printStackTrace();
+	  }
   }
 }

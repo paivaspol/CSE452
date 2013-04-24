@@ -44,8 +44,10 @@ public class Read extends Function {
 		}
 		String[] tokens = responseString.split("\n");
 		if (!tokens[0].startsWith(TwitterServer.SUCCESS)) {
-			rioNode.fail();
-			return;
+		      logError("Error issuing request to server.");
+		      client.eventIndex = 0;
+		      client.completeCommand();
+		      return;
 		}
 		boolean isLogin = false;
 		for (int i = 1; i < tokens.length; i++) {
@@ -76,8 +78,10 @@ public class Read extends Function {
 		}
 		String[] tokens = responseString.split("\n");
 		if (!tokens[0].startsWith(TwitterServer.SUCCESS)) {
-			rioNode.fail();
-			return;
+		      logError("Error issuing request to server.");
+		      client.eventIndex = 0;
+		      client.completeCommand();
+		      return;
 		}
 		
 		// Get all the followee from the response string
@@ -101,8 +105,10 @@ public class Read extends Function {
 		}
 		String[] tokens = responseString.split("\n");
 		if (!tokens[0].startsWith(TwitterServer.SUCCESS)) {
-			rioNode.fail();
-			return;
+		      logError("Error issuing request to server.");
+		      client.eventIndex = 0;
+		      client.completeCommand();
+		      return;
 		}
 		Long fromTime = Long.parseLong(followeeInfo[1]);
 		// got all the tweets for that particular user
@@ -145,8 +151,10 @@ public class Read extends Function {
 		}
 		String[] tokens = responseString.split("\n");
 		if (!tokens[0].startsWith(TwitterServer.SUCCESS)) {
-			rioNode.fail();
-			return;
+		      logError("Error issuing request to server.");
+		      client.eventIndex = 0;
+		      client.completeCommand();
+		      return;
 		}
 		// create the new list with the new time
 		TwitterProtocol tpUpdateFollowing =
@@ -166,8 +174,10 @@ public class Read extends Function {
 		}
 		String[] tokens = responseString.split("\n");
 		if (!tokens[0].startsWith(TwitterServer.SUCCESS)) {
-			rioNode.fail();
-			return;
+		      logError("Error issuing request to server.");
+		      client.eventIndex = 0;
+		      client.completeCommand();
+		      return;
 		}
 		TwitterProtocol tpUpdateFollowing =
 				new TwitterProtocol(TwitterServer.APPEND, usersFile, newFollowingList.toString());
@@ -185,8 +195,10 @@ public class Read extends Function {
 		}
 		String[] tokens = responseString.split("\n");
 		if (!tokens[0].startsWith(TwitterServer.SUCCESS)) {
-			rioNode.fail();
-			return;
+		      logError("Error issuing request to server.");
+		      client.eventIndex = 0;
+		      client.completeCommand();
+		      return;
 		}
 		// check response data, if succeeded notify the user
 		logOutput("You have no more unread post.");

@@ -89,4 +89,13 @@ public class TwitterNodeWrapper extends RIONode {
   public PersistentStorageReader getReader(String filename) throws FileNotFoundException {
     return super.getReader(filename);
   }
+  
+//  @Override
+//  public void stopResend() {
+//	  if (server != null) {
+//		  server.stopResend();
+//	  } else {
+//		  client.stopResend();
+//	  }
+//  }
 }

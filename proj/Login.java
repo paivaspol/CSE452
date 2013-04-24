@@ -54,8 +54,10 @@ public class Login extends Function {
 			  return;
 		  }
 		if (!responseString.startsWith(TwitterServer.SUCCESS)) {
-			rioNode.fail();
-			return;
+		      logError("Error issuing request to server.");
+		      client.eventIndex = 0;
+		      client.completeCommand();
+		      return;
 		}
 		String usersList = responseString.substring(8);
 		String[] names = usersList.split("\n");
@@ -90,8 +92,10 @@ public class Login extends Function {
 			  return;
 		  }
 		if (!responseString.startsWith(TwitterServer.SUCCESS)) {
-			rioNode.fail();
-			return;
+		      logError("Error issuing request to server.");
+		      client.eventIndex = 0;
+		      client.completeCommand();
+		      return;
 		}
 		logOutput("You are login!");
 		client.eventIndex = 0;

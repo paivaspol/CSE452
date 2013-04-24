@@ -40,8 +40,10 @@ public class Follow extends Function {
 	  }
 	  String[] tokens = responseString.split("\n");
 	  if (!tokens[0].startsWith(TwitterServer.SUCCESS)) {
-		  rioNode.fail();
-		  return;
+	      logError("Error issuing request to server.");
+	      client.eventIndex = 0;
+	      client.completeCommand();
+	      return;
 	  }
 	  boolean isLogin = false;
 	  for (int i = 1; i < tokens.length; i++) {
@@ -107,8 +109,10 @@ public class Follow extends Function {
 	  }
     // check response data, if succeeded notify the user
     if (!responseString.startsWith(TwitterServer.SUCCESS)) {
-      rioNode.fail();
-      return;
+        logError("Error issuing request to server.");
+        client.eventIndex = 0;
+        client.completeCommand();
+        return;
     }
     logOutput("Congratulation! You are now following " + followee);
     client.eventIndex = 0;
