@@ -1,4 +1,3 @@
-import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
@@ -68,8 +67,7 @@ public class TwitterServer {
   public void start() {
     // server might just recover from a failure, so need to check
     // tmp file in case of it was in the middle of something when it crashed
-    File f = new File(TEMP_FILENAME);
-    if (f.exists()) {
+    if (Utility.fileExists(wrapper, TEMP_FILENAME)) {
       Utils.logOutput(wrapper.getAddr(), "Restoring file after crash at append");
       resumeAppendExecution();
     }

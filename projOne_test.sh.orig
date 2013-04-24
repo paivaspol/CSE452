@@ -1,0 +1,11 @@
+#!/bin/bash
+
+rm -rf storage
+rm -f *.log
+rm -f *.replay
+<<<<<<< HEAD
+./execute.pl -s -n TwitterNodeWrapper  -f 0 -c scripts/ProjOneTest
+=======
+./execute.pl -s -n TwitterNodeWrapper -f 1 -c scripts/ProjOneTest
+>>>>>>> 8fede284e90322bf6ba08f196b0409aa09d22374
+
