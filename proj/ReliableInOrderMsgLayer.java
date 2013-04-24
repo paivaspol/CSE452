@@ -43,17 +43,15 @@ public class ReliableInOrderMsgLayer {
     Utils.logOutput(n.addr, new String(msg));
     TwitterProtocol tp = TwitterNodeWrapper.GSON.fromJson(new String(riopkt.getPayload()), TwitterProtocol.class);
 
-    // ack the message
-    byte[] seqNumByteArray = Utility.stringToByteArray("" + riopkt.getSeqNum());
-    n.send(from, Protocol.ACK, seqNumByteArray);
-
     if (tp.getMethod().equals(TwitterServer.RESTART)) {
       inConnections.remove(from);
       outConnections.remove(from);
-      n.onRIOReceive(from, riopkt.getProtocol(), riopkt.getPayload());
-    } else {
-      // at-most-once semantics
-
+    }
+    
+    // at-most-once semantics
+    // ack the message
+    byte[] seqNumByteArray = Utility.stringToByteArray("" + riopkt.getSeqNum());
+    n.send(from, Protocol.ACK, seqNumByteArray);
       InChannel in = inConnections.get(from);
       if (in == null) {
         in = new InChannel();
@@ -65,7 +63,7 @@ public class ReliableInOrderMsgLayer {
         // deliver in-order the next sequence of packets
         n.onRIOReceive(from, p.getProtocol(), p.getPayload());
       }
-    }
+
   }
 
   /**
