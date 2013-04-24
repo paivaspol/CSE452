@@ -40,21 +40,31 @@ public class ReliableInOrderMsgLayer {
    */
   public void RIODataReceive(int from, byte[] msg) {
     RIOPacket riopkt = RIOPacket.unpack(msg);
+    Utils.logOutput(n.addr, new String(msg));
+    TwitterProtocol tp = TwitterNodeWrapper.GSON.fromJson(new String(riopkt.getPayload()), TwitterProtocol.class);
 
-    // at-most-once semantics
+    // ack the message
     byte[] seqNumByteArray = Utility.stringToByteArray("" + riopkt.getSeqNum());
     n.send(from, Protocol.ACK, seqNumByteArray);
 
-    InChannel in = inConnections.get(from);
-    if (in == null) {
-      in = new InChannel();
-      inConnections.put(from, in);
-    }
+    if (tp.getMethod().equals(TwitterServer.RESTART)) {
+      inConnections.remove(from);
+      outConnections.remove(from);
+      n.onRIOReceive(from, riopkt.getProtocol(), riopkt.getPayload());
+    } else {
+      // at-most-once semantics
 
-    LinkedList<RIOPacket> toBeDelivered = in.gotPacket(riopkt);
-    for (RIOPacket p : toBeDelivered) {
-      // deliver in-order the next sequence of packets
-      n.onRIOReceive(from, p.getProtocol(), p.getPayload());
+      InChannel in = inConnections.get(from);
+      if (in == null) {
+        in = new InChannel();
+        inConnections.put(from, in);
+      }
+
+      LinkedList<RIOPacket> toBeDelivered = in.gotPacket(riopkt);
+      for (RIOPacket p : toBeDelivered) {
+        // deliver in-order the next sequence of packets
+        n.onRIOReceive(from, p.getProtocol(), p.getPayload());
+      }
     }
   }
 
@@ -215,8 +225,9 @@ class OutChannel {
    */
   public void onTimeout(RIONode n, Integer seqNum) {
     if (unACKedPackets.containsKey(seqNum)) {
+      resendRIOPacket(n, seqNum);
       if (resendCounter.get(seqNum) > 0) {
-        resendRIOPacket(n, seqNum);
+
       } else {
         n.stopResend();
       }

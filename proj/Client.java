@@ -74,7 +74,6 @@ public class Client {
   }
 
   public void onCommand(String command) throws IllegalAccessException, InvocationTargetException {
-    // p
     logOutput("client: " + command);
     Pattern pattern = Pattern.compile("[A-Za-z0-9]+|\"[^\"]*\"");
     Scanner sc = new Scanner(command);
@@ -152,11 +151,11 @@ public class Client {
       processQueue();
 
     } else if (token.equalsIgnoreCase("tweet")) {
-        String username = sc.findInLine(pattern);
-        if (username == null) {
-          logError("tweet <username> <content> <serveraddress>");
-          return;
-        }
+      String username = sc.findInLine(pattern);
+      if (username == null) {
+        logError("tweet <username> <content> <serveraddress>");
+        return;
+      }
       String content = sc.findInLine(pattern);
       if (content == null) {
         logError("tweet <username> <content> <serveraddress>");
@@ -172,13 +171,13 @@ public class Client {
       Tweet tweet = new Tweet(this, tnw, serverAddress, username + ".txt", content, username);
       commandQueue.add(tweet.init());
       processQueue();
-      
+
     } else if (token.equalsIgnoreCase("follow")) {
-        String username = sc.findInLine(pattern);
-        if (username == null) {
-          logError("follow <username> <username to follow> <serveraddress>");
-          return;
-        }
+      String username = sc.findInLine(pattern);
+      if (username == null) {
+        logError("follow <username> <username to follow> <serveraddress>");
+        return;
+      }
       String userToFollow = sc.findInLine(pattern);
       if (userToFollow == null) {
         logError("follow <username> <username to follow> <serveraddress>");
@@ -196,33 +195,33 @@ public class Client {
       processQueue();
 
     } else if (token.equalsIgnoreCase("unfollow")) {
-        String username = sc.findInLine(pattern);
-        if (username == null) {
-          logError("unfollow <username> <username to unfollow> <serveraddress>");
-          return;
-        }
+      String username = sc.findInLine(pattern);
+      if (username == null) {
+        logError("unfollow <username> <username to unfollow> <serveraddress>");
+        return;
+      }
       String userToUnfollow = sc.findInLine(pattern);
       // String userToUnfollow = tokens[1];
       if (userToUnfollow == null) {
-    	  logError("unfollow <username> <username to unfollow> <serveraddress>");
-    	  return;
+        logError("unfollow <username> <username to unfollow> <serveraddress>");
+        return;
       }
       String server = sc.findInLine(pattern);
       // String server = tokens[1];
       if (server == null) {
-    	  logError("unfollow <username> <username to unfollow> <serveraddress>");
-    	  return;
+        logError("unfollow <username> <username to unfollow> <serveraddress>");
+        return;
       }
       int serverAddress = Integer.valueOf(server);
       Unfollow unfollow = new Unfollow(this, tnw, serverAddress, username + "_following.txt", userToUnfollow, username);
       commandQueue.add(unfollow.init());
       processQueue();
-      
+
     } else if (token.equalsIgnoreCase("read")) {
       String username = sc.findInLine(pattern);
       if (username == null) {
-    	  logError("read <username> <serveraddress>");
-    	  return;
+        logError("read <username> <serveraddress>");
+        return;
       }
       String server = sc.findInLine(pattern);
       // String server = tokens[1];
