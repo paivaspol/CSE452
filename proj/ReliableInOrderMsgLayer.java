@@ -272,7 +272,7 @@ class OutChannel {
 	  try {
 		  Method onTimeoutMethod =
 				  Callback.getMethod("onTimeout", parent, new String[] { "java.lang.Integer", "java.lang.Integer" });
-		  TwitterProtocol tp = new TwitterProtocol("TIMEOUT", "TIMEOUT", "TIMEOUT");
+		  TwitterProtocol tp = new TwitterProtocol("TIMEOUT", "TIMEOUT", "TIMEOUT", new Entry(rioNode.addr).getHash());
 		  RIOPacket pck = new RIOPacket(Protocol.DATA, seqNum, tp.toBytes());
 		  rioNode.onReceive(destAddr, Protocol.DATA, pck.pack());
 		  unACKedPackets.remove(seqNum);
