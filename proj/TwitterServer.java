@@ -88,7 +88,7 @@ public class TwitterServer {
           Utils.logOutput(wrapper.getAddr(), "I'm up! " + clientNode);
           int nodeId = Integer.parseInt(clientNode);
           connectedNodes.add(nodeId);
-          TwitterProtocol msg = new TwitterProtocol(RESTART, RESTART, RESTART);
+          TwitterProtocol msg = new TwitterProtocol(RESTART, RESTART, RESTART, new Entry(wrapper.getAddr()).getHash());
           wrapper.RIOSend(nodeId, Protocol.DATA, gson.toJson(msg).getBytes());
         }
       }
@@ -143,7 +143,7 @@ public class TwitterServer {
       } else if (request.getMethod().equals(DELETE_LINES)) {
         responseData += deleteEntries(collection, data);
       } else if (request.getMethod().equals("TIMEOUT")){
-    	  TwitterProtocol response = new TwitterProtocol(RESTART, RESTART, RESTART);
+    	  TwitterProtocol response = new TwitterProtocol(RESTART, RESTART, RESTART, new Entry(wrapper.getAddr()).getHash());
     	  wrapper.RIOSend(from, protocol, response.toBytes());
     	  return;
       } else {

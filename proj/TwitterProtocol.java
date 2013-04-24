@@ -12,6 +12,8 @@ public class TwitterProtocol {
   private String collection;
   /** data */
   private String data;
+  /** unique hash code */
+  private String hash;
 
   /**
    * Constructs a new structure to hold for communication
@@ -21,10 +23,11 @@ public class TwitterProtocol {
    * @param data extra information
    * @param operator the operator for getting the data
    */
-  public TwitterProtocol(String method, String collection, String data) {
+  public TwitterProtocol(String method, String collection, String data, String hash) {
     this.method = method;
     this.collection = collection;
     this.data = data;
+    this.hash = hash;
   }
 
   /**
@@ -58,6 +61,10 @@ public class TwitterProtocol {
   public String getData() {
     return data;
   }
+  
+  public String getHash() {
+	  return hash;
+  }
 
   /**
    * Sets the method
@@ -84,6 +91,10 @@ public class TwitterProtocol {
    */
   public void setData(String data) {
     this.data = data;
+  }
+  
+  public void setHash(String hash) {
+	  this.hash = hash;
   }
   
   public byte[] toBytes() {
