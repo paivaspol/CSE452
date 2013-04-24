@@ -34,7 +34,7 @@ public class TwitterServer {
   public static final String SUCCESS = "SUCCESS";
   public static final String FAILURE = "FAILURE";
   public static final String RESTART = "RESTART";
-  
+
   /**
    * File names
    */
@@ -51,12 +51,15 @@ public class TwitterServer {
   /** An instance of the wrapper for the nodes */
   private final TwitterNodeWrapper wrapper;
 
+  private final Set<Integer> connectedNodes;
+
   /**
    * Constructs the server side
    */
   public TwitterServer(TwitterNodeWrapper wrapper) {
     gson = new GsonBuilder().create();
     this.wrapper = wrapper;
+    connectedNodes = new HashSet<Integer>();
   }
 
   /**
@@ -67,7 +70,7 @@ public class TwitterServer {
     // tmp file in case of it was in the middle of something when it crashed
     File f = new File(TEMP_FILENAME);
     if (f.exists()) {
-    	Utils.logOutput(wrapper.getAddr(), "Restoring file after crash at append");
+      Utils.logOutput(wrapper.getAddr(), "Restoring file after crash at append");
       resumeAppendExecution();
     }
 
@@ -84,7 +87,9 @@ public class TwitterServer {
         PersistentStorageReader reader = wrapper.getReader(CONTACTED_CLIENTS);
         String clientNode = "";
         while ((clientNode = reader.readLine()) != null) {
+          Utils.logOutput(wrapper.getAddr(), "I'm up! " + clientNode);
           int nodeId = Integer.parseInt(clientNode);
+          connectedNodes.add(nodeId);
           TwitterProtocol msg = new TwitterProtocol(RESTART, RESTART, RESTART);
           wrapper.RIOSend(nodeId, Protocol.DATA, gson.toJson(msg).getBytes());
         }
@@ -112,7 +117,10 @@ public class TwitterServer {
       if (!Utility.fileExists(wrapper, CONTACTED_CLIENTS)) {
         createFile(CONTACTED_CLIENTS);
       }
-      appendFile(CONTACTED_CLIENTS, String.valueOf(from));
+      if (!connectedNodes.contains(from)) {
+        appendFile(CONTACTED_CLIENTS, String.valueOf(from));
+        connectedNodes.add(from);
+      }
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -266,7 +274,7 @@ public class TwitterServer {
   // reads the whole file in the reader into the oldContent variable
   private void readWholeFile(PersistentStorageReader reader, StringBuilder builder) throws IOException {
     Utils.logOutput(wrapper.getAddr(), "EXEC!");
-	String temp = "";
+    String temp = "";
     while ((temp = reader.readLine()) != null) {
       builder = builder.append(temp + "\n");
     }

@@ -1,6 +1,5 @@
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 
 import com.google.gson.Gson;
 
@@ -22,7 +21,7 @@ public class TwitterNodeWrapper extends RIONode {
       // this is from the client
       server.onRIOReceive(from, protocol, msg);
     } else if (from == 3) {
-    	client.onRIOReceive(from, protocol, msg);
+      client.onRIOReceive(from, protocol, msg);
     }
   }
 
@@ -46,12 +45,12 @@ public class TwitterNodeWrapper extends RIONode {
 
   @Override
   public void onCommand(String command) {
-	  try {
-		client.onCommand(command);
-	} catch (Exception e) {
-		e.printStackTrace();
-		fail();
-	}
+    try {
+      client.onCommand(command);
+    } catch (Exception e) {
+      e.printStackTrace();
+      fail();
+    }
   }
 
   /**

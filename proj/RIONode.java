@@ -49,6 +49,6 @@ public abstract class RIONode extends Node {
   }
 
   public void stopResend() {
-    throw new RuntimeException("the connection to the node is not present.");
+    // throw new RuntimeException("the connection to the node is not present.");
   }
 }
