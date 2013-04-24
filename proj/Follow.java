@@ -54,7 +54,7 @@ public class Follow extends Function {
 		  }
 	  }
 	  if (!isLogin) {
-		  logError("You are not login.");
+		  logError("You are not login. Cannot follow.");
 		  client.eventIndex = 0;
 		  client.completeCommand(); 
 		  return;

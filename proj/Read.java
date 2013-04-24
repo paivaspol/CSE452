@@ -58,7 +58,7 @@ public class Read extends Function {
 			}
 		}
 		if (!isLogin) {
-			logError("You are not login.");
+			logError("You are not login. Cannot read.");
 			client.eventIndex = 0;
 			client.completeCommand(); 
 			return;

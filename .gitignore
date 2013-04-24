@@ -2,6 +2,8 @@
 /build/
 /bin/
 /doc/
+/jars/
+/storage/
 target/
  
 # OS Files #

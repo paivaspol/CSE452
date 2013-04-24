@@ -38,6 +38,6 @@ public class User extends Entry {
 	}
 	
 	public String toString() {
-		return getUserName() + "\t" + getName() + "\t" + getPassword(); 
+		return getUserName() + "\t" + getPassword() + "\t" + getName(); 
 	}
 }
