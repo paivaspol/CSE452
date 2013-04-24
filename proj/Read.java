@@ -17,6 +17,7 @@ public class Read extends Function {
 	private StringBuilder newFollowingList;
 	private final String usersFile;
 	private final String username;
+	private StringData strData;
 
 	public Read(Client client, RIONode rioNode, int serverAddress, String usersFile, String username) {
 		super(client, rioNode);
@@ -30,14 +31,14 @@ public class Read extends Function {
 
 	public void step1() {
 		// get login usernames
-		TwitterProtocol tpGetLogin = new TwitterProtocol(TwitterServer.READ, "login.txt", null);
+		TwitterProtocol tpGetLogin = new TwitterProtocol(TwitterServer.READ, "login.txt", null, new Entry(rioNode.addr).getHash());
 		rioNode.RIOSend(serverAddress, Protocol.DATA, tpGetLogin.toBytes());
 		client.eventIndex = 1;
 	}
 
 	public void step2(String responseString) {
 		if (responseString.startsWith(TwitterServer.RESTART)) {
-			TwitterProtocol tpGetLogin = new TwitterProtocol(TwitterServer.READ, "login.txt", null);
+			TwitterProtocol tpGetLogin = new TwitterProtocol(TwitterServer.READ, "login.txt", null, new Entry(rioNode.addr).getHash());
 			rioNode.RIOSend(serverAddress, Protocol.DATA, tpGetLogin.toBytes());
 			client.eventIndex = 1;
 			return;
@@ -65,14 +66,14 @@ public class Read extends Function {
 		logOutput("Fecthing unread post");
 		// request the userlist
 		// get the list of username that user is following
-		TwitterProtocol tpGetFollowing = new TwitterProtocol(TwitterServer.READ, usersFile, null);
+		TwitterProtocol tpGetFollowing = new TwitterProtocol(TwitterServer.READ, usersFile, null, new Entry(rioNode.addr).getHash());
 		rioNode.RIOSend(serverAddress, Protocol.DATA, tpGetFollowing.toBytes());
 		client.eventIndex = 2;
 	}
 
 	public void step3(String responseString) {
 		if (responseString.startsWith(TwitterServer.RESTART)) {
-			TwitterProtocol tpGetFollowing = new TwitterProtocol(TwitterServer.READ, usersFile, null);
+			TwitterProtocol tpGetFollowing = new TwitterProtocol(TwitterServer.READ, usersFile, null, new Entry(rioNode.addr).getHash());
 			rioNode.RIOSend(serverAddress, Protocol.DATA, tpGetFollowing.toBytes());
 			client.eventIndex = 2;
 			return;
@@ -90,7 +91,7 @@ public class Read extends Function {
 		following = followingList.split("\n");
 		curFollowIndex = 0;
 		String[] followeeInfo = following[curFollowIndex].split("\t");
-		TwitterProtocol tpGetTweets = new TwitterProtocol(TwitterServer.READ, followeeInfo[0] + ".txt", null);
+		TwitterProtocol tpGetTweets = new TwitterProtocol(TwitterServer.READ, followeeInfo[0] + ".txt", null, new Entry(rioNode.addr).getHash());
 		rioNode.RIOSend(serverAddress, Protocol.DATA, tpGetTweets.toBytes());
 		client.eventIndex = 3;
 	}
@@ -99,7 +100,7 @@ public class Read extends Function {
 	public void readTillFinish(String responseString) {
 		String[] followeeInfo = following[curFollowIndex].split("\t");
 		if (responseString.startsWith(TwitterServer.RESTART)) {
-			TwitterProtocol tpGetTweets = new TwitterProtocol(TwitterServer.READ, followeeInfo[0] + ".txt", null);
+			TwitterProtocol tpGetTweets = new TwitterProtocol(TwitterServer.READ, followeeInfo[0] + ".txt", null, new Entry(rioNode.addr).getHash());
 			rioNode.RIOSend(serverAddress, Protocol.DATA, tpGetTweets.toBytes());
 			client.eventIndex = 3;
 			return;
@@ -132,12 +133,12 @@ public class Read extends Function {
 		logOutput("currFollowIndex " + curFollowIndex);
 		if (curFollowIndex == following.length) {
 			// update the following list time by delete the the original following file
-			TwitterProtocol tpDeleteFollowing = new TwitterProtocol(TwitterServer.DELETE, usersFile, null);
+			TwitterProtocol tpDeleteFollowing = new TwitterProtocol(TwitterServer.DELETE, usersFile, null, new Entry(rioNode.addr).getHash());
 			rioNode.RIOSend(serverAddress, Protocol.DATA, tpDeleteFollowing.toBytes());
 			client.eventIndex = 4;
 		} else {
 			// proceed with reading other people's tweet
-			TwitterProtocol tpGetTweets = new TwitterProtocol(TwitterServer.READ, followeeInfo[curFollowIndex] + ".txt", null);
+			TwitterProtocol tpGetTweets = new TwitterProtocol(TwitterServer.READ, followeeInfo[curFollowIndex] + ".txt", null, new Entry(rioNode.addr).getHash());
 			rioNode.RIOSend(serverAddress, Protocol.DATA, tpGetTweets.toBytes());
 			client.eventIndex = 3;
 		}
@@ -145,7 +146,7 @@ public class Read extends Function {
 
 	public void step5(String responseString) {
 		if (responseString.startsWith(TwitterServer.RESTART)) {
-			TwitterProtocol tpDeleteFollowing = new TwitterProtocol(TwitterServer.DELETE, usersFile, null);
+			TwitterProtocol tpDeleteFollowing = new TwitterProtocol(TwitterServer.DELETE, usersFile, null, new Entry(rioNode.addr).getHash());
 			rioNode.RIOSend(serverAddress, Protocol.DATA, tpDeleteFollowing.toBytes());
 			client.eventIndex = 4;
 			return;
@@ -159,7 +160,7 @@ public class Read extends Function {
 		}
 		// create the new list with the new time
 		TwitterProtocol tpUpdateFollowing =
-				new TwitterProtocol(TwitterServer.CREATE, usersFile, newFollowingList.toString());
+				new TwitterProtocol(TwitterServer.CREATE, usersFile, null, new Entry(rioNode.addr).getHash());
 		rioNode.RIOSend(serverAddress, Protocol.DATA, getBytesFromTwitterProtocol(tpUpdateFollowing));
 		client.eventIndex = 5;
 	}
@@ -168,7 +169,7 @@ public class Read extends Function {
 		// append the new following list with the new timestamps to the file
 		if (responseString.startsWith(TwitterServer.RESTART)) {
 			TwitterProtocol tpUpdateFollowing =
-					new TwitterProtocol(TwitterServer.CREATE, usersFile, newFollowingList.toString());
+					new TwitterProtocol(TwitterServer.CREATE, usersFile, null, new Entry(rioNode.addr).getHash());
 			rioNode.RIOSend(serverAddress, Protocol.DATA, tpUpdateFollowing.toBytes());
 			client.eventIndex = 5;
 			return;
@@ -180,8 +181,10 @@ public class Read extends Function {
 		      client.completeCommand();
 		      return;
 		}
+		strData = new StringData(rioNode.addr);
+		strData.setData(newFollowingList.toString());
 		TwitterProtocol tpUpdateFollowing =
-				new TwitterProtocol(TwitterServer.APPEND, usersFile, newFollowingList.toString());
+				new TwitterProtocol(TwitterServer.APPEND, usersFile, strData.toString(), strData.getHash());
 		rioNode.RIOSend(serverAddress, Protocol.DATA, tpUpdateFollowing.toBytes());
 		client.eventIndex = 6;
 	}
@@ -189,7 +192,7 @@ public class Read extends Function {
 	public void step7(String responseString) {
 		if (responseString.startsWith(TwitterServer.RESTART)) {
 			TwitterProtocol tpUpdateFollowing =
-					new TwitterProtocol(TwitterServer.APPEND, usersFile, newFollowingList.toString());
+					new TwitterProtocol(TwitterServer.APPEND, usersFile, strData.toString(), strData.getHash());
 			rioNode.RIOSend(serverAddress, Protocol.DATA, tpUpdateFollowing.toBytes());
 			client.eventIndex = 6;
 			return;
