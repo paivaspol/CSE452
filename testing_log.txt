@@ -1,0 +1,1490 @@
+Starting simulation with seed: 1366835583998
+Warning: unable to open logfile '' for writing.
+...continuing
+Warning: unable to open logfile '' for writing.
+...continuing
+
+Time: 0
+0: START 3
+1: START 4
+In what order should the events happen? (enter for in-order)
+
+Node 3: Starting up server...
+Crash node 3 before creation of users.txt? (y/n)
+
+Crash node 3 before write(cbuf)? (y/n)
+
+Crash node 3 before write(cbuf, 0, 0)? (y/n)
+
+Crash node 3 before creation of login.txt? (y/n)
+
+Crash node 3 before write(cbuf)? (y/n)
+
+Crash node 3 before write(cbuf, 0, 0)? (y/n)
+
+Starting up client...
+client started
+
+Time: 1
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: COMMAND 4 executes signup leelee leelee a2345 3
+In what order should the events happen? (enter for in-order)
+
+client: signup leelee leelee a2345 3
+token: signup
+
+Time: 2
+The following messages are in transit:
+0: Packet: 4->3 protocol: 0 contents: {"method":"read","collection":"users.txt"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: COMMAND 4 executes signup vaspol vaspol 1234 3
+1: DELIVERY Packet: 4->3 protocol: 0 contents: {"method":"read","collection":"users.txt"}
+In what order should the events happen? (enter for in-order)
+
+client: signup vaspol vaspol 1234 3
+token: signup
+Node 3: {"method":"read","collection":"users.txt"}
+Crash node 3 before creation of clients.txt? (y/n)
+
+Crash node 3 before write(cbuf)? (y/n)
+
+Crash node 3 before write(cbuf, 0, 0)? (y/n)
+
+Crash node 3 before creation of .tmp? (y/n)
+
+Node 3: EXEC!
+Crash node 3 before write(str)? (y/n)
+
+Crash node 3 before write(s, 0, 12)? (y/n)
+
+Crash node 3 before creation of clients.txt? (y/n)
+
+Crash node 3 before write(str)? (y/n)
+
+Crash node 3 before write(s, 0, 1)? (y/n)
+
+Crash node 3 before delete of.tmp? (y/n)
+
+Node 3: EXEC!
+
+Time: 3
+The following messages are in transit:
+0: Packet: 3->4 protocol: 1 contents: 0
+1: Packet: 3->4 protocol: 0 contents: {"method":"read","collection":"users.txt","data":"SUCCESS\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: COMMAND 4 executes login vaspol 1234 3
+1: DELIVERY Packet: 3->4 protocol: 1 contents: 0
+2: DELIVERY Packet: 3->4 protocol: 0 contents: {"method":"read","collection":"users.txt","data":"SUCCESS\n"}
+In what order should the events happen? (enter for in-order)
+
+client: login vaspol 1234 3
+token: login
+Node 4: {"method":"read","collection":"users.txt","data":"SUCCESS\n"}
+at onRIOReceive queue size index 3 1
+Client eventIndex: 1
+CreateUser tokens[0] SUCCESS
+Creating a user, name:leelee
+
+Time: 4
+The following messages are in transit:
+0: Packet: 4->3 protocol: 1 contents: 0
+1: Packet: 4->3 protocol: 0 contents: {"method":"create","collection":"leelee.txt"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: COMMAND 4 executes follow vaspol leelee 3
+1: DELIVERY Packet: 4->3 protocol: 1 contents: 0
+2: DELIVERY Packet: 4->3 protocol: 0 contents: {"method":"create","collection":"leelee.txt"}
+3: TIMEOUT 4: onTimeout([Ljava.lang.Object;@6c2a0030) at 4
+In what order should the events happen? (enter for in-order)
+
+client: follow vaspol leelee 3
+token: follow
+Node 3: {"method":"create","collection":"leelee.txt"}
+Node 3: Creating a tweet entry...
+Crash node 3 before creation of leelee.txt? (y/n)
+
+Crash node 3 before write(cbuf)? (y/n)
+
+Crash node 3 before write(cbuf, 0, 0)? (y/n)
+
+
+Time: 5
+The following messages are in transit:
+0: Packet: 3->4 protocol: 1 contents: 1
+1: Packet: 3->4 protocol: 0 contents: {"method":"create","collection":"leelee.txt","data":"SUCCESS\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: COMMAND 4 executes logout vaspol 3
+1: DELIVERY Packet: 3->4 protocol: 1 contents: 1
+2: DELIVERY Packet: 3->4 protocol: 0 contents: {"method":"create","collection":"leelee.txt","data":"SUCCESS\n"}
+3: TIMEOUT 3: onTimeout([Ljava.lang.Object;@19e6d8ab) at 5
+In what order should the events happen? (enter for in-order)
+
+client: logout vaspol 3
+token: logout
+Node 4: {"method":"create","collection":"leelee.txt","data":"SUCCESS\n"}
+at onRIOReceive queue size index 5 2
+Client eventIndex: 2
+CreateUser step3
+
+Time: 6
+The following messages are in transit:
+0: Packet: 4->3 protocol: 1 contents: 1
+1: Packet: 4->3 protocol: 0 contents: {"method":"create","collection":"leelee_following.txt"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: COMMAND 4 executes login leelee a2345 3
+1: DELIVERY Packet: 4->3 protocol: 1 contents: 1
+2: DELIVERY Packet: 4->3 protocol: 0 contents: {"method":"create","collection":"leelee_following.txt"}
+3: TIMEOUT 4: onTimeout([Ljava.lang.Object;@25356f42) at 6
+In what order should the events happen? (enter for in-order)
+
+client: login leelee a2345 3
+token: login
+Node 3: {"method":"create","collection":"leelee_following.txt"}
+Node 3: Creating a tweet entry...
+Crash node 3 before creation of leelee_following.txt? (y/n)
+
+Crash node 3 before write(cbuf)? (y/n)
+
+Crash node 3 before write(cbuf, 0, 0)? (y/n)
+
+
+Time: 7
+The following messages are in transit:
+0: Packet: 3->4 protocol: 1 contents: 2
+1: Packet: 3->4 protocol: 0 contents: {"method":"create","collection":"leelee_following.txt","data":"SUCCESS\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: COMMAND 4 executes tweet leelee "first tweet" 3
+1: DELIVERY Packet: 3->4 protocol: 1 contents: 2
+2: DELIVERY Packet: 3->4 protocol: 0 contents: {"method":"create","collection":"leelee_following.txt","data":"SUCCESS\n"}
+3: TIMEOUT 3: onTimeout([Ljava.lang.Object;@4ab63056) at 7
+In what order should the events happen? (enter for in-order)
+
+client: tweet leelee "first tweet" 3
+token: tweet
+Node 4: {"method":"create","collection":"leelee_following.txt","data":"SUCCESS\n"}
+at onRIOReceive queue size index 7 3
+Client eventIndex: 3
+CreateUser step4
+
+Time: 8
+The following messages are in transit:
+0: Packet: 4->3 protocol: 1 contents: 2
+1: Packet: 4->3 protocol: 0 contents: {"method":"append","collection":"users.txt","data":"leelee\ta2345\tleelee\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: FAILURE 3
+1: DELIVERY Packet: 4->3 protocol: 1 contents: 2
+2: DELIVERY Packet: 4->3 protocol: 0 contents: {"method":"append","collection":"users.txt","data":"leelee\ta2345\tleelee\n"}
+3: TIMEOUT 4: onTimeout([Ljava.lang.Object;@3da38891) at 8
+In what order should the events happen? (enter for in-order)
+
+java.lang.Thread.getStackTrace(Thread.java:1567)
+edu.washington.cs.cse490h.lib.Node.fail(Node.java:85)
+edu.washington.cs.cse490h.lib.Simulator.failNode(Simulator.java:313)
+edu.washington.cs.cse490h.lib.Simulator.handleEvent(Simulator.java:662)
+edu.washington.cs.cse490h.lib.Simulator.executeEvents(Simulator.java:613)
+edu.washington.cs.cse490h.lib.Simulator.doTimestep(Simulator.java:229)
+edu.washington.cs.cse490h.lib.Simulator.start(Simulator.java:165)
+edu.washington.cs.cse490h.lib.MessageLayer.main(MessageLayer.java:315)
+
+Time: 9
+Live nodes: 4
+Dead nodes: 3
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+Restart which nodes? (space-delimited list of addresses or just press enter)
+
+0: START 3
+In what order should the events happen? (enter for in-order)
+
+Node 3: Starting up server...
+Node 3: I'm up! 4
+
+Time: 10
+The following messages are in transit:
+0: Packet: 3->4 protocol: 0 contents: {"method":"RESTART","collection":"RESTART","data":"RESTART"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: COMMAND 4 executes logout leelee 3
+1: DELIVERY Packet: 3->4 protocol: 0 contents: {"method":"RESTART","collection":"RESTART","data":"RESTART"}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@4d9a485f) at 10
+In what order should the events happen? (enter for in-order)
+
+client: logout leelee 3
+token: logout
+Node 4: {"method":"RESTART","collection":"RESTART","data":"RESTART"}
+at onRIOReceive queue size index 8 4
+Client eventIndex: 4
+CreateUser step5
+
+Time: 11
+The following messages are in transit:
+0: Packet: 4->3 protocol: 1 contents: 0
+1: Packet: 4->3 protocol: 0 contents: {"method":"append","collection":"users.txt","data":"leelee\ta2345\tleelee\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: COMMAND 4 executes login vaspol 1234 3
+1: DELIVERY Packet: 4->3 protocol: 1 contents: 0
+2: DELIVERY Packet: 4->3 protocol: 0 contents: {"method":"append","collection":"users.txt","data":"leelee\ta2345\tleelee\n"}
+In what order should the events happen? (enter for in-order)
+
+client: login vaspol 1234 3
+token: login
+Node 3: {"method":"append","collection":"users.txt","data":"leelee\ta2345\tleelee\n"}
+Crash node 3 before creation of .tmp? (y/n)
+
+Node 3: EXEC!
+Crash node 3 before write(str)? (y/n)
+
+Crash node 3 before write(s, 0, 10)? (y/n)
+
+Crash node 3 before creation of users.txt? (y/n)
+
+Crash node 3 before write(str)? (y/n)
+
+Crash node 3 before write(s, 0, 20)? (y/n)
+
+Crash node 3 before delete of.tmp? (y/n)
+
+
+Time: 12
+The following messages are in transit:
+0: Packet: 3->4 protocol: 1 contents: 0
+1: Packet: 3->4 protocol: 0 contents: {"method":"append","collection":"users.txt","data":"SUCCESS\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: COMMAND 4 executes read vaspol 3
+1: DELIVERY Packet: 3->4 protocol: 1 contents: 0
+2: DELIVERY Packet: 3->4 protocol: 0 contents: {"method":"append","collection":"users.txt","data":"SUCCESS\n"}
+3: TIMEOUT 3: onTimeout([Ljava.lang.Object;@eee2024) at 12
+In what order should the events happen? (enter for in-order)
+
+client: read vaspol 3
+token: read
+Node 4: {"method":"append","collection":"users.txt","data":"SUCCESS\n"}
+at onRIOReceive queue size index 10 4
+Client eventIndex: 4
+CreateUser step5
+You are signed up!
+in complete command with queue size 10
+
+Time: 13
+The following messages are in transit:
+0: Packet: 4->3 protocol: 1 contents: 1
+1: Packet: 4->3 protocol: 0 contents: {"method":"read","collection":"users.txt"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: COMMAND 4 executes logout vaspol 3
+1: DELIVERY Packet: 4->3 protocol: 1 contents: 1
+2: DELIVERY Packet: 4->3 protocol: 0 contents: {"method":"read","collection":"users.txt"}
+3: TIMEOUT 4: onTimeout([Ljava.lang.Object;@7daf3aa0) at 13
+In what order should the events happen? (enter for in-order)
+
+client: logout vaspol 3
+token: logout
+Node 3: {"method":"read","collection":"users.txt"}
+Node 3: EXEC!
+
+Time: 14
+The following messages are in transit:
+0: Packet: 3->4 protocol: 1 contents: 1
+1: Packet: 3->4 protocol: 0 contents: {"method":"read","collection":"users.txt","data":"SUCCESS\nleelee\ta2345\tleelee\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 1
+1: DELIVERY Packet: 3->4 protocol: 0 contents: {"method":"read","collection":"users.txt","data":"SUCCESS\nleelee\ta2345\tleelee\n"}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@12aa1ce) at 14
+In what order should the events happen? (enter for in-order)
+
+Node 4: {"method":"read","collection":"users.txt","data":"SUCCESS\nleelee\ta2345\tleelee\n"}
+at onRIOReceive queue size index 10 1
+Client eventIndex: 1
+CreateUser tokens[0] SUCCESS
+Creating a user, name:vaspol
+
+Time: 15
+The following messages are in transit:
+0: Packet: 4->3 protocol: 1 contents: 2
+1: Packet: 4->3 protocol: 0 contents: {"method":"create","collection":"vaspol.txt"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 2
+1: DELIVERY Packet: 4->3 protocol: 0 contents: {"method":"create","collection":"vaspol.txt"}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@43c32b82) at 15
+In what order should the events happen? (enter for in-order)
+
+Node 3: {"method":"create","collection":"vaspol.txt"}
+Node 3: Creating a tweet entry...
+Crash node 3 before creation of vaspol.txt? (y/n)
+
+Crash node 3 before write(cbuf)? (y/n)
+
+Crash node 3 before write(cbuf, 0, 0)? (y/n)
+
+
+Time: 16
+The following messages are in transit:
+0: Packet: 3->4 protocol: 1 contents: 2
+1: Packet: 3->4 protocol: 0 contents: {"method":"create","collection":"vaspol.txt","data":"SUCCESS\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 2
+1: DELIVERY Packet: 3->4 protocol: 0 contents: {"method":"create","collection":"vaspol.txt","data":"SUCCESS\n"}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@1a0d8377) at 16
+In what order should the events happen? (enter for in-order)
+
+Node 4: {"method":"create","collection":"vaspol.txt","data":"SUCCESS\n"}
+at onRIOReceive queue size index 10 2
+Client eventIndex: 2
+CreateUser step3
+
+Time: 17
+The following messages are in transit:
+0: Packet: 4->3 protocol: 1 contents: 3
+1: Packet: 4->3 protocol: 0 contents: {"method":"create","collection":"vaspol_following.txt"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 3
+1: DELIVERY Packet: 4->3 protocol: 0 contents: {"method":"create","collection":"vaspol_following.txt"}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@782a519b) at 17
+In what order should the events happen? (enter for in-order)
+
+Node 3: {"method":"create","collection":"vaspol_following.txt"}
+Node 3: Creating a tweet entry...
+Crash node 3 before creation of vaspol_following.txt? (y/n)
+
+Crash node 3 before write(cbuf)? (y/n)
+
+Crash node 3 before write(cbuf, 0, 0)? (y/n)
+
+
+Time: 18
+The following messages are in transit:
+0: Packet: 3->4 protocol: 1 contents: 3
+1: Packet: 3->4 protocol: 0 contents: {"method":"create","collection":"vaspol_following.txt","data":"SUCCESS\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 3
+1: DELIVERY Packet: 3->4 protocol: 0 contents: {"method":"create","collection":"vaspol_following.txt","data":"SUCCESS\n"}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@3a78cbab) at 18
+In what order should the events happen? (enter for in-order)
+
+Node 4: {"method":"create","collection":"vaspol_following.txt","data":"SUCCESS\n"}
+at onRIOReceive queue size index 10 3
+Client eventIndex: 3
+CreateUser step4
+
+Time: 19
+The following messages are in transit:
+0: Packet: 4->3 protocol: 1 contents: 4
+1: Packet: 4->3 protocol: 0 contents: {"method":"append","collection":"users.txt","data":"vaspol\t1234\tvaspol\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 4
+1: DELIVERY Packet: 4->3 protocol: 0 contents: {"method":"append","collection":"users.txt","data":"vaspol\t1234\tvaspol\n"}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@1a15deb6) at 19
+In what order should the events happen? (enter for in-order)
+
+Node 3: {"method":"append","collection":"users.txt","data":"vaspol\t1234\tvaspol\n"}
+Crash node 3 before creation of .tmp? (y/n)
+
+Node 3: EXEC!
+Crash node 3 before write(str)? (y/n)
+
+Crash node 3 before write(s, 0, 30)? (y/n)
+
+Crash node 3 before creation of users.txt? (y/n)
+
+Crash node 3 before write(str)? (y/n)
+
+Crash node 3 before write(s, 0, 39)? (y/n)
+
+Crash node 3 before delete of.tmp? (y/n)
+
+
+Time: 20
+The following messages are in transit:
+0: Packet: 3->4 protocol: 1 contents: 4
+1: Packet: 3->4 protocol: 0 contents: {"method":"append","collection":"users.txt","data":"SUCCESS\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 4
+1: DELIVERY Packet: 3->4 protocol: 0 contents: {"method":"append","collection":"users.txt","data":"SUCCESS\n"}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@26b72884) at 20
+In what order should the events happen? (enter for in-order)
+
+Node 4: {"method":"append","collection":"users.txt","data":"SUCCESS\n"}
+at onRIOReceive queue size index 10 4
+Client eventIndex: 4
+CreateUser step5
+You are signed up!
+in complete command with queue size 10
+
+Time: 21
+The following messages are in transit:
+0: Packet: 4->3 protocol: 1 contents: 5
+1: Packet: 4->3 protocol: 0 contents: {"method":"read","collection":"users.txt"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 5
+1: DELIVERY Packet: 4->3 protocol: 0 contents: {"method":"read","collection":"users.txt"}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@f0896b1) at 21
+In what order should the events happen? (enter for in-order)
+
+Node 3: {"method":"read","collection":"users.txt"}
+Node 3: EXEC!
+
+Time: 22
+The following messages are in transit:
+0: Packet: 3->4 protocol: 1 contents: 5
+1: Packet: 3->4 protocol: 0 contents: {"method":"read","collection":"users.txt","data":"SUCCESS\nleelee\ta2345\tleelee\nvaspol\t1234\tvaspol\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 5
+1: DELIVERY Packet: 3->4 protocol: 0 contents: {"method":"read","collection":"users.txt","data":"SUCCESS\nleelee\ta2345\tleelee\nvaspol\t1234\tvaspol\n"}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@6815e601) at 22
+In what order should the events happen? (enter for in-order)
+
+Node 4: {"method":"read","collection":"users.txt","data":"SUCCESS\nleelee\ta2345\tleelee\nvaspol\t1234\tvaspol\n"}
+at onRIOReceive queue size index 9 1
+Client eventIndex: 1
+Login SUCCESS
+leelee	a2345	leelee
+vaspol	1234	vaspol
+
+
+Time: 23
+The following messages are in transit:
+0: Packet: 4->3 protocol: 1 contents: 6
+1: Packet: 4->3 protocol: 0 contents: {"method":"append","collection":"login.txt","data":"vaspol\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 6
+1: DELIVERY Packet: 4->3 protocol: 0 contents: {"method":"append","collection":"login.txt","data":"vaspol\n"}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@22d1ed3e) at 23
+In what order should the events happen? (enter for in-order)
+
+Node 3: {"method":"append","collection":"login.txt","data":"vaspol\n"}
+Crash node 3 before creation of .tmp? (y/n)
+
+Node 3: EXEC!
+Crash node 3 before write(str)? (y/n)
+
+Crash node 3 before write(s, 0, 10)? (y/n)
+
+Crash node 3 before creation of login.txt? (y/n)
+
+Crash node 3 before write(str)? (y/n)
+
+Crash node 3 before write(s, 0, 7)? (y/n)
+
+Crash node 3 before delete of.tmp? (y/n)
+
+
+Time: 24
+The following messages are in transit:
+0: Packet: 3->4 protocol: 1 contents: 6
+1: Packet: 3->4 protocol: 0 contents: {"method":"append","collection":"login.txt","data":"SUCCESS\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 6
+1: DELIVERY Packet: 3->4 protocol: 0 contents: {"method":"append","collection":"login.txt","data":"SUCCESS\n"}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@665e33d4) at 24
+In what order should the events happen? (enter for in-order)
+
+Node 4: {"method":"append","collection":"login.txt","data":"SUCCESS\n"}
+at onRIOReceive queue size index 9 2
+Client eventIndex: 2
+You are login!
+in complete command with queue size 9
+
+Time: 25
+The following messages are in transit:
+0: Packet: 4->3 protocol: 1 contents: 7
+1: Packet: 4->3 protocol: 0 contents: {"method":"read","collection":"login.txt"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 7
+1: DELIVERY Packet: 4->3 protocol: 0 contents: {"method":"read","collection":"login.txt"}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@662ec7f1) at 25
+In what order should the events happen? (enter for in-order)
+
+Node 3: {"method":"read","collection":"login.txt"}
+Node 3: EXEC!
+
+Time: 26
+The following messages are in transit:
+0: Packet: 3->4 protocol: 1 contents: 7
+1: Packet: 3->4 protocol: 0 contents:{"method":"read","collection":"login.txt","data":"SUCCESS\nvaspol\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 7
+1: DELIVERY Packet: 3->4 protocol: 0 contents:{"method":"read","collection":"login.txt","data":"SUCCESS\nvaspol\n"}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@1b4ed400) at 26
+In what order should the events happen? (enter for in-order)
+
+Node 4:{"method":"read","collection":"login.txt","data":"SUCCESS\nvaspol\n"}
+at onRIOReceive queue size index 8 1
+Client eventIndex: 1
+
+Time: 27
+The following messages are in transit:
+0: Packet: 4->3 protocol: 1 contents: 8
+1: Packet: 4->3 protocol: 0 contents:{"method":"read","collection":"users.txt"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 8
+1: DELIVERY Packet: 4->3 protocol: 0 contents:{"method":"read","collection":"users.txt"}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@1d652020) at 27
+In what order should the events happen? (enter for in-order)
+
+Node 3:{"method":"read","collection":"users.txt"}
+Node 3: EXEC!
+
+Time: 28
+The following messages are in transit:
+0: Packet: 3->4 protocol: 1 contents: 8
+1: Packet: 3->4 protocol: 0 contents: 	{"method":"read","collection":"users.txt","data":"SUCCESS\nleelee\ta2345\tleelee\nvaspol\t1234\tvaspol\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 8
+1: DELIVERY Packet: 3->4 protocol: 0 contents: 	{"method":"read","collection":"users.txt","data":"SUCCESS\nleelee\ta2345\tleelee\nvaspol\t1234\tvaspol\n"}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@490b8a8c) at 28
+In what order should the events happen? (enter for in-order)
+
+Node 4: 	{"method":"read","collection":"users.txt","data":"SUCCESS\nleelee\ta2345\tleelee\nvaspol\t1234\tvaspol\n"}
+at onRIOReceive queue size index 8 2
+Client eventIndex: 2
+
+Time: 29
+The following messages are in transit:
+0: Packet: 4->3 protocol: 1 contents: 9
+1: Packet: 4->3 protocol: 0 contents: 	{"method":"append","collection":"vaspol_following.txt","data":"leelee\t1366835859391"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 9
+1: DELIVERY Packet: 4->3 protocol: 0 contents: 	{"method":"append","collection":"vaspol_following.txt","data":"leelee\t1366835859391"}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@54dfd702) at 29
+In what order should the events happen? (enter for in-order)
+
+Node 3: 	{"method":"append","collection":"vaspol_following.txt","data":"leelee\t1366835859391"}
+Crash node 3 before creation of .tmp? (y/n)
+
+Node 3: EXEC!
+Crash node 3 before write(str)? (y/n)
+
+Crash node 3 before write(s, 0, 21)? (y/n)
+
+Crash node 3 before creation of vaspol_following.txt? (y/n)
+
+Crash node 3 before write(str)? (y/n)
+
+Crash node 3 before write(s, 0, 20)? (y/n)
+
+Crash node 3 before delete of.tmp? (y/n)
+
+
+Time: 30
+The following messages are in transit:
+0: Packet: 3->4 protocol: 1 contents: 9
+1: Packet: 3->4 protocol: 0 contents:
+{"method":"append","collection":"vaspol_following.txt","data":"SUCCESS\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 9
+1: DELIVERY Packet: 3->4 protocol: 0 contents:
+{"method":"append","collection":"vaspol_following.txt","data":"SUCCESS\n"}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@4f0ea988) at 30
+In what order should the events happen? (enter for in-order)
+
+Node 4:
+{"method":"append","collection":"vaspol_following.txt","data":"SUCCESS\n"}
+at onRIOReceive queue size index 8 3
+Client eventIndex: 3
+Congratulation! You are now following leelee
+in complete command with queue size 8
+Logging out
+
+Time: 31
+The following messages are in transit:
+0: Packet: 4->3 protocol: 1 contents: 10
+1: Packet: 4->3 protocol: 0 contents:
+{"method":"deletelines","collection":"login.txt","data":"vaspol"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 10
+1: DELIVERY Packet: 4->3 protocol: 0 contents:
+{"method":"deletelines","collection":"login.txt","data":"vaspol"}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@79c4a760) at 31
+In what order should the events happen? (enter for in-order)
+
+Node 3:
+{"method":"deletelines","collection":"login.txt","data":"vaspol"}
+Crash node 3 before creation of login.txt? (y/n)
+
+Crash node 3 before write(str)? (y/n)
+
+Crash node 3 before write(s, 0, 0)? (y/n)
+
+
+Time: 32
+The following messages are in transit:
+0: Packet: 3->4 protocol: 1 contents: 10
+1: Packet: 3->4 protocol: 0 contents:
+                                      {"method":"deletelines","collection":"login.txt","data":"SUCCESS\nvaspol"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 10
+1: DELIVERY Packet: 3->4 protocol: 0 contents:
+                                               {"method":"deletelines","collection":"login.txt","data":"SUCCESS\nvaspol"}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@5d5efa6a) at 32
+In what order should the events happen? (enter for in-order)
+
+Node 4:
+        {"method":"deletelines","collection":"login.txt","data":"SUCCESS\nvaspol"}
+at onRIOReceive queue size index 7 1
+Client eventIndex: 1
+You are logout! vaspol
+in complete command with queue size 7
+
+Time: 33
+The following messages are in transit:
+0: Packet: 4->3 protocol: 1 contents: 11
+1: Packet: 4->3 protocol: 0 contents:
+                                      {"method":"read","collection":"users.txt"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 11
+1: DELIVERY Packet: 4->3 protocol: 0 contents:
+                                               {"method":"read","collection":"users.txt"}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@117280a) at 33
+In what order should the events happen? (enter for in-order)
+
+Node 3:
+        {"method":"read","collection":"users.txt"}
+Node 3: EXEC!
+
+Time: 34
+The following messages are in transit:
+0: Packet: 3->4 protocol: 1 contents: 11
+1: Packet: 3->4 protocol: 0 contents:
+                                      {"method":"read","collection":"users.txt","data":"SUCCESS\nleelee\ta2345\tleelee\nvaspol\t1234\tvaspol\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 11
+1: DELIVERY Packet: 3->4 protocol: 0 contents:
+                                               {"method":"read","collection":"users.txt","data":"SUCCESS\nleelee\ta2345\tleelee\nvaspol\t1234\tvaspol\n"}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@573f12a1) at 34
+In what order should the events happen? (enter for in-order)
+
+Node 4:
+        {"method":"read","collection":"users.txt","data":"SUCCESS\nleelee\ta2345\tleelee\nvaspol\t1234\tvaspol\n"}
+at onRIOReceive queue size index 6 1
+Client eventIndex: 1
+Login SUCCESS
+leelee	a2345	leelee
+vaspol	1234	vaspol
+
+
+Time: 35
+The following messages are in transit:
+0: Packet: 4->3 protocol: 1 contents: 12
+1: Packet: 4->3 protocol: 0 contents:
+                                      {"method":"append","collection":"login.txt","data":"leelee\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 12
+1: DELIVERY Packet: 4->3 protocol: 0 contents:
+                                               {"method":"append","collection":"login.txt","data":"leelee\n"}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@40ccc48b) at 35
+In what order should the events happen? (enter for in-order)
+
+Node 3:
+        {"method":"append","collection":"login.txt","data":"leelee\n"}
+Crash node 3 before creation of .tmp? (y/n)
+
+Node 3: EXEC!
+Crash node 3 before write(str)? (y/n)
+
+Crash node 3 before write(s, 0, 10)? (y/n)
+
+Crash node 3 before creation of login.txt? (y/n)
+
+Crash node 3 before write(str)? (y/n)
+
+Crash node 3 before write(s, 0, 7)? (y/n)
+
+Crash node 3 before delete of.tmp? (y/n)
+
+
+Time: 36
+The following messages are in transit:
+0: Packet: 3->4 protocol: 1 contents: 12
+{"method":"append","collection":"login.txt","data":"SUCCESS\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 12
+{"method":"append","collection":"login.txt","data":"SUCCESS\n"}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@2d0a5068) at 36
+In what order should the events happen? (enter for in-order)
+
+{"method":"append","collection":"login.txt","data":"SUCCESS\n"}
+at onRIOReceive queue size index 6 2
+Client eventIndex: 2
+You are login!
+in complete command with queue size 6
+
+Time: 37
+The following messages are in transit:
+0: Packet: 4->3 protocol: 1 contents: 13
+{"method":"read","collection":"login.txt"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 13
+{"method":"read","collection":"login.txt"}nts:
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@5da6725c) at 37
+In what order should the events happen? (enter for in-order)
+
+{"method":"read","collection":"login.txt"}
+Node 3: EXEC!
+
+Time: 38
+The following messages are in transit:
+0: Packet: 3->4 protocol: 1 contents: 13
+1: Packet: 3->4 protocol: 0 contents: {"method":"read","collection":"login.txt","data":"SUCCESS\nleelee\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 13
+1: DELIVERY Packet: 3->4 protocol: 0 contents: {"method":"read","collection":"login.txt","data":"SUCCESS\nleelee\n"}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@8aaf52e) at 38
+In what order should the events happen? (enter for in-order)
+
+Node 4: {"method":"read","collection":"login.txt","data":"SUCCESS\nleelee\n"}
+at onRIOReceive queue size index 5 1
+Client eventIndex: 1
+Posting tweet
+
+Time: 39
+The following messages are in transit:
+0: Packet: 4->3 protocol: 1 contents: 14
+1: Packet: 4->3 protocol: 0 contents: {"method":"append","collection":"leelee.txt","data":"1366835966895\t\"first tweet\"\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 14
+1: DELIVERY Packet: 4->3 protocol: 0 contents: {"method":"append","collection":"leelee.txt","data":"1366835966895\t\"first tweet\"\n"}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@28cc6a8) at 39
+In what order should the events happen? (enter for in-order)
+
+Node 3: {"method":"append","collection":"leelee.txt","data":"1366835966895\t\"first tweet\"\n"}
+Crash node 3 before creation of .tmp? (y/n)
+
+Node 3: EXEC!
+Crash node 3 before write(str)? (y/n)
+
+Crash node 3 before write(s, 0, 11)? (y/n)
+
+Crash node 3 before creation of leelee.txt? (y/n)
+
+Crash node 3 before write(str)? (y/n)
+
+Crash node 3 before write(s, 0, 28)? (y/n)
+
+Crash node 3 before delete of.tmp? (y/n)
+
+
+Time: 40
+The following messages are in transit:
+0: Packet: 3->4 protocol: 1 contents: 14
+1: Packet: 3->4 protocol: 0 contents: {"method":"append","collection":"leelee.txt","data":"SUCCESS\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 14
+1: DELIVERY Packet: 3->4 protocol: 0 contents: {"method":"append","collection":"leelee.txt","data":"SUCCESS\n"}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@a5bdce3) at 40
+In what order should the events happen? (enter for in-order)
+
+Node 4: {"method":"append","collection":"leelee.txt","data":"SUCCESS\n"}
+at onRIOReceive queue size index 5 2
+Client eventIndex: 2
+Your tweet is posted. :)
+in complete command with queue size 5
+Logging out
+
+Time: 41
+The following messages are in transit:
+0: Packet: 4->3 protocol: 1 contents: 15
+1: Packet: 4->3 protocol: 0 contents: {"method":"deletelines","collection":"login.txt","data":"leelee"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 15
+1: DELIVERY Packet: 4->3 protocol: 0 contents: {"method":"deletelines","collection":"login.txt","data":"leelee"}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@64d75d4e) at 41
+In what order should the events happen? (enter for in-order)
+
+Node 3: {"method":"deletelines","collection":"login.txt","data":"leelee"}
+Crash node 3 before creation of login.txt? (y/n)
+
+Crash node 3 before write(str)? (y/n)
+
+Crash node 3 before write(s, 0, 0)? (y/n)
+
+
+Time: 42
+The following messages are in transit:
+0: Packet: 3->4 protocol: 1 contents: 15
+1: Packet: 3->4 protocol: 0 contents: {"method":"deletelines","collection":"login.txt","data":"SUCCESS\nleelee"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 15
+1: DELIVERY Packet: 3->4 protocol: 0 contents: {"method":"deletelines","collection":"login.txt","data":"SUCCESS\nleelee"}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@761b2f32) at 42
+In what order should the events happen? (enter for in-order)
+
+Node 4: {"method":"deletelines","collection":"login.txt","data":"SUCCESS\nleelee"}
+at onRIOReceive queue size index 4 1
+Client eventIndex: 1
+You are logout! leelee
+in complete command with queue size 4
+
+Time: 43
+The following messages are in transit:
+0: Packet: 4->3 protocol: 1 contents: 16
+1: Packet: 4->3 protocol: 0 contents: {"method":"read","collection":"users.txt"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 16
+1: DELIVERY Packet: 4->3 protocol: 0 contents: {"method":"read","collection":"users.txt"}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@11c0f73a) at 43
+In what order should the events happen? (enter for in-order)
+
+Node 3: {"method":"read","collection":"users.txt"}
+Node 3: EXEC!
+
+Time: 44
+The following messages are in transit:
+0: Packet: 3->4 protocol: 1 contents: 16
+1: Packet: 3->4 protocol: 0 contents: {"method":"read","collection":"users.txt","data":"SUCCESS\nleelee\ta2345\tleelee\nvaspol\t1234\tvaspol\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 16
+1: DELIVERY Packet: 3->4 protocol: 0 contents: {"method":"read","collection":"users.txt","data":"SUCCESS\nleelee\ta2345\tleelee\nvaspol\t1234\tvaspol\n"}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@6d65d417) at 44
+In what order should the events happen? (enter for in-order)
+
+Node 4: {"method":"read","collection":"users.txt","data":"SUCCESS\nleelee\ta2345\tleelee\nvaspol\t1234\tvaspol\n"}
+at onRIOReceive queue size index 3 1
+Client eventIndex: 1
+Login SUCCESS
+leelee	a2345	leelee
+vaspol	1234	vaspol
+
+
+Time: 45
+The following messages are in transit:
+0: Packet: 4->3 protocol: 1 contents: 17
+1: Packet: 4->3 protocol: 0 contents: {"method":"append","collection":"login.txt","data":"vaspol\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 17
+1: DELIVERY Packet: 4->3 protocol: 0 contents: {"method":"append","collection":"login.txt","data":"vaspol\n"}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@1515c044) at 45
+In what order should the events happen? (enter for in-order)
+
+Node 3: {"method":"append","collection":"login.txt","data":"vaspol\n"}
+Crash node 3 before creation of .tmp? (y/n)
+
+Node 3: EXEC!
+Crash node 3 before write(str)? (y/n)
+
+Crash node 3 before write(s, 0, 10)? (y/n)
+
+Crash node 3 before creation of login.txt? (y/n)
+
+Crash node 3 before write(str)? (y/n)
+
+Crash node 3 before write(s, 0, 7)? (y/n)
+
+Crash node 3 before delete of.tmp? (y/n)
+
+
+Time: 46
+The following messages are in transit:
+0: Packet: 3->4 protocol: 1 contents: 17
+1: Packet: 3->4 protocol: 0 contents: {"method":"append","collection":"login.txt","data":"SUCCESS\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 17
+1: DELIVERY Packet: 3->4 protocol: 0 contents: {"method":"append","collection":"login.txt","data":"SUCCESS\n"}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@74ee003d) at 46
+In what order should the events happen? (enter for in-order)
+
+Node 4: {"method":"append","collection":"login.txt","data":"SUCCESS\n"}
+at onRIOReceive queue size index 3 2
+Client eventIndex: 2
+You are login!
+in complete command with queue size 3
+
+Time: 47
+The following messages are in transit:
+0: Packet: 4->3 protocol: 1 contents: 18
+1: Packet: 4->3 protocol: 0 contents: {"method":"read","collection":"login.txt"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 18
+1: DELIVERY Packet: 4->3 protocol: 0 contents: {"method":"read","collection":"login.txt"}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@53aa5221) at 47
+In what order should the events happen? (enter for in-order)
+
+Node 3: {"method":"read","collection":"login.txt"}
+Node 3: EXEC!
+
+Time: 48
+The following messages are in transit:
+0: Packet: 3->4 protocol: 1 contents: 18
+1: Packet: 3->4 protocol: 0 contents: {"method":"read","collection":"login.txt","data":"SUCCESS\nvaspol\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 18
+1: DELIVERY Packet: 3->4 protocol: 0 contents: {"method":"read","collection":"login.txt","data":"SUCCESS\nvaspol\n"}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@66174689) at 48
+In what order should the events happen? (enter for in-order)
+
+Node 4: {"method":"read","collection":"login.txt","data":"SUCCESS\nvaspol\n"}
+at onRIOReceive queue size index 2 1
+Client eventIndex: 1
+Fecthing unread post
+
+Time: 49
+The following messages are in transit:
+0: Packet: 4->3 protocol: 1 contents: 19
+1: Packet: 4->3 protocol: 0 contents: {"method":"read","collection":"vaspol_following.txt"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 19
+1: DELIVERY Packet: 4->3 protocol: 0 contents: {"method":"read","collection":"vaspol_following.txt"}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@15dac551) at 49
+In what order should the events happen? (enter for in-order)
+
+Node 3: {"method":"read","collection":"vaspol_following.txt"}
+Node 3: EXEC!
+
+Time: 50
+The following messages are in transit:
+0: Packet: 3->4 protocol: 1 contents: 19
+1: Packet: 3->4 protocol: 0 contents: {"method":"read","collection":"vaspol_following.txt","data":"SUCCESS\nleelee\t1366835859391\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 19
+1: DELIVERY Packet: 3->4 protocol: 0 contents: {"method":"read","collection":"vaspol_following.txt","data":"SUCCESS\nleelee\t1366835859391\n"}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@264ab70a) at 50
+In what order should the events happen? (enter for in-order)
+
+Node 4: {"method":"read","collection":"vaspol_following.txt","data":"SUCCESS\nleelee\t1366835859391\n"}
+at onRIOReceive queue size index 2 2
+Client eventIndex: 2
+
+Time: 51
+The following messages are in transit:
+0: Packet: 4->3 protocol: 1 contents: 20
+1: Packet: 4->3 protocol: 0 contents: {"method":"read","collection":"leelee.txt"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 20
+1: DELIVERY Packet: 4->3 protocol: 0 contents: {"method":"read","collection":"leelee.txt"}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@87883df) at 51
+In what order should the events happen? (enter for in-order)
+
+Node 3: {"method":"read","collection":"leelee.txt"}
+Node 3: EXEC!
+
+Time: 52
+The following messages are in transit:
+0: Packet: 3->4 protocol: 1 contents: 20
+1: Packet: 3->4 protocol: 0 contents: {"method":"read","collection":"leelee.txt","data":"SUCCESS\n1366835966895\t\"first tweet\"\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 20
+1: DELIVERY Packet: 3->4 protocol: 0 contents: {"method":"read","collection":"leelee.txt","data":"SUCCESS\n1366835966895\t\"first tweet\"\n"}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@3b87bd31) at 52
+In what order should the events happen? (enter for in-order)
+
+Node 4: {"method":"read","collection":"leelee.txt","data":"SUCCESS\n1366835966895\t\"first tweet\"\n"}
+at onRIOReceive queue size index 2 3
+Client eventIndex: 3
+leelee: 1366835966895	"first tweet"
+following.length 1
+currFollowIndex 1
+
+Time: 53
+The following messages are in transit:
+0: Packet: 4->3 protocol: 1 contents: 21
+1: Packet: 4->3 protocol: 0 contents: {"method":"delete","collection":"vaspol_following.txt"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 21
+1: DELIVERY Packet: 4->3 protocol: 0 contents: {"method":"delete","collection":"vaspol_following.txt"}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@1a160b5e) at 53
+In what order should the events happen? (enter for in-order)
+
+Node 3: {"method":"delete","collection":"vaspol_following.txt"}
+Crash node 3 before creation of vaspol_following.txt? (y/n)
+
+Crash node 3 before delete ofvaspol_following.txt? (y/n)
+
+
+Time: 54
+The following messages are in transit:
+0: Packet: 3->4 protocol: 1 contents: 21
+1: Packet: 3->4 protocol: 0 contents: {"method":"delete","collection":"vaspol_following.txt","data":"SUCCESS\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 21
+1: DELIVERY Packet: 3->4 protocol: 0 contents: {"method":"delete","collection":"vaspol_following.txt","data":"SUCCESS\n"}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@79111260) at 54
+In what order should the events happen? (enter for in-order)
+
+Node 4: {"method":"delete","collection":"vaspol_following.txt","data":"SUCCESS\n"}
+at onRIOReceive queue size index 2 4
+Client eventIndex: 4
+
+Time: 55
+The following messages are in transit:
+0: Packet: 4->3 protocol: 1 contents: 22
+1: Packet: 4->3 protocol: 0 contents: {"method":"create","collection":"vaspol_following.txt","data":"leelee\t1366836008477\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 22
+1: DELIVERY Packet: 4->3 protocol: 0 contents: {"method":"create","collection":"vaspol_following.txt","data":"leelee\t1366836008477\n"}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@1f107db9) at 55
+In what order should the events happen? (enter for in-order)
+
+Node 3: {"method":"create","collection":"vaspol_following.txt","data":"leelee\t1366836008477\n"}
+Node 3: Creating a tweet entry...
+Crash node 3 before creation of vaspol_following.txt? (y/n)
+
+Crash node 3 before write(cbuf)? (y/n)
+
+Crash node 3 before write(cbuf, 0, 0)? (y/n)
+
+
+Time: 56
+The following messages are in transit:
+0: Packet: 3->4 protocol: 1 contents: 22
+1: Packet: 3->4 protocol: 0 contents: {"method":"create","collection":"vaspol_following.txt","data":"SUCCESS\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 22
+1: DELIVERY Packet: 3->4 protocol: 0 contents: {"method":"create","collection":"vaspol_following.txt","data":"SUCCESS\n"}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@27b9d14c) at 56
+In what order should the events happen? (enter for in-order)
+
+Node 4: {"method":"create","collection":"vaspol_following.txt","data":"SUCCESS\n"}
+at onRIOReceive queue size index 2 5
+Client eventIndex: 5
+
+Time: 57
+The following messages are in transit:
+0: Packet: 4->3 protocol: 1 contents: 23
+1: Packet: 4->3 protocol: 0 contents: {"method":"append","collection":"vaspol_following.txt","data":"leelee\t1366836008477\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 23
+1: DELIVERY Packet: 4->3 protocol: 0 contents: {"method":"append","collection":"vaspol_following.txt","data":"leelee\t1366836008477\n"}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@7f4049d6) at 57
+In what order should the events happen? (enter for in-order)
+
+Node 3: {"method":"append","collection":"vaspol_following.txt","data":"leelee\t1366836008477\n"}
+Crash node 3 before creation of .tmp? (y/n)
+
+Node 3: EXEC!
+Crash node 3 before write(str)? (y/n)
+
+Crash node 3 before write(s, 0, 21)? (y/n)
+
+Crash node 3 before creation of vaspol_following.txt? (y/n)
+
+Crash node 3 before write(str)? (y/n)
+
+Crash node 3 before write(s, 0, 21)? (y/n)
+
+Crash node 3 before delete of.tmp? (y/n)
+
+
+Time: 58
+The following messages are in transit:
+0: Packet: 3->4 protocol: 1 contents: 23
+1: Packet: 3->4 protocol: 0 contents: {"method":"append","collection":"vaspol_following.txt","data":"SUCCESS\n"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 23
+1: DELIVERY Packet: 3->4 protocol: 0 contents: {"method":"append","collection":"vaspol_following.txt","data":"SUCCESS\n"}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@67facbda) at 58
+In what order should the events happen? (enter for in-order)
+
+Node 4: {"method":"append","collection":"vaspol_following.txt","data":"SUCCESS\n"}
+at onRIOReceive queue size index 2 6
+Client eventIndex: 6
+You have no more unread post.
+in complete command with queue size 2
+Logging out
+
+Time: 59
+The following messages are in transit:
+0: Packet: 4->3 protocol: 1 contents: 24
+1: Packet: 4->3 protocol: 0 contents: {"method":"deletelines","collection":"login.txt","data":"vaspol"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 24
+1: DELIVERY Packet: 4->3 protocol: 0 contents: {"method":"deletelines","collection":"login.txt","data":"vaspol"}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@58660a9) at 59
+In what order should the events happen? (enter for in-order)
+
+Node 3: {"method":"deletelines","collection":"login.txt","data":"vaspol"}
+Crash node 3 before creation of login.txt? (y/n)
+
+Crash node 3 before write(str)? (y/n)
+
+Crash node 3 before write(s, 0, 0)? (y/n)
+
+
+Time: 60
+The following messages are in transit:
+0: Packet: 3->4 protocol: 1 contents: 24
+1: Packet: 3->4 protocol: 0 contents: {"method":"deletelines","collection":"login.txt","data":"SUCCESS\nvaspol"}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 24
+1: DELIVERY Packet: 3->4 protocol: 0 contents: {"method":"deletelines","collection":"login.txt","data":"SUCCESS\nvaspol"}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@75a70476) at 60
+In what order should the events happen? (enter for in-order)
+
+Node 4: {"method":"deletelines","collection":"login.txt","data":"SUCCESS\nvaspol"}
+at onRIOReceive queue size index 1 1
+Client eventIndex: 1
+You are logout! vaspol
+in complete command with queue size 1
+
+Time: 61
+The following messages are in transit:
+0: Packet: 4->3 protocol: 1 contents: 25
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 25
+1: TIMEOUT 4: onTimeout([Ljava.lang.Object;@3ad22707) at 61
+In what order should the events happen? (enter for in-order)
+
+
+Time: 62
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: TIMEOUT 3: onTimeout([Ljava.lang.Object;@c4b5011) at 62
+In what order should the events happen? (enter for in-order)
+
+MessageLayer exiting.
+Number of packets sent: 115
+3: last delivered: 24, outstanding: 0
+
+4: last delivered: 25, outstanding: 0
