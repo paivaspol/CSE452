@@ -1,4 +1,3 @@
-
 /**
  * Holds the JSON Representation for the Twitter protocol
  * 
@@ -14,6 +13,8 @@ public class TwitterProtocol {
   private String data;
   /** unique hash code */
   private String hash;
+  /** transaction id of the msg */
+  private int transactionId;
 
   /**
    * Constructs a new structure to hold for communication
@@ -23,11 +24,12 @@ public class TwitterProtocol {
    * @param data extra information
    * @param operator the operator for getting the data
    */
-  public TwitterProtocol(String method, String collection, String data, String hash) {
+  public TwitterProtocol(String method, String collection, String data, String hash, int transactionId) {
     this.method = method;
     this.collection = collection;
     this.data = data;
     this.hash = hash;
+    this.transactionId = transactionId;
   }
 
   /**
@@ -61,9 +63,19 @@ public class TwitterProtocol {
   public String getData() {
     return data;
   }
-  
+
+  /**
+   * @return the hash of the msg
+   */
   public String getHash() {
-	  return hash;
+    return hash;
+  }
+
+  /**
+   * @return the transaction id
+   */
+  public int getTransactionId() {
+    return transactionId;
   }
 
   /**
@@ -92,12 +104,20 @@ public class TwitterProtocol {
   public void setData(String data) {
     this.data = data;
   }
-  
+
+  /**
+   * Sets the hash
+   * 
+   * @param hash the hash being set
+   */
   public void setHash(String hash) {
-	  this.hash = hash;
+    this.hash = hash;
   }
-  
+
+  /**
+   * @return a byte representation of the message
+   */
   public byte[] toBytes() {
-	  return TwitterNodeWrapper.GSON.toJson(this).getBytes();
+    return TwitterNodeWrapper.GSON.toJson(this).getBytes();
   }
 }
