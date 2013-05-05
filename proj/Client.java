@@ -15,22 +15,28 @@ import edu.washington.cs.cse490h.lib.Callback;
  */
 public class Client {
 
-	/** to get the response from on receive */
-	static final String USERS_FILE = "users.txt";
+	/** The filename where server store the user's information. */
+	public static final String USERS_FILE = "users.txt";
+	/** TwitterNodeWrapper. */
 	private final TwitterNodeWrapper tnw;
+	/** Contains the sequence of events to occur. */
 	private List<Callback> eventList;
+	/** Contains the commands received. */
 	private Queue<List<Callback>> commandQueue;
+	/** Keeps track of which event to execute next. */
 	public int eventIndex;
 
+	/**
+	 * Construct a new Client object using the given TwitterNodeWrapper.
+	 * 
+	 * @param tnw The TwitterNodeWrapper object.
+	 */
 	public Client(TwitterNodeWrapper tnw) {
 		this.tnw = tnw;
 	}
 
 	public void onRIOReceive(Integer from, int protocol, byte[] msg) {
 		logOutput("at onRIOReceive queue size index " + commandQueue.size() + " " + eventIndex);
-		if (protocol == 1) {
-			logOutput("Client line 41 ack received!");
-		}
 		TwitterProtocol tp = TwitterNodeWrapper.GSON.fromJson(new String(msg), TwitterProtocol.class);
 		if (tp.getMethod().startsWith("TIMEOUT")) {
 			logOutput("Timeout has occured while issuing request to server.");
@@ -247,16 +253,8 @@ public class Client {
 		stream.println(output);
 	}
 
-	public void processEvent() throws IllegalAccessException, InvocationTargetException, SecurityException,
-	ClassNotFoundException, NoSuchMethodException {
-		for (Callback cb : eventList) {
-			cb.invoke();
-		}
-		tnw.addTimeout(new Callback(Callback.getMethod("processEvent", this, null), this, null), 1);
-	}
-
 	/**
-	 * Dequeue to call the start of the next call back and reset the index.
+	 * Call the start of the next call back and reset the event index.
 	 * 
 	 * @throws InvocationTargetException
 	 * @throws IllegalAccessException
@@ -281,6 +279,12 @@ public class Client {
 		}
 	}
 
+	/**
+	 * Invoke first event for the command if it is the first command received.
+	 * 
+	 * @throws IllegalAccessException
+	 * @throws InvocationTargetException
+	 */
 	public void processQueue() throws IllegalAccessException, InvocationTargetException {
 		if (commandQueue.size() == 0) {
 			logError("no event to invoke in processQueue");
