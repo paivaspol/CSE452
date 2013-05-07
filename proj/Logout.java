@@ -4,6 +4,7 @@ import java.util.List;
 import edu.washington.cs.cse490h.lib.Callback;
 
 /**
+ * Contains a sequence of event for logging out.
  * 
  * @author leelee
  *
@@ -54,6 +55,7 @@ public class Logout extends Function {
 		logOutput("Logging out");
 		// delete this user's username from login.txt
 		TwitterProtocol tpQuery = new TwitterProtocol(TwitterServer.DELETE_LINES, "login.txt", username, new Entry(rioNode.addr).getHash());
+		tpQuery.setTimestamp(timestamp);
 		rioNode.RIOSend(serverAddress, Protocol.DATA, tpQuery.toBytes());
 		client.eventIndex = 2;
 	}
@@ -63,6 +65,7 @@ public class Logout extends Function {
 		if (responseString.startsWith(TwitterServer.RESTART)) {
 			// delete this user's username from login.txt
 			TwitterProtocol tpQuery = new TwitterProtocol(TwitterServer.DELETE_LINES, "login.txt", username, new Entry(rioNode.addr).getHash());
+			tpQuery.setTimestamp(timestamp);
 			rioNode.RIOSend(serverAddress, Protocol.DATA, tpQuery.toBytes());
 			client.eventIndex = 2;
 			return;
