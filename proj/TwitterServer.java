@@ -28,6 +28,7 @@ public class TwitterServer {
   public static final String CHECK_LAST_UPDATE = "checklastupdate";
   public static final String BEGIN_TRANSACTION = "begintransaction";
   public static final String COMMIT = "commit";
+  public static final String ABORT = "abort";
 
   /**
    * Response indicators
@@ -171,6 +172,8 @@ public class TwitterServer {
     	 return;
       } else if (request.getMethod().equals(COMMIT)) {
     	
+      } else if (request.getMethod().equals(ABORT)) {
+    	  
       } else { 
         throw new RuntimeException("Command not supported by the server");
       }
