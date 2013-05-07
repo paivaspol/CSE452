@@ -4,6 +4,7 @@ import java.util.List;
 import edu.washington.cs.cse490h.lib.Callback;
 
 /**
+ * Contains a sequence of events for signup action.
  * 
  * @author leelee
  *
@@ -177,6 +178,7 @@ public class CreateUser extends Function {
 			rioNode.fail();
 			return;
 		}
+		// commit
 		TwitterProtocol tpCommit = new TwitterProtocol(TwitterServer.COMMIT, new Entry(rioNode.addr).getHash());
 		tpCommit.setTimestamp(timestamp);
 		rioNode.RIOSend(serverAddress, Protocol.DATA, tpCommit.toBytes());
@@ -186,7 +188,7 @@ public class CreateUser extends Function {
 	public void step6(TwitterProtocol response) {
 		String responseString = response.getData();
 		if (responseString.startsWith(TwitterServer.RESTART)) {
-			// append this user information to users.txt
+			// commit
 			TwitterProtocol tpCommit = new TwitterProtocol(TwitterServer.COMMIT, new Entry(rioNode.addr).getHash());
 			tpCommit.setTimestamp(timestamp);
 			rioNode.RIOSend(serverAddress, Protocol.DATA, tpCommit.toBytes());
