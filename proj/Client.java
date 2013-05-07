@@ -36,7 +36,6 @@ public class Client {
 	}
 
 	public void onRIOReceive(Integer from, int protocol, byte[] msg) {
-		logOutput("at onRIOReceive queue size index " + commandQueue.size() + " " + eventIndex);
 		TwitterProtocol tp = TwitterNodeWrapper.GSON.fromJson(new String(msg), TwitterProtocol.class);
 		if (tp.getMethod().startsWith("TIMEOUT")) {
 			logOutput("Timeout has occured while issuing request to server.");
@@ -266,7 +265,6 @@ public class Client {
 	 * @throws IllegalAccessException
 	 */
 	public void completeCommand() {
-		logOutput("in complete command with queue size " + commandQueue.size());
 		if (commandQueue.size() == 0) {
 			logError("no event to invoke in completeCommand");
 		} else if (commandQueue.size() == 1) {
