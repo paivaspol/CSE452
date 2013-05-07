@@ -4,6 +4,7 @@ import java.util.List;
 import edu.washington.cs.cse490h.lib.Callback;
 
 /**
+ * Contains a sequence of events for logging in.
  * 
  * @author leelee
  *
