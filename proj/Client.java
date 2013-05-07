@@ -44,10 +44,16 @@ public class Client {
 			commandQueue.clear();
 			return;
 		}
+		if (tp.getMethod().startsWith("ROLLBACK")) {
+			logOutput("Transaction has been aborted.");
+			eventList = null;
+			commandQueue.clear();
+			return;
+		}
 		if (eventList != null && eventIndex < eventList.size() && eventList.get(eventIndex) != null) {
 			Callback cb = eventList.get(eventIndex);
 
-			cb.setParams(new Object[] { tp.getData() });
+			cb.setParams(new Object[] { tp });
 			try {
 				logOutput("Client eventIndex: " + eventIndex);
 				cb.invoke();
