@@ -26,6 +26,9 @@ public class TwitterServer {
   public static final String DELETE = "delete";
   public static final String DELETE_LINES = "deletelines";
   public static final String CHECK_LAST_UPDATE = "checklastupdate";
+  public static final String BEGIN_TRANSACTION = "begintransaction";
+  public static final String COMMIT = "commit";
+  public static final String ABORT = "abort";
 
   /**
    * Response indicators
@@ -161,7 +164,17 @@ public class TwitterServer {
             new TwitterProtocol(RESTART, RESTART, RESTART, new Entry(wrapper.getAddr()).getHash());
         wrapper.RIOSend(from, protocol, response.toBytes());
         return;
-      } else {
+      } else if (request.getMethod().equals(BEGIN_TRANSACTION)) {
+    	 TwitterProtocol response = new TwitterProtocol(request.getMethod(),
+    			 request.getCollection(), responseData, request.getHash(),
+    			 System.currentTimeMillis());
+    	 wrapper.RIOSend(from, protocol, response.toBytes());
+    	 return;
+      } else if (request.getMethod().equals(COMMIT)) {
+    	
+      } else if (request.getMethod().equals(ABORT)) {
+    	  
+      } else { 
         throw new RuntimeException("Command not supported by the server");
       }
     } catch (IOException e) {

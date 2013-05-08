@@ -44,6 +44,7 @@ public class ReliableInOrderMsgLayer {
     TwitterProtocol tp = TwitterNodeWrapper.GSON.fromJson(new String(riopkt.getPayload()), TwitterProtocol.class);
 
     if (tp.getMethod().equals(TwitterServer.RESTART)) {
+    	// reset sequence number of receiver.
       inConnections.remove(from);
       outConnections.remove(from);
     }

@@ -49,7 +49,6 @@ public class Entry {
 	
 	private void componentsToHash() {
 		long temp = (this.time.getTime()/1000 << 32) + (this.machineId << 20) + this.counter;
-		System.out.println("temp " + temp);
 		this.hash = Long.toString(temp);
 	}
 	
