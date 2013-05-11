@@ -47,13 +47,13 @@ public class Client {
 			commandQueue.clear();
 			return;
 		}
-		if (tp.getMethod().startsWith("ROLLBACK")) {
+		if (tp.getMethod().startsWith(TwitterServer.ROLLBACK)) {
 			logOutput("Transaction has been aborted.");
 			eventIndex = 0;
 			completeCommand();
 			return;
 		}
-		if (tp.getMethod().startsWith("INVALIDATE")) {
+		if (tp.getMethod().startsWith(TwitterServer.INVALIDATE)) {
 			// invalidates the particular filename to file content caching
 			String filename = tp.getCollection();
 			cache.remove(filename);
@@ -95,7 +95,7 @@ public class Client {
 		commandQueue = new LinkedList<List<Callback>>();
 		cache = new HashMap<String, String>();
 		// Inform the server that this client just started/restarted.
-		TwitterProtocol tpRestart = new TwitterProtocol(TwitterServer.RESTART, null);
+		TwitterProtocol tpRestart = new TwitterProtocol(TwitterServer.RESTART, TwitterServer.RESTART, TwitterServer.RESTART, new Entry(tnw.addr).getHash());
 		tnw.RIOSend(3, Protocol.DATA, tpRestart.toBytes());
 	}
 

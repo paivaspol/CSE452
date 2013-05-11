@@ -17,10 +17,11 @@ public class TwitterNodeWrapper extends RIONode {
 
   @Override
   public void onRIOReceive(Integer from, int protocol, byte[] msg) {
-    if (from == 4) {
+    if (from != 3) {
       // this is from the client
       server.onRIOReceive(from, protocol, msg);
     } else {
+    	Utils.logOutput(addr, client.toString());
       client.onRIOReceive(from, protocol, msg);
     }
   }
