@@ -69,7 +69,8 @@ public class CreateUser extends Function {
 		}
 		String[] tokens = responseString.split("\n");
 		if (!tokens[0].equals(TwitterServer.SUCCESS)) {
-			rioNode.fail();
+			client.eventIndex = 0;
+			client.completeCommand();
 			return;
 		}
 		boolean alreadyExist = false;
@@ -81,6 +82,10 @@ public class CreateUser extends Function {
 		}
 		if (alreadyExist) {
 			logOutput("User already created.");
+			// Abort this transaction.
+			TwitterProtocol tpAbort = new TwitterProtocol(TwitterServer.ABORT, new Entry(rioNode.addr).getHash());
+			client.RIOSend(serverAddress, Protocol.DATA, tpAbort.toBytes());
+			client.eventIndex = 0;
 			client.completeCommand();
 			return;
 		}
@@ -101,7 +106,8 @@ public class CreateUser extends Function {
 			return;
 		}
 		if (!responseString.startsWith(TwitterServer.SUCCESS)) {
-			rioNode.fail();
+			client.eventIndex = 0;
+			client.completeCommand();
 			return;
 		}
 		// create user file that stores users that he/she is following
@@ -120,7 +126,8 @@ public class CreateUser extends Function {
 			return;
 		}
 		if (!responseString.startsWith(TwitterServer.SUCCESS)) {
-			rioNode.fail();
+			client.eventIndex = 0;
+			client.completeCommand();
 			return;
 		}
 		// append this user information to users.txt
@@ -139,7 +146,8 @@ public class CreateUser extends Function {
 			return;
 		}
 		if (!responseString.startsWith(TwitterServer.SUCCESS)) {
-			rioNode.fail();
+			client.eventIndex = 0;
+			client.completeCommand();
 			return;
 		}
 		// commit

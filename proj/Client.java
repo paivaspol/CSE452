@@ -49,8 +49,8 @@ public class Client {
 		}
 		if (tp.getMethod().startsWith("ROLLBACK")) {
 			logOutput("Transaction has been aborted.");
-			eventList = null;
-			commandQueue.clear();
+			eventIndex = 0;
+			completeCommand();
 			return;
 		}
 		if (tp.getMethod().startsWith("INVALIDATE")) {
@@ -94,6 +94,9 @@ public class Client {
 		eventList = null;
 		commandQueue = new LinkedList<List<Callback>>();
 		cache = new HashMap<String, String>();
+		// Inform the server that this client just started/restarted.
+		TwitterProtocol tpRestart = new TwitterProtocol(TwitterServer.RESTART, null);
+		tnw.RIOSend(3, Protocol.DATA, tpRestart.toBytes());
 	}
 
 	public void onCommand(String command) throws IllegalAccessException, InvocationTargetException {

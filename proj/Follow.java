@@ -75,6 +75,9 @@ public class Follow extends Function {
 		}
 		if (!isLogin) {
 			logError("You are not login. Cannot follow.");
+			// Abort this transaction.
+			TwitterProtocol tpAbort = new TwitterProtocol(TwitterServer.ABORT, new Entry(rioNode.addr).getHash());
+			client.RIOSend(serverAddress, Protocol.DATA, tpAbort.toBytes());
 			client.eventIndex = 0;
 			client.completeCommand(); 
 			return;
@@ -112,6 +115,9 @@ public class Follow extends Function {
 		}
 		if (!isValidUser) {
 			logError("username:" + " " + followee + " does not exist.");
+			// Abort this transaction.
+			TwitterProtocol tpAbort = new TwitterProtocol(TwitterServer.ABORT, new Entry(rioNode.addr).getHash());
+			client.RIOSend(serverAddress, Protocol.DATA, tpAbort.toBytes());
 			client.eventIndex = 0;
 			client.completeCommand();
 			return;

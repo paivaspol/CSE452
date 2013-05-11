@@ -73,6 +73,9 @@ public class Unfollow extends Function {
 		}
 		if (!isLogin) {
 			logError("You are not login. Cannot unfollow.");
+			// Abort this transaction.
+			TwitterProtocol tpAbort = new TwitterProtocol(TwitterServer.ABORT, new Entry(rioNode.addr).getHash());
+			client.RIOSend(serverAddress, Protocol.DATA, tpAbort.toBytes());
 			client.eventIndex = 0;
 			client.completeCommand(); 
 			return;
