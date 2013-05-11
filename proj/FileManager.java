@@ -248,6 +248,9 @@ public class FileManager {
    * @return
    */
   public int getLastModifiedVersion(String filename) throws IOException {
+    if (!Utility.fileExists(server.getNode(), filename)) {
+      return 0;
+    }
     PersistentStorageReader reader = server.getPersistentStorageReader(filename);
     String lastTxn = reader.readLine();
     if (lastTxn == null) {
@@ -269,7 +272,6 @@ public class FileManager {
    * @throws IOException
    */
   public void writeToFile(String filename, String content) throws IOException {
-
     PersistentStorageReader reader = null;
     PersistentStorageWriter tempFileWriter = server.getPersistentStorageWriter(TwitterServer.TEMP_FILENAME, false);
     StringBuilder tempContent = new StringBuilder(filename + "\n");
