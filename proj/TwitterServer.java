@@ -165,7 +165,7 @@ public class TwitterServer {
       if (request.getMethod().equals(CREATE) || request.getMethod().equals(DELETE_LINES)
           || request.getMethod().equals(READ) || request.getMethod().equals(COMMIT)
           || request.getMethod().equals(DELETE)) {
-        fileManager.handleTransaction((int) transactionId, request.getMethod(), collection, data);
+        responseData = fileManager.handleTransaction((int) transactionId, request.getMethod(), collection, data);
         TwitterProtocol response = new TwitterProtocol(INVALIDATE, collection, "", "", -1);
         for (Integer machineId : connectedNodes) {
           if (machineId != from) {
@@ -174,7 +174,7 @@ public class TwitterServer {
         }
       } else if (request.getMethod().equals(APPEND)) {
         if (!pastRequests.contains(hash)) {
-          fileManager.handleTransaction((int) transactionId, request.getMethod(), collection, data);
+          responseData = fileManager.handleTransaction((int) transactionId, request.getMethod(), collection, data);
         }
         TwitterProtocol response = new TwitterProtocol(INVALIDATE, collection, "", "", -1);
         for (Integer machineId : connectedNodes) {
@@ -199,6 +199,9 @@ public class TwitterServer {
                   transactionCounter);
           wrapper.RIOSend(from, protocol, response.toBytes());
         }
+        return;
+      } else if (request.getMethod().equals(ABORT)) {
+        fileManager.handleTransaction((int) transactionId, request.getMethod(), collection, data);
         return;
       } else {
         throw new RuntimeException("Command not supported by the server");
