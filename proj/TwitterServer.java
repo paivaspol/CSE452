@@ -62,7 +62,7 @@ public class TwitterServer {
   private final Set<String> pastRequests;
   private final Map<Integer, Integer> nodeToTxn;
 
-  private final long transactionCounter;
+  private long transactionCounter;
 
   private final FileManager fileManager;
 
@@ -146,6 +146,10 @@ public class TwitterServer {
         appendFile(CONTACTED_CLIENTS, String.valueOf(from));
         connectedNodes.add(from);
       }
+      if (!nodeToTxn.containsKey(from)) {
+        nodeToTxn.put(from, (int) transactionCounter);
+        transactionCounter++;
+      }
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -159,19 +163,15 @@ public class TwitterServer {
     long transactionId = request.getTimestamp();
     try {
       if (request.getMethod().equals(CREATE) || request.getMethod().equals(DELETE_LINES)
-          || request.getMethod().equals(READ) || request.getMethod().equals(COMMIT)
-          || request.getMethod().equals(DELETE)) {
+          || request.getMethod().equals(READ) || request.getMethod().equals(DELETE)) {
         responseData = fileManager.handleTransaction((int) transactionId, request.getMethod(), collection, data);
       } else if (request.getMethod().equals(APPEND)) {
         if (!pastRequests.contains(hash)) {
           responseData = fileManager.handleTransaction((int) transactionId, request.getMethod(), collection, data);
         }
-        TwitterProtocol response = new TwitterProtocol(INVALIDATE, collection, "", "", -1);
-        for (Integer machineId : connectedNodes) {
-          if (machineId != from) {
-            wrapper.RIOSend(machineId, protocol, response.toBytes());
-          }
-        }
+      } else if (request.getMethod().equals(COMMIT)) {
+        responseData = fileManager.handleTransaction((int) transactionId, request.getMethod(), collection, data);
+        nodeToTxn.remove(from);
       } else if (request.getMethod().equals("TIMEOUT")) {
         TwitterProtocol response =
             new TwitterProtocol(RESTART, RESTART, RESTART, new Entry(wrapper.getAddr()).getHash());
@@ -193,10 +193,12 @@ public class TwitterServer {
       } else if (request.getMethod().equals(RESTART)) {
         if (nodeToTxn.containsKey(from)) {
           fileManager.removeTransaction(nodeToTxn.get(from));
+          nodeToTxn.remove(from);
         }
         return;
       } else if (request.getMethod().equals(ABORT)) {
         fileManager.handleTransaction((int) transactionId, request.getMethod(), collection, data);
+        nodeToTxn.remove(from);
         return;
       } else {
         throw new RuntimeException("Command not supported by the server" + request.getMethod());
