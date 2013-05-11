@@ -1,5 +1,7 @@
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.gson.Gson;
@@ -30,6 +32,7 @@ public class TwitterServer {
   public static final String COMMIT = "commit";
   public static final String ABORT = "abort";
   public static final String INVALIDATE = "invalidate";
+  public static final String ROLLBACK = "rollback";
 
   /**
    * Response indicators
@@ -57,6 +60,7 @@ public class TwitterServer {
   private final TwitterNodeWrapper wrapper;
   private final Set<Integer> connectedNodes;
   private final Set<String> pastRequests;
+  private final Map<Integer, Integer> nodeToTxn;
 
   private final long transactionCounter;
 
@@ -72,6 +76,7 @@ public class TwitterServer {
     pastRequests = new HashSet<String>();
     transactionCounter = 0;
     fileManager = new FileManager(this);
+    nodeToTxn = new HashMap<Integer, Integer>();
   }
 
   /**
@@ -153,6 +158,10 @@ public class TwitterServer {
     String hash = request.getHash();
     long transactionId = request.getTimestamp();
     try {
+      if (request.getMethod().equals(RESTART)) {
+        fileManager.removeTransaction(nodeToTxn.get(from));
+      }
+
       if (request.getMethod().equals(CREATE) || request.getMethod().equals(DELETE_LINES)
           || request.getMethod().equals(READ) || request.getMethod().equals(COMMIT)
           || request.getMethod().equals(DELETE)) {
@@ -179,10 +188,17 @@ public class TwitterServer {
         wrapper.RIOSend(from, protocol, response.toBytes());
         return;
       } else if (request.getMethod().equals(BEGIN_TRANSACTION)) {
-        TwitterProtocol response =
-            new TwitterProtocol(request.getMethod(), request.getCollection(), responseData, request.getHash(),
-                transactionCounter);
-        wrapper.RIOSend(from, protocol, response.toBytes());
+        if (!pastRequests.contains(hash)) {
+          TwitterProtocol response =
+              new TwitterProtocol(request.getMethod(), request.getCollection(), responseData, request.getHash(),
+                  transactionCounter);
+          wrapper.RIOSend(from, protocol, response.toBytes());
+        } else {
+          TwitterProtocol response =
+              new TwitterProtocol(ROLLBACK, request.getCollection(), responseData, request.getHash(),
+                  transactionCounter);
+          wrapper.RIOSend(from, protocol, response.toBytes());
+        }
         return;
       } else {
         throw new RuntimeException("Command not supported by the server");
@@ -191,7 +207,6 @@ public class TwitterServer {
       responseData = FAILURE + "\n";
       e.printStackTrace();
     }
-    // send back the damn respond!
     TwitterProtocol response = new TwitterProtocol(request);
     response.setData(responseData);
     wrapper.RIOSend(from, protocol, response.toBytes());

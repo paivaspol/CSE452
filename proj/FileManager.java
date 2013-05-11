@@ -67,6 +67,10 @@ public class FileManager {
     }
   }
 
+  public void removeTransaction(int transactionId) {
+    activeTransactions.remove(transactionId);
+  }
+
   /*
    * Helper for redoing all the operations in the log file
    */
