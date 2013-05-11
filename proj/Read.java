@@ -152,8 +152,6 @@ public class Read extends Function {
 		}
 		newFollowingList.append(followeeInfo[0] + "\t" + System.currentTimeMillis() + "\n");
 		++curFollowIndex;
-		logOutput("following.length " + following.length);
-		logOutput("currFollowIndex " + curFollowIndex);
 		if (curFollowIndex == following.length) {
 			// update the following list time by delete the the original following file
 			TwitterProtocol tpDeleteFollowing = new TwitterProtocol(TwitterServer.DELETE, usersFile, null, new Entry(rioNode.addr).getHash());
