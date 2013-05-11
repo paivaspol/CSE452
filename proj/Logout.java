@@ -39,7 +39,7 @@ public class Logout extends Function {
 
 	public void step0() {
 		TwitterProtocol tpBeginT = new TwitterProtocol(TwitterServer.BEGIN_TRANSACTION, new Entry(rioNode.addr).getHash());
-		rioNode.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
+		client.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
 		client.eventIndex = 1;
 	}
 
@@ -47,7 +47,7 @@ public class Logout extends Function {
 		String responseString = response.getData();
 		if (responseString.startsWith(TwitterServer.RESTART)) {
 			TwitterProtocol tpBeginT = new TwitterProtocol(TwitterServer.BEGIN_TRANSACTION, new Entry(rioNode.addr).getHash());
-			rioNode.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
+			client.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
 			client.eventIndex = 1;
 			return;
 		}
@@ -56,7 +56,7 @@ public class Logout extends Function {
 		// delete this user's username from login.txt
 		TwitterProtocol tpQuery = new TwitterProtocol(TwitterServer.DELETE_LINES, "login.txt", username, new Entry(rioNode.addr).getHash());
 		tpQuery.setTimestamp(timestamp);
-		rioNode.RIOSend(serverAddress, Protocol.DATA, tpQuery.toBytes());
+		client.RIOSend(serverAddress, Protocol.DATA, tpQuery.toBytes());
 		client.eventIndex = 2;
 	}
 
@@ -66,7 +66,7 @@ public class Logout extends Function {
 			// delete this user's username from login.txt
 			TwitterProtocol tpQuery = new TwitterProtocol(TwitterServer.DELETE_LINES, "login.txt", username, new Entry(rioNode.addr).getHash());
 			tpQuery.setTimestamp(timestamp);
-			rioNode.RIOSend(serverAddress, Protocol.DATA, tpQuery.toBytes());
+			client.RIOSend(serverAddress, Protocol.DATA, tpQuery.toBytes());
 			client.eventIndex = 2;
 			return;
 		}
@@ -79,7 +79,7 @@ public class Logout extends Function {
 		// commit
 		TwitterProtocol tpCommit = new TwitterProtocol(TwitterServer.COMMIT, new Entry(rioNode.addr).getHash());
 		tpCommit.setTimestamp(timestamp);
-		rioNode.RIOSend(serverAddress, Protocol.DATA, tpCommit.toBytes());
+		client.RIOSend(serverAddress, Protocol.DATA, tpCommit.toBytes());
 		client.eventIndex = 3;
 	}
 
@@ -89,7 +89,7 @@ public class Logout extends Function {
 			// commit
 			TwitterProtocol tpCommit = new TwitterProtocol(TwitterServer.COMMIT, new Entry(rioNode.addr).getHash());
 			tpCommit.setTimestamp(timestamp);
-			rioNode.RIOSend(serverAddress, Protocol.DATA, tpCommit.toBytes());
+			client.RIOSend(serverAddress, Protocol.DATA, tpCommit.toBytes());
 			client.eventIndex = 3;
 			return;
 		}

@@ -35,7 +35,7 @@ public class CreateUser extends Function {
 
 	public void step0() {
 		TwitterProtocol tpBeginT = new TwitterProtocol(TwitterServer.BEGIN_TRANSACTION, new Entry(rioNode.addr).getHash());
-		rioNode.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
+		client.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
 		client.eventIndex = 1;
 	}
 	
@@ -43,7 +43,7 @@ public class CreateUser extends Function {
 		String responseString = response.getData();
 		if (responseString.startsWith(TwitterServer.RESTART)) {
 			TwitterProtocol tpBeginT = new TwitterProtocol(TwitterServer.BEGIN_TRANSACTION, new Entry(rioNode.addr).getHash());
-			rioNode.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
+			client.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
 			client.eventIndex = 1;
 			return;
 		}
@@ -52,14 +52,14 @@ public class CreateUser extends Function {
 		// do a read
 		TwitterProtocol tpCheckUser = new TwitterProtocol(TwitterServer.READ, usersFile, null, new Entry(rioNode.addr).getHash());
 		tpCheckUser.setTimestamp(timestamp);
-		rioNode.RIOSend(serverAddress, Protocol.DATA, tpCheckUser.toBytes());
+		client.RIOSend(serverAddress, Protocol.DATA, tpCheckUser.toBytes());
 		client.eventIndex = 2;
 	}
 
 	public void step2(String responseString) {
 		if (responseString.startsWith(TwitterServer.RESTART)) {
 			TwitterProtocol tpCheckUser = new TwitterProtocol(TwitterServer.READ, usersFile, null, new Entry(rioNode.addr).getHash());
-			rioNode.RIOSend(serverAddress, Protocol.DATA, tpCheckUser.toBytes());
+			client.RIOSend(serverAddress, Protocol.DATA, tpCheckUser.toBytes());
 			client.eventIndex = 2;
 			return;
 		}
@@ -84,7 +84,7 @@ public class CreateUser extends Function {
 		logOutput("Creating a user, name:" + name);
 		// create the new user's text file
 		TwitterProtocol tpCreateUserFile = new TwitterProtocol(TwitterServer.CREATE, username + ".txt", null, new Entry(rioNode.addr).getHash());
-		rioNode.RIOSend(serverAddress, Protocol.DATA,tpCreateUserFile.toBytes());
+		client.RIOSend(serverAddress, Protocol.DATA,tpCreateUserFile.toBytes());
 		client.eventIndex = 3;
 	}
 	
@@ -93,7 +93,7 @@ public class CreateUser extends Function {
 		if (responseString.startsWith(TwitterServer.RESTART)) {
 			TwitterProtocol tpCheckUser = new TwitterProtocol(TwitterServer.READ, usersFile, null, new Entry(rioNode.addr).getHash());
 			tpCheckUser.setTimestamp(timestamp);
-			rioNode.RIOSend(serverAddress, Protocol.DATA, tpCheckUser.toBytes());
+			client.RIOSend(serverAddress, Protocol.DATA, tpCheckUser.toBytes());
 			client.eventIndex = 2;
 			return;
 		}
@@ -119,7 +119,7 @@ public class CreateUser extends Function {
 		// create the new user's text file
 		TwitterProtocol tpCreateUserFile = new TwitterProtocol(TwitterServer.CREATE, username + ".txt", null, new Entry(rioNode.addr).getHash());
 		tpCreateUserFile.setTimestamp(timestamp);
-		rioNode.RIOSend(serverAddress, Protocol.DATA,tpCreateUserFile.toBytes());
+		client.RIOSend(serverAddress, Protocol.DATA,tpCreateUserFile.toBytes());
 		client.eventIndex = 3;
 	}
 	
@@ -129,7 +129,7 @@ public class CreateUser extends Function {
 			// create the new user's text file
 			TwitterProtocol tpCreateUserFile = new TwitterProtocol(TwitterServer.CREATE, username + ".txt", null, new Entry(rioNode.addr).getHash());
 			tpCreateUserFile.setTimestamp(timestamp);
-			rioNode.RIOSend(serverAddress, Protocol.DATA,tpCreateUserFile.toBytes());
+			client.RIOSend(serverAddress, Protocol.DATA,tpCreateUserFile.toBytes());
 			client.eventIndex = 3;
 		}
 		if (!responseString.startsWith(TwitterServer.SUCCESS)) {
@@ -139,7 +139,7 @@ public class CreateUser extends Function {
 		// create user file that stores users that he/she is following
 		TwitterProtocol tpCreateFollowingFile = new TwitterProtocol(TwitterServer.CREATE, username + "_" + "following.txt", null, new Entry(rioNode.addr).getHash());
 		tpCreateFollowingFile.setTimestamp(timestamp);
-		rioNode.RIOSend(serverAddress, Protocol.DATA, tpCreateFollowingFile.toBytes());
+		client.RIOSend(serverAddress, Protocol.DATA, tpCreateFollowingFile.toBytes());
 		client.eventIndex = 4;
 	}
 	
@@ -149,7 +149,7 @@ public class CreateUser extends Function {
 			// create user file that stores users that he/she is following
 			TwitterProtocol tpCreateFollowingFile = new TwitterProtocol(TwitterServer.CREATE, username + "_" + "following.txt", null, new Entry(rioNode.addr).getHash());
 			tpCreateFollowingFile.setTimestamp(timestamp);
-			rioNode.RIOSend(serverAddress, Protocol.DATA, tpCreateFollowingFile.toBytes());
+			client.RIOSend(serverAddress, Protocol.DATA, tpCreateFollowingFile.toBytes());
 			client.eventIndex = 4;
 			return;
 		}
@@ -160,7 +160,7 @@ public class CreateUser extends Function {
 		// append this user information to users.txt
 		TwitterProtocol tpAppendUserInfo = new TwitterProtocol(TwitterServer.APPEND, usersFile, user.toString(), user.getHash());
 		tpAppendUserInfo.setTimestamp(timestamp);
-		rioNode.RIOSend(serverAddress, Protocol.DATA, tpAppendUserInfo.toBytes());
+		client.RIOSend(serverAddress, Protocol.DATA, tpAppendUserInfo.toBytes());
 		client.eventIndex = 5;
 	}
 	
@@ -170,7 +170,7 @@ public class CreateUser extends Function {
 			// append this user information to users.txt
 			TwitterProtocol tpAppendUserInfo = new TwitterProtocol(TwitterServer.APPEND, usersFile, user.toString(), user.getHash());
 			tpAppendUserInfo.setTimestamp(timestamp);
-			rioNode.RIOSend(serverAddress, Protocol.DATA, tpAppendUserInfo.toBytes());
+			client.RIOSend(serverAddress, Protocol.DATA, tpAppendUserInfo.toBytes());
 			client.eventIndex = 5;
 			return;
 		}
@@ -181,7 +181,7 @@ public class CreateUser extends Function {
 		// commit
 		TwitterProtocol tpCommit = new TwitterProtocol(TwitterServer.COMMIT, new Entry(rioNode.addr).getHash());
 		tpCommit.setTimestamp(timestamp);
-		rioNode.RIOSend(serverAddress, Protocol.DATA, tpCommit.toBytes());
+		client.RIOSend(serverAddress, Protocol.DATA, tpCommit.toBytes());
 		client.eventIndex = 6;
 	}
 	
@@ -191,7 +191,7 @@ public class CreateUser extends Function {
 			// commit
 			TwitterProtocol tpCommit = new TwitterProtocol(TwitterServer.COMMIT, new Entry(rioNode.addr).getHash());
 			tpCommit.setTimestamp(timestamp);
-			rioNode.RIOSend(serverAddress, Protocol.DATA, tpCommit.toBytes());
+			client.RIOSend(serverAddress, Protocol.DATA, tpCommit.toBytes());
 			client.eventIndex = 6;
 			return;
 		}

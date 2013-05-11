@@ -1,7 +1,9 @@
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Scanner;
 import java.util.regex.Pattern;
@@ -25,6 +27,8 @@ public class Client {
 	private Queue<List<Callback>> commandQueue;
 	/** Keeps track of which event to execute next. */
 	public int eventIndex;
+	/** Map from filename to file content. */
+	private Map<String, String> cache;
 
 	/**
 	 * Construct a new Client object using the given TwitterNodeWrapper.
@@ -49,12 +53,17 @@ public class Client {
 			commandQueue.clear();
 			return;
 		}
+		if (tp.getMethod().startsWith("INVALIDATE")) {
+			// invalidates the particular filename to file content caching
+			String filename = tp.getCollection();
+			cache.remove(filename);
+			return;
+		}
 		if (eventList != null && eventIndex < eventList.size() && eventList.get(eventIndex) != null) {
 			Callback cb = eventList.get(eventIndex);
 
 			cb.setParams(new Object[] { tp });
 			try {
-				logOutput("Client eventIndex: " + eventIndex);
 				cb.invoke();
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -78,6 +87,7 @@ public class Client {
 		eventIndex = 0;
 		eventList = null;
 		commandQueue = new LinkedList<List<Callback>>();
+		cache = new HashMap<String, String>();
 	}
 
 	public void onCommand(String command) throws IllegalAccessException, InvocationTargetException {
@@ -244,6 +254,10 @@ public class Client {
 			logError("Invalid command");
 		}
 		sc.close();
+	}
+	
+	public void RIOSend(int destAddr, int protocol, byte[] payload) {
+		tnw.RIOSend(destAddr, protocol, payload);
 	}
 
 	public void logError(String output) {

@@ -28,7 +28,7 @@ public class Tweet extends Function {
 
 	public void step0() {
 		TwitterProtocol tpBeginT = new TwitterProtocol(TwitterServer.BEGIN_TRANSACTION, new Entry(rioNode.addr).getHash());
-		rioNode.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
+		client.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
 		client.eventIndex = 1;
 	}
 
@@ -36,7 +36,7 @@ public class Tweet extends Function {
 		String responseString = response.getData();
 		if (responseString.startsWith(TwitterServer.RESTART)) {
 			TwitterProtocol tpBeginT = new TwitterProtocol(TwitterServer.BEGIN_TRANSACTION, new Entry(rioNode.addr).getHash());
-			rioNode.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
+			client.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
 			client.eventIndex = 1;
 			return;
 		}
@@ -44,7 +44,7 @@ public class Tweet extends Function {
 		// get login usernames
 		TwitterProtocol tpGetLogin = new TwitterProtocol(TwitterServer.READ, "login.txt", null, new Entry(rioNode.addr).getHash());
 		tpGetLogin.setTimestamp(timestamp);
-		rioNode.RIOSend(serverAddress, Protocol.DATA, tpGetLogin.toBytes());
+		client.RIOSend(serverAddress, Protocol.DATA, tpGetLogin.toBytes());
 		client.eventIndex = 2;
 	}
 
@@ -53,7 +53,7 @@ public class Tweet extends Function {
 		if (responseString.startsWith(TwitterServer.RESTART)) {
 			TwitterProtocol tpGetLogin = new TwitterProtocol(TwitterServer.READ, "login.txt", null, new Entry(rioNode.addr).getHash());
 			tpGetLogin.setTimestamp(timestamp);
-			rioNode.RIOSend(serverAddress, Protocol.DATA, tpGetLogin.toBytes());
+			client.RIOSend(serverAddress, Protocol.DATA, tpGetLogin.toBytes());
 			client.eventIndex = 2;
 			return;
 		}
@@ -85,7 +85,7 @@ public class Tweet extends Function {
 		TwitterProtocol tpAppendTweet =
 				new TwitterProtocol(TwitterServer.APPEND, usersFile, strData.toString(), strData.getHash());
 		tpAppendTweet.setTimestamp(timestamp);
-		rioNode.RIOSend(serverAddress, Protocol.DATA, tpAppendTweet.toBytes());
+		client.RIOSend(serverAddress, Protocol.DATA, tpAppendTweet.toBytes());
 		client.eventIndex = 3;
 	}
 
@@ -96,7 +96,7 @@ public class Tweet extends Function {
 			TwitterProtocol tpAppendTweet =
 					new TwitterProtocol(TwitterServer.APPEND, usersFile, strData.toString(), strData.getHash());
 			tpAppendTweet.setTimestamp(timestamp);
-			rioNode.RIOSend(serverAddress, Protocol.DATA, tpAppendTweet.toBytes());
+			client.RIOSend(serverAddress, Protocol.DATA, tpAppendTweet.toBytes());
 			client.eventIndex = 3;
 			return;
 		}
@@ -109,7 +109,7 @@ public class Tweet extends Function {
 		// commit
 		TwitterProtocol tpCommit = new TwitterProtocol(TwitterServer.COMMIT, new Entry(rioNode.addr).getHash());
 		tpCommit.setTimestamp(timestamp);
-		rioNode.RIOSend(serverAddress, Protocol.DATA, tpCommit.toBytes());
+		client.RIOSend(serverAddress, Protocol.DATA, tpCommit.toBytes());
 		client.eventIndex = 4;
 	}
 	
@@ -119,7 +119,7 @@ public class Tweet extends Function {
 			// commit
 			TwitterProtocol tpCommit = new TwitterProtocol(TwitterServer.COMMIT, new Entry(rioNode.addr).getHash());
 			tpCommit.setTimestamp(timestamp);
-			rioNode.RIOSend(serverAddress, Protocol.DATA, tpCommit.toBytes());
+			client.RIOSend(serverAddress, Protocol.DATA, tpCommit.toBytes());
 			client.eventIndex = 4;
 			return;
 		}

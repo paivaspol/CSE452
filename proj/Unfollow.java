@@ -27,7 +27,7 @@ public class Unfollow extends Function {
 
 	public void step0() {
 		TwitterProtocol tpBeginT = new TwitterProtocol(TwitterServer.BEGIN_TRANSACTION, new Entry(rioNode.addr).getHash());
-		rioNode.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
+		client.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
 		client.eventIndex = 1;
 	}
 
@@ -35,7 +35,7 @@ public class Unfollow extends Function {
 		String responseString = response.getData();
 		if (responseString.startsWith(TwitterServer.RESTART)) {
 			TwitterProtocol tpBeginT = new TwitterProtocol(TwitterServer.BEGIN_TRANSACTION, new Entry(rioNode.addr).getHash());
-			rioNode.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
+			client.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
 			client.eventIndex = 1;
 			return;
 		}
@@ -43,7 +43,7 @@ public class Unfollow extends Function {
 		// get login usernames
 		TwitterProtocol tpGetLogin = new TwitterProtocol(TwitterServer.READ, "login.txt", null, new Entry(rioNode.addr).getHash());
 		tpGetLogin.setTimestamp(timestamp);
-		rioNode.RIOSend(serverAddress, Protocol.DATA, tpGetLogin.toBytes());
+		client.RIOSend(serverAddress, Protocol.DATA, tpGetLogin.toBytes());
 		client.eventIndex = 2;
 	}
 
@@ -52,7 +52,7 @@ public class Unfollow extends Function {
 		if (responseString.startsWith(TwitterServer.RESTART)) {
 			TwitterProtocol tpGetLogin = new TwitterProtocol(TwitterServer.READ, "login.txt", null, new Entry(rioNode.addr).getHash());
 			tpGetLogin.setTimestamp(timestamp);
-			rioNode.RIOSend(serverAddress, Protocol.DATA, tpGetLogin.toBytes());
+			client.RIOSend(serverAddress, Protocol.DATA, tpGetLogin.toBytes());
 			client.eventIndex = 2;
 			return;
 		}
@@ -81,7 +81,7 @@ public class Unfollow extends Function {
 		// delete the username to follow in the following file
 		TwitterProtocol tpAddToFollowing = new TwitterProtocol(TwitterServer.DELETE_LINES, usersFile, followee, new Entry(rioNode.addr).getHash());
 		tpAddToFollowing.setTimestamp(timestamp);
-		rioNode.RIOSend(serverAddress, Protocol.DATA, tpAddToFollowing.toBytes());
+		client.RIOSend(serverAddress, Protocol.DATA, tpAddToFollowing.toBytes());
 		client.eventIndex = 3;
 	}
 
@@ -92,7 +92,7 @@ public class Unfollow extends Function {
 		if (responseString.startsWith(TwitterServer.RESTART)) {
 			TwitterProtocol tpAddToFollowing = new TwitterProtocol(TwitterServer.DELETE_LINES, usersFile, followee, new Entry(rioNode.addr).getHash());
 			tpAddToFollowing.setTimestamp(timestamp);
-			rioNode.RIOSend(serverAddress, Protocol.DATA, tpAddToFollowing.toBytes());
+			client.RIOSend(serverAddress, Protocol.DATA, tpAddToFollowing.toBytes());
 			client.eventIndex = 3;
 			return;
 		}
@@ -105,7 +105,7 @@ public class Unfollow extends Function {
 		// commit
 		TwitterProtocol tpCommit = new TwitterProtocol(TwitterServer.COMMIT, new Entry(rioNode.addr).getHash());
 		tpCommit.setTimestamp(timestamp);
-		rioNode.RIOSend(serverAddress, Protocol.DATA, tpCommit.toBytes());
+		client.RIOSend(serverAddress, Protocol.DATA, tpCommit.toBytes());
 		client.eventIndex = 4;
 	}
 	
@@ -115,7 +115,7 @@ public class Unfollow extends Function {
 			// commit
 			TwitterProtocol tpCommit = new TwitterProtocol(TwitterServer.COMMIT, new Entry(rioNode.addr).getHash());
 			tpCommit.setTimestamp(timestamp);
-			rioNode.RIOSend(serverAddress, Protocol.DATA, tpCommit.toBytes());
+			client.RIOSend(serverAddress, Protocol.DATA, tpCommit.toBytes());
 			client.eventIndex = 4;
 			return;
 		}
