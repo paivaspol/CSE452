@@ -59,6 +59,12 @@ public class Client {
 			cache.remove(filename);
 			return;
 		}
+		if (tp.getMethod().equals(TwitterServer.READ)) {
+			if (tp.getData().startsWith(TwitterServer.SUCCESS)) {
+				logOutput("\nadd to the cache " + tp.getMethod() + "\n" + tp.getCollection() + "\n" + tp.getData() + "\n");
+				cache.put(tp.getCollection(), tp.getData());
+			}
+		}
 		if (eventList != null && eventIndex < eventList.size() && eventList.get(eventIndex) != null) {
 			Callback cb = eventList.get(eventIndex);
 
@@ -257,6 +263,31 @@ public class Client {
 	}
 	
 	public void RIOSend(int destAddr, int protocol, byte[] payload) {
+		// Check the request to be sent to server. If the request is a read, check if we have cache
+		// information for that particular collection.
+		// If the request is an deletelines, append, or delete, remove the cache information that
+		// we have for that collection, aka invalidates cache.
+	    String jsonStr = tnw.packetBytesToString(payload);
+	    TwitterProtocol request = TwitterNodeWrapper.GSON.fromJson(jsonStr, TwitterProtocol.class);
+	    String method = request.getMethod();
+	    String collection = request.getCollection();
+	    if (method.equals(TwitterServer.READ)) {
+	    	String fileContent = cache.get(collection);
+	    	// get the information from the cache and send it to the person that sent the request
+	    	if (fileContent != null) {
+	    		// p
+	    		logOutput("\nget info from cache " + method + "\n" + collection + "\n" + fileContent + "\n");
+	    		TwitterProtocol response = new TwitterProtocol(request);
+	    		response.setMethod("NO_CACHE");
+	    		response.setData(fileContent);
+	    		onRIOReceive(destAddr, protocol, response.toBytes());
+	    		return;
+	    	}
+	    } else if (method.equals(TwitterServer.APPEND) || method.equals(TwitterServer.DELETE)
+	    		|| method.equals(TwitterServer.DELETE_LINES)) {
+	    	logOutput("\ninvalidate cache " + method + "\n");
+	    	cache.remove(collection);
+	    }
 		tnw.RIOSend(destAddr, protocol, payload);
 	}
 
