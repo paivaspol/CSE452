@@ -14,6 +14,7 @@ public class Logout extends Function {
 	private int serverAddress;
 	private String username;
 	private long timestamp;
+	private String beginTransactionHash;
 
 	public Logout(Client client, RIONode rioNode, int serverAddress, String username) {
 		super(client, rioNode);
@@ -38,7 +39,8 @@ public class Logout extends Function {
 	}
 
 	public void step0() {
-		TwitterProtocol tpBeginT = new TwitterProtocol(TwitterServer.BEGIN_TRANSACTION, new Entry(rioNode.addr).getHash());
+		beginTransactionHash = new Entry(rioNode.addr).getHash();
+		TwitterProtocol tpBeginT = new TwitterProtocol(TwitterServer.BEGIN_TRANSACTION, beginTransactionHash);
 		client.eventIndex = 1;
 		client.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
 	}
@@ -46,7 +48,7 @@ public class Logout extends Function {
 	public void step1(TwitterProtocol response) {
 		String responseString = response.getData();
 		if (responseString.startsWith(TwitterServer.RESTART)) {
-			TwitterProtocol tpBeginT = new TwitterProtocol(TwitterServer.BEGIN_TRANSACTION, new Entry(rioNode.addr).getHash());
+			TwitterProtocol tpBeginT = new TwitterProtocol(TwitterServer.BEGIN_TRANSACTION, beginTransactionHash);
 			client.eventIndex = 1;
 			client.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
 			return;
@@ -63,11 +65,9 @@ public class Logout extends Function {
 	public void step2(TwitterProtocol response) {
 		String responseString = response.getData();
 		if (responseString.startsWith(TwitterServer.RESTART)) {
-			// delete this user's username from login.txt
-			TwitterProtocol tpQuery = new TwitterProtocol(TwitterServer.DELETE_LINES, "login.txt", username, new Entry(rioNode.addr).getHash());
-			tpQuery.setTimestamp(timestamp);
-			client.eventIndex = 2;
-			client.RIOSend(serverAddress, Protocol.DATA, tpQuery.toBytes());
+			TwitterProtocol tpBeginT = new TwitterProtocol(TwitterServer.BEGIN_TRANSACTION, beginTransactionHash);
+			client.eventIndex = 1;
+			client.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
 			return;
 		}
 		if (!responseString.startsWith(TwitterServer.SUCCESS)) {
@@ -86,11 +86,9 @@ public class Logout extends Function {
 	public void step3(TwitterProtocol response) {
 		String responseString = response.getData();
 		if (responseString.startsWith(TwitterServer.RESTART)) {
-			// commit
-			TwitterProtocol tpCommit = new TwitterProtocol(TwitterServer.COMMIT, new Entry(rioNode.addr).getHash());
-			tpCommit.setTimestamp(timestamp);
-			client.eventIndex = 3;
-			client.RIOSend(serverAddress, Protocol.DATA, tpCommit.toBytes());
+			TwitterProtocol tpBeginT = new TwitterProtocol(TwitterServer.BEGIN_TRANSACTION, beginTransactionHash);
+			client.eventIndex = 1;
+			client.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
 			return;
 		}
 		logOutput("You are logout! " + username);

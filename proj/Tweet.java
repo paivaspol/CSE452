@@ -17,6 +17,7 @@ public class Tweet extends Function {
 	private final String username;
 	private StringData strData;
 	private long timestamp;
+	private String beginTransactionHash;
 
 	public Tweet(Client client, RIONode rioNode, int serverAddress, String usersFile, String msg, String username) {
 		super(client, rioNode);
@@ -27,7 +28,8 @@ public class Tweet extends Function {
 	}
 
 	public void step0() {
-		TwitterProtocol tpBeginT = new TwitterProtocol(TwitterServer.BEGIN_TRANSACTION, new Entry(rioNode.addr).getHash());
+		beginTransactionHash = new Entry(rioNode.addr).getHash();
+		TwitterProtocol tpBeginT = new TwitterProtocol(TwitterServer.BEGIN_TRANSACTION, beginTransactionHash);
 		client.eventIndex = 1;
 		client.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
 	}
@@ -35,7 +37,7 @@ public class Tweet extends Function {
 	public void step1(TwitterProtocol response) {
 		String responseString = response.getData();
 		if (responseString.startsWith(TwitterServer.RESTART)) {
-			TwitterProtocol tpBeginT = new TwitterProtocol(TwitterServer.BEGIN_TRANSACTION, new Entry(rioNode.addr).getHash());
+			TwitterProtocol tpBeginT = new TwitterProtocol(TwitterServer.BEGIN_TRANSACTION, beginTransactionHash);
 			client.eventIndex = 1;
 			client.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
 			return;
@@ -51,10 +53,9 @@ public class Tweet extends Function {
 	public void step2(TwitterProtocol response) {
 		String responseString = response.getData();
 		if (responseString.startsWith(TwitterServer.RESTART)) {
-			TwitterProtocol tpGetLogin = new TwitterProtocol(TwitterServer.READ, "login.txt", null, new Entry(rioNode.addr).getHash());
-			tpGetLogin.setTimestamp(timestamp);
-			client.eventIndex = 2;
-			client.RIOSend(serverAddress, Protocol.DATA, tpGetLogin.toBytes());
+			TwitterProtocol tpBeginT = new TwitterProtocol(TwitterServer.BEGIN_TRANSACTION, beginTransactionHash);
+			client.eventIndex = 1;
+			client.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
 			return;
 		}
 		String[] tokens = responseString.split("\n");
@@ -93,11 +94,9 @@ public class Tweet extends Function {
 		String responseString = response.getData();
 		// check response data
 		if (responseString.startsWith(TwitterServer.RESTART)) {
-			TwitterProtocol tpAppendTweet =
-					new TwitterProtocol(TwitterServer.APPEND, usersFile, strData.toString(), strData.getHash());
-			tpAppendTweet.setTimestamp(timestamp);
-			client.eventIndex = 3;
-			client.RIOSend(serverAddress, Protocol.DATA, tpAppendTweet.toBytes());
+			TwitterProtocol tpBeginT = new TwitterProtocol(TwitterServer.BEGIN_TRANSACTION, beginTransactionHash);
+			client.eventIndex = 1;
+			client.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
 			return;
 		}
 		if (!responseString.startsWith(TwitterServer.SUCCESS)) {
@@ -116,11 +115,9 @@ public class Tweet extends Function {
 	public void step4(TwitterProtocol response) {
 		String responseString = response.getData();
 		if (responseString.startsWith(TwitterServer.RESTART)) {
-			// commit
-			TwitterProtocol tpCommit = new TwitterProtocol(TwitterServer.COMMIT, new Entry(rioNode.addr).getHash());
-			tpCommit.setTimestamp(timestamp);
-			client.eventIndex = 4;
-			client.RIOSend(serverAddress, Protocol.DATA, tpCommit.toBytes());
+			TwitterProtocol tpBeginT = new TwitterProtocol(TwitterServer.BEGIN_TRANSACTION, beginTransactionHash);
+			client.eventIndex = 1;
+			client.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
 			return;
 		}
 		logOutput("Your tweet is posted. :)");

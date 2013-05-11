@@ -17,6 +17,7 @@ public class Follow extends Function {
 	private final String username;
 	private StringData strData;
 	private long timestamp;
+	private String beginTransactionHash;
 
 	public Follow(Client client, RIONode rioNode, int serverAddress, String usersFile, String followee, String username) {
 		super(client, rioNode);
@@ -28,7 +29,8 @@ public class Follow extends Function {
 
 
 	public void step0() {
-		TwitterProtocol tpBeginT = new TwitterProtocol(TwitterServer.BEGIN_TRANSACTION, new Entry(rioNode.addr).getHash());
+		beginTransactionHash = new Entry(rioNode.addr).getHash();
+		TwitterProtocol tpBeginT = new TwitterProtocol(TwitterServer.BEGIN_TRANSACTION, beginTransactionHash);
 		client.eventIndex = 1;
 		client.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
 	}
@@ -36,7 +38,7 @@ public class Follow extends Function {
 	public void step1(TwitterProtocol response) {
 		String responseString = response.getData();
 		if (responseString.startsWith(TwitterServer.RESTART)) {
-			TwitterProtocol tpBeginT = new TwitterProtocol(TwitterServer.BEGIN_TRANSACTION, new Entry(rioNode.addr).getHash());
+			TwitterProtocol tpBeginT = new TwitterProtocol(TwitterServer.BEGIN_TRANSACTION, beginTransactionHash);
 			client.eventIndex = 1;
 			client.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
 			return;
@@ -52,10 +54,9 @@ public class Follow extends Function {
 	public void step2(TwitterProtocol response) {
 		String responseString = response.getData();
 		if (responseString.startsWith(TwitterServer.RESTART)) {
-			TwitterProtocol tpGetLogin = new TwitterProtocol(TwitterServer.READ, "login.txt", null, new Entry(rioNode.addr).getHash());
-			tpGetLogin.setTimestamp(timestamp);
-			client.eventIndex = 2;
-			client.RIOSend(serverAddress, Protocol.DATA, tpGetLogin.toBytes());
+			TwitterProtocol tpBeginT = new TwitterProtocol(TwitterServer.BEGIN_TRANSACTION, beginTransactionHash);
+			client.eventIndex = 1;
+			client.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
 			return;
 		}
 		String[] tokens = responseString.split("\n");
@@ -88,10 +89,9 @@ public class Follow extends Function {
 	public void step3(TwitterProtocol response) {
 		String responseString = response.getData();
 		if (responseString.startsWith(TwitterServer.RESTART)) {
-			TwitterProtocol tpCheckUser = new TwitterProtocol(TwitterServer.READ, Client.USERS_FILE, null, new Entry(rioNode.addr).getHash());
-			tpCheckUser.setTimestamp(timestamp);
-			client.eventIndex = 3;
-			client.RIOSend(serverAddress, Protocol.DATA, tpCheckUser.toBytes());
+			TwitterProtocol tpBeginT = new TwitterProtocol(TwitterServer.BEGIN_TRANSACTION, beginTransactionHash);
+			client.eventIndex = 1;
+			client.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
 			return;
 		}
 		// check if the user is a valid user or not
@@ -129,10 +129,9 @@ public class Follow extends Function {
 	public void step4(TwitterProtocol response) {
 		String responseString = response.getData();
 		if (responseString.startsWith(TwitterServer.RESTART)) {
-			TwitterProtocol tpAddToFollowing = new TwitterProtocol(TwitterServer.APPEND, usersFile, strData.toString(), strData.getHash());
-			tpAddToFollowing.setTimestamp(timestamp);
-			client.eventIndex = 4;
-			client.RIOSend(serverAddress, Protocol.DATA, tpAddToFollowing.toBytes());
+			TwitterProtocol tpBeginT = new TwitterProtocol(TwitterServer.BEGIN_TRANSACTION, beginTransactionHash);
+			client.eventIndex = 1;
+			client.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
 			return;
 		}
 		// check response data, if succeeded notify the user
@@ -151,10 +150,9 @@ public class Follow extends Function {
 	public void step5(TwitterProtocol response) {
 		String responseString = response.getData();
 		if (responseString.startsWith(TwitterServer.RESTART)) {
-			TwitterProtocol tpCommit = new TwitterProtocol(TwitterServer.COMMIT, new Entry(rioNode.addr).getHash());
-			tpCommit.setTimestamp(timestamp);
-			client.eventIndex = 5;
-			client.RIOSend(serverAddress, Protocol.DATA, tpCommit.toBytes());
+			TwitterProtocol tpBeginT = new TwitterProtocol(TwitterServer.BEGIN_TRANSACTION, beginTransactionHash);
+			client.eventIndex = 1;
+			client.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
 			return;
 		}
 		logOutput("Congratulation! You are now following " + followee);
