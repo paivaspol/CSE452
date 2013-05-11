@@ -1,0 +1,29 @@
+start 3
+start 4
+start 5
+time
+4	signup	leelee	leelee	a2345	3
+time
+5	signup	vaspol	vaspol	1234	3
+time
+5	login	vaspol	1234	3
+time
+5	follow	vaspol	leelee	3
+time
+5	logout	vaspol	3
+time
+4	login	leelee	a2345	3
+time
+4	tweet	leelee	"first tweet"	3
+time
+fail 3
+time
+start 3
+time
+4	logout	leelee	3
+time
+5	login	vaspol	1234	3
+time
+5	read	vaspol	3
+time
+5	logout	vaspol	3
