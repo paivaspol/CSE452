@@ -40,11 +40,12 @@ public class TwitterServer {
   /**
    * File names
    */
-  private static final String TEMP_FILENAME = ".tmp";
+  public static final String TEMP_FILENAME = ".tmp";
   private static final String USERS_FILENAME = "users.txt";
   private static final String LOGIN_FILENAME = "login.txt";
   private static final String CONTACTED_CLIENTS = "clients.txt";
   private static final String LOG_FILENAME = "logs.txt";
+  public static final String REDO_LOGGING_FILENAME = "log.txt";
 
   /**
    * An instance of GSON for serializing and deserializing JSON objects
@@ -56,6 +57,10 @@ public class TwitterServer {
   private final Set<Integer> connectedNodes;
   private final Set<String> pastRequests;
 
+  private final long transactionCounter;
+
+  private final FileManager fileManager;
+
   /**
    * Constructs the server side
    */
@@ -64,6 +69,8 @@ public class TwitterServer {
     this.wrapper = wrapper;
     connectedNodes = new HashSet<Integer>();
     pastRequests = new HashSet<String>();
+    transactionCounter = 0;
+    fileManager = new FileManager(this);
   }
 
   /**
@@ -74,7 +81,7 @@ public class TwitterServer {
     // tmp file in case of it was in the middle of something when it crashed
     if (Utility.fileExists(wrapper, TEMP_FILENAME)) {
       Utils.logOutput(wrapper.getAddr(), "Restoring file after crash at append");
-      resumeAppendExecution();
+      fileManager.onRecover();
     }
 
     try {
@@ -143,38 +150,27 @@ public class TwitterServer {
     String data = request.getData();
     String responseData = SUCCESS + "\n";
     String hash = request.getHash();
+    long transactionId = request.getTimestamp();
     try {
-      if (request.getMethod().equals(CREATE)) {
-        Utils.logOutput(wrapper.getAddr(), "Creating a tweet entry...");
-        if (!createFile(collection)) {
-          responseData = FAILURE;
-        }
-      } else if (request.getMethod().equals(READ)) {
-        responseData += readFile(collection);
+      if (request.getMethod().equals(CREATE) || request.getMethod().equals(DELETE_LINES)
+          || request.getMethod().equals(READ) || request.getMethod().equals(COMMIT)) {
+        fileManager.handleTransaction((int) transactionId, request.getMethod(), collection, data);
       } else if (request.getMethod().equals(APPEND)) {
         if (!pastRequests.contains(hash)) {
-          appendFile(collection, data);
+          fileManager.handleTransaction((int) transactionId, request.getMethod(), collection, data);
         }
-      } else if (request.getMethod().equals(DELETE)) {
-        deleteFile(collection);
-      } else if (request.getMethod().equals(DELETE_LINES)) {
-        responseData += deleteEntries(collection, data);
       } else if (request.getMethod().equals("TIMEOUT")) {
         TwitterProtocol response =
             new TwitterProtocol(RESTART, RESTART, RESTART, new Entry(wrapper.getAddr()).getHash());
         wrapper.RIOSend(from, protocol, response.toBytes());
         return;
       } else if (request.getMethod().equals(BEGIN_TRANSACTION)) {
-    	 TwitterProtocol response = new TwitterProtocol(request.getMethod(),
-    			 request.getCollection(), responseData, request.getHash(),
-    			 System.currentTimeMillis());
-    	 wrapper.RIOSend(from, protocol, response.toBytes());
-    	 return;
-      } else if (request.getMethod().equals(COMMIT)) {
-    	
-      } else if (request.getMethod().equals(ABORT)) {
-    	  
-      } else { 
+        TwitterProtocol response =
+            new TwitterProtocol(request.getMethod(), request.getCollection(), responseData, request.getHash(),
+                transactionCounter);
+        wrapper.RIOSend(from, protocol, response.toBytes());
+        return;
+      } else {
         throw new RuntimeException("Command not supported by the server");
       }
     } catch (IOException e) {
@@ -195,9 +191,23 @@ public class TwitterServer {
 
   /**
    * accept commands
+   * 
+   * @throws IOException
    */
-  public void onCommand(String command) {
-    // server shouldn't be accepting any command.
+  public void onCommand(String command) throws IOException {
+    String[] tokenized = command.split("\t");
+    // by assumption: tokenized[0] = method, tokenized[1] = filename, other arguments
+    if (tokenized[0].equals(CREATE)) {
+      createFile(tokenized[1]);
+    } else if (tokenized[0].equals(APPEND)) {
+      appendFile(tokenized[1], tokenized[2]);
+    } else if (tokenized[0].equals(DELETE)) {
+      deleteFile(tokenized[1]);
+    } else if (tokenized[0].equals(DELETE_LINES)) {
+      deleteEntries(tokenized[1], tokenized[2]);
+    } else if (tokenized[0].equals(READ)) {
+      readFile(tokenized[1]);
+    }
   }
 
   // creates a file with the collection name
@@ -215,33 +225,6 @@ public class TwitterServer {
     PersistentStorageReader reader = wrapper.getReader(collectionName);
     readWholeFile(reader, fileContent);
     return fileContent.toString();
-  }
-
-  /**
-   * Append a data to the end of the file
-   * 
-   * @param collectionName the filename
-   * @param data the line to be appended at the end of the file
-   * @throws IOException
-   */
-  private void appendFile(String collectionName, String data) throws IOException {
-    PersistentStorageReader reader = wrapper.getReader(collectionName);
-    PersistentStorageWriter tempFileWriter = wrapper.getWriter(TEMP_FILENAME, false);
-    StringBuilder tempContent = new StringBuilder(collectionName + "\n");
-    StringBuilder oldContent = new StringBuilder();
-    readWholeFile(reader, oldContent);
-    // first, write the tmp file
-    tempContent = tempContent.append(oldContent);
-    tempFileWriter.write(tempContent.toString());
-    // append the new content
-    oldContent = oldContent.append(data);
-    PersistentStorageWriter writer = wrapper.getWriter(collectionName, false);
-    writer.write(oldContent.toString());
-    tempFileWriter.delete();
-    // close all the file connections
-    reader.close();
-    writer.close();
-    tempFileWriter.close();
   }
 
   /**
@@ -286,35 +269,50 @@ public class TwitterServer {
     return linesDeleted.toString();
   }
 
-  /*
-   * Helper method for resuming append after server crash
-   */
-  private void resumeAppendExecution() {
-    try {
-      PersistentStorageReader reader = wrapper.getReader(TEMP_FILENAME);
-      if (reader.ready()) {
-        String filename = reader.readLine();
-        StringBuilder oldContent = new StringBuilder();
-        readWholeFile(reader, oldContent);
-        PersistentStorageWriter revertFile = wrapper.getWriter(filename, false);
-        char[] oldContentChars = new char[oldContent.length()];
-        oldContent.getChars(0, oldContent.length(), oldContentChars, 0);
-        revertFile.write(oldContentChars);
-      }
-      PersistentStorageWriter tmpFileWriter = wrapper.getWriter(TEMP_FILENAME, false);
-      tmpFileWriter.delete();
-      tmpFileWriter.close();
-    } catch (IOException e) {
-      Utils.logError(wrapper.getAddr(), e.getMessage());
-    }
-  }
-
   // reads the whole file in the reader into the oldContent variable
-  private void readWholeFile(PersistentStorageReader reader, StringBuilder builder) throws IOException {
-    Utils.logOutput(wrapper.getAddr(), "EXEC!");
+  public void readWholeFile(PersistentStorageReader reader, StringBuilder builder) throws IOException {
     String temp = "";
     while ((temp = reader.readLine()) != null) {
       builder = builder.append(temp + "\n");
     }
+  }
+
+  /**
+   * Append a data to the end of the file
+   * 
+   * @param collectionName the filename
+   * @param data the line to be appended at the end of the file
+   * @throws IOException
+   */
+  private void appendFile(String collectionName, String data) throws IOException {
+    PersistentStorageReader reader = wrapper.getReader(collectionName);
+    PersistentStorageWriter tempFileWriter = wrapper.getWriter(TEMP_FILENAME, false);
+    StringBuilder tempContent = new StringBuilder(collectionName + "\n");
+    StringBuilder oldContent = new StringBuilder();
+    readWholeFile(reader, oldContent);
+    // first, write the tmp file
+    tempContent = tempContent.append(oldContent);
+    tempFileWriter.write(tempContent.toString());
+    // append the new content
+    oldContent = oldContent.append(data);
+    PersistentStorageWriter writer = wrapper.getWriter(collectionName, false);
+    writer.write(oldContent.toString());
+    tempFileWriter.delete();
+    // close all the file connections
+    reader.close();
+    writer.close();
+    tempFileWriter.close();
+  }
+
+  RIONode getNode() {
+    return wrapper;
+  }
+
+  PersistentStorageReader getPersistentStorageReader(String filename) throws IOException {
+    return wrapper.getReader(filename);
+  }
+
+  PersistentStorageWriter getPersistentStorageWriter(String filename, boolean allowsAppend) throws IOException {
+    return wrapper.getWriter(filename, allowsAppend);
   }
 }
