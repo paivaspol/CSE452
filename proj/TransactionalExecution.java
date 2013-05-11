@@ -34,12 +34,12 @@ public class TransactionalExecution {
    * @param filename
    * @param newContent
    */
-  public void modifyFile(int transactionId, String filename, String newContent) {
+  public void modifyFile(int version, String filename, String newContent) {
     FileHolder fileHolder = modifiedFiles.get(filename);
     if (fileHolder != null) {
       modifiedFiles.get(filename).setContent(newContent);
     } else {
-      modifiedFiles.put(filename, new FileHolder(newContent, transactionId));
+      modifiedFiles.put(filename, new FileHolder(newContent, version));
     }
   }
 

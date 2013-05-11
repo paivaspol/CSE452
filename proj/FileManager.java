@@ -146,7 +146,8 @@ public class FileManager {
       PersistentStorageReader reader = server.getPersistentStorageReader(filename);
       readWholeFile(reader, content);
     }
-    exec.modifyFile(transactionId, filename, content.toString()); // put it in memory
+    int version = getLastModifiedVersion(filename);
+    exec.modifyFile(version, filename, content.toString()); // put it in memory
   }
 
   private void append(int transactionId, String filename, String value, TransactionalExecution exec) throws IOException {
@@ -166,7 +167,8 @@ public class FileManager {
         content.append(value + "\n");
       }
     }
-    exec.modifyFile(transactionId, filename, content.toString());
+    int version = getLastModifiedVersion(filename);
+    exec.modifyFile(version, filename, content.toString());
   }
 
   private void delete(int transactionId, String filename, TransactionalExecution exec) {
@@ -189,7 +191,8 @@ public class FileManager {
         result.append(str);
       }
     }
-    exec.modifyFile(transactionId, filename, result.toString());
+    int version = getLastModifiedVersion(filename);
+    exec.modifyFile(version, filename, result.toString());
   }
 
   private String read(int transactionId, String filename, String retval, TransactionalExecution exec)
@@ -200,7 +203,8 @@ public class FileManager {
       PersistentStorageReader reader = server.getPersistentStorageReader(filename);
       readWholeFile(reader, cont);
       content = cont.toString();
-      exec.modifyFile(transactionId, filename, content);
+      int version = getLastModifiedVersion(filename);
+      exec.modifyFile(version, filename, content);
     }
     retval += content;
     return retval;
