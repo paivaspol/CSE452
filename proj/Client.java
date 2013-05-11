@@ -28,7 +28,7 @@ public class Client {
 	/** Keeps track of which event to execute next. */
 	public int eventIndex;
 	/** Map from filename to file content. */
-	private Map<String, String> cache;
+	public Map<String, String> cache;
 
 	/**
 	 * Construct a new Client object using the given TwitterNodeWrapper.
@@ -47,17 +47,9 @@ public class Client {
 			commandQueue.clear();
 			return;
 		}
-		if (tp.getMethod().startsWith(TwitterServer.ROLLBACK)) {
-			logOutput("Transaction has been aborted.");
+		if (tp.getData() != null && tp.getData().startsWith(TwitterServer.ROLLBACK)) {
 			eventIndex = 0;
-			completeCommand();
-			return;
-		}
-		if (tp.getMethod().startsWith(TwitterServer.INVALIDATE)) {
-			// invalidates the particular filename to file content caching
-			String filename = tp.getCollection();
-			cache.remove(filename);
-			return;
+			cache.clear();
 		}
 		if (tp.getMethod().equals(TwitterServer.READ)) {
 			if (tp.getData().startsWith(TwitterServer.SUCCESS)) {
