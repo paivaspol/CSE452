@@ -1,4 +1,3 @@
-
 /**
  * Holds the JSON Representation for the Twitter protocol
  * 
