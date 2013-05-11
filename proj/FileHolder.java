@@ -6,10 +6,12 @@ public class FileHolder {
 
   private String content;
   private boolean isDeleted;
+  private final int version;
 
-  public FileHolder(String content) {
+  public FileHolder(String content, int version) {
     isDeleted = false;
     this.content = content;
+    this.version = version;
   }
 
   /**
@@ -42,5 +44,9 @@ public class FileHolder {
    */
   public void setDeleted(boolean isDeleted) {
     this.isDeleted = isDeleted;
+  }
+
+  public int getVersion() {
+    return version;
   }
 }
