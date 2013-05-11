@@ -20,7 +20,7 @@ public class TwitterNodeWrapper extends RIONode {
     if (from == 4) {
       // this is from the client
       server.onRIOReceive(from, protocol, msg);
-    } else if (from == 3) {
+    } else {
       client.onRIOReceive(from, protocol, msg);
     }
   }
@@ -37,7 +37,7 @@ public class TwitterNodeWrapper extends RIONode {
       // assuming that it is a server
       server = new TwitterServer(this);
       server.start();
-    } else if (super.addr == 4) {
+    } else {
       client = new Client(this);
       client.start();
     }
@@ -89,13 +89,4 @@ public class TwitterNodeWrapper extends RIONode {
   public PersistentStorageReader getReader(String filename) throws FileNotFoundException {
     return super.getReader(filename);
   }
-  
-//  @Override
-//  public void stopResend() {
-//	  if (server != null) {
-//		  server.stopResend();
-//	  } else {
-//		  client.stopResend();
-//	  }
-//  }
 }
