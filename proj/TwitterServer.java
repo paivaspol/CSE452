@@ -29,6 +29,7 @@ public class TwitterServer {
   public static final String BEGIN_TRANSACTION = "begintransaction";
   public static final String COMMIT = "commit";
   public static final String ABORT = "abort";
+  public static final String INVALIDATE = "invalidate";
 
   /**
    * Response indicators
@@ -153,11 +154,24 @@ public class TwitterServer {
     long transactionId = request.getTimestamp();
     try {
       if (request.getMethod().equals(CREATE) || request.getMethod().equals(DELETE_LINES)
-          || request.getMethod().equals(READ) || request.getMethod().equals(COMMIT)) {
+          || request.getMethod().equals(READ) || request.getMethod().equals(COMMIT)
+          || request.getMethod().equals(DELETE)) {
         fileManager.handleTransaction((int) transactionId, request.getMethod(), collection, data);
+        TwitterProtocol response = new TwitterProtocol(INVALIDATE, collection, "", "", -1);
+        for (Integer machineId : connectedNodes) {
+          if (machineId != from) {
+            wrapper.RIOSend(machineId, protocol, response.toBytes());
+          }
+        }
       } else if (request.getMethod().equals(APPEND)) {
         if (!pastRequests.contains(hash)) {
           fileManager.handleTransaction((int) transactionId, request.getMethod(), collection, data);
+        }
+        TwitterProtocol response = new TwitterProtocol(INVALIDATE, collection, "", "", -1);
+        for (Integer machineId : connectedNodes) {
+          if (machineId != from) {
+            wrapper.RIOSend(machineId, protocol, response.toBytes());
+          }
         }
       } else if (request.getMethod().equals("TIMEOUT")) {
         TwitterProtocol response =
