@@ -158,20 +158,10 @@ public class TwitterServer {
     String hash = request.getHash();
     long transactionId = request.getTimestamp();
     try {
-      if (request.getMethod().equals(RESTART)) {
-        fileManager.removeTransaction(nodeToTxn.get(from));
-      }
-
       if (request.getMethod().equals(CREATE) || request.getMethod().equals(DELETE_LINES)
           || request.getMethod().equals(READ) || request.getMethod().equals(COMMIT)
           || request.getMethod().equals(DELETE)) {
         responseData = fileManager.handleTransaction((int) transactionId, request.getMethod(), collection, data);
-        TwitterProtocol response = new TwitterProtocol(INVALIDATE, collection, "", "", -1);
-        for (Integer machineId : connectedNodes) {
-          if (machineId != from) {
-            wrapper.RIOSend(machineId, protocol, response.toBytes());
-          }
-        }
       } else if (request.getMethod().equals(APPEND)) {
         if (!pastRequests.contains(hash)) {
           responseData = fileManager.handleTransaction((int) transactionId, request.getMethod(), collection, data);
@@ -200,11 +190,16 @@ public class TwitterServer {
           wrapper.RIOSend(from, protocol, response.toBytes());
         }
         return;
+      } else if (request.getMethod().equals(RESTART)) {
+        if (nodeToTxn.containsKey(from)) {
+          fileManager.removeTransaction(nodeToTxn.get(from));
+        }
+        return;
       } else if (request.getMethod().equals(ABORT)) {
         fileManager.handleTransaction((int) transactionId, request.getMethod(), collection, data);
         return;
       } else {
-        throw new RuntimeException("Command not supported by the server");
+        throw new RuntimeException("Command not supported by the server" + request.getMethod());
       }
     } catch (IOException e) {
       responseData = FAILURE + "\n";
