@@ -181,7 +181,7 @@ public class TwitterServer {
       responseData = FAILURE + "\n";
       e.printStackTrace();
     }
-    // send back the damn respond!
+    // send back the respond!
     TwitterProtocol response = new TwitterProtocol(request);
     response.setData(responseData);
     wrapper.RIOSend(from, protocol, response.toBytes());
