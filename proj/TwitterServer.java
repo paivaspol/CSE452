@@ -181,8 +181,9 @@ public class TwitterServer {
         TwitterProtocol response = new TwitterProtocol(request);
         response.setData(responseData);
         wrapper.RIOSend(from, protocol, response.toBytes());
-        if (responseData.equals(ROLLBACK)) {
-          for (Integer i : connectedNodes) {
+
+        for (Integer i : connectedNodes) {
+          if (responseData.equals(ROLLBACK)) {
             if (from != i) {
               TwitterProtocol invalidation = new TwitterProtocol(INVALIDATE, INVALIDATE, INVALIDATE, INVALIDATE);
               wrapper.RIOSend(i, protocol, invalidation.toBytes());

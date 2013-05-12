@@ -34,12 +34,13 @@ public class TransactionalExecution {
    * @param filename
    * @param newContent
    */
-  public void modifyFile(int version, String filename, String newContent) {
+  public void modifyFile(int version, String filename, String newContent, boolean isRead) {
     FileHolder fileHolder = modifiedFiles.get(filename);
     if (fileHolder != null) {
       modifiedFiles.get(filename).setContent(newContent);
+      modifiedFiles.get(filename).setIsReadOperation(isRead);
     } else {
-      modifiedFiles.put(filename, new FileHolder(newContent, version));
+      modifiedFiles.put(filename, new FileHolder(newContent, version, isRead));
     }
   }
 
@@ -51,7 +52,7 @@ public class TransactionalExecution {
   public void deleteFile(int transactionId, String filename) {
     FileHolder fileHolder = modifiedFiles.get(filename);
     if (fileHolder == null) {
-      modifiedFiles.put(filename, new FileHolder("", transactionId));
+      modifiedFiles.put(filename, new FileHolder("", transactionId, false));
     }
     modifiedFiles.get(filename).setDeleted(true);
 
