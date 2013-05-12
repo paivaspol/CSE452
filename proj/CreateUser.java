@@ -21,6 +21,7 @@ public class CreateUser extends Function {
 	private User user;
 	private long timestamp;
 	private String beginTransactionHash;
+	private String password;
 
 	public CreateUser(Client client, RIONode rioNode, int serverAddress, String usersFile, String name, String username, String password) {
 		super(client, rioNode);
@@ -32,6 +33,7 @@ public class CreateUser extends Function {
 		this.user.setName(name);
 		this.user.setPassword(password);
 		this.user.setUserName(username);
+		this.password = password;
 	}
 
 	public void step0() {
@@ -187,5 +189,9 @@ public class CreateUser extends Function {
 		}
 		eventList = list;
 		return list;
+	}
+	
+	public String toString() {
+		return "signup\t" + username + "\t" + name + "\t" + password + "\t" + serverAddress;
 	}
 }

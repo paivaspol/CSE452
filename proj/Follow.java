@@ -183,4 +183,8 @@ public class Follow extends Function {
 		eventList = todoList;
 		return todoList;
 	}
+	
+	public String toString() {
+		return "follow\t" + username + "\t" + followee + "\t" + serverAddress;
+	}
 }

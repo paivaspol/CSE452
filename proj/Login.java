@@ -145,4 +145,8 @@ public class Login extends Function {
 		client.eventIndex = 0;
 		client.completeCommand();
 	}
+	
+	public String toString() {
+		return "login\t" + username + "\t" + password + "\t" + serverAddress;
+	}
 }

@@ -95,4 +95,8 @@ public class Logout extends Function {
 		client.eventIndex = 0;
 		client.completeCommand();
 	}
+	
+	public String toString() {
+		return "logout\t" + username + "\t" + serverAddress; 
+	}
 }

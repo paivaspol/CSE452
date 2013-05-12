@@ -272,4 +272,8 @@ public class Read extends Function {
 		eventList = todoList;
 		return todoList;
 	}
+	
+	public String toString() {
+		return "read\t" + username + "\t" + serverAddress;
+	}
 }

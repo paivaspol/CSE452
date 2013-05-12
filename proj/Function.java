@@ -47,4 +47,7 @@ public abstract class Function {
 	public void log(String output, PrintStream stream) {
 		stream.println(output);
 	}
+	
+	@Override
+	public abstract String toString();
 }

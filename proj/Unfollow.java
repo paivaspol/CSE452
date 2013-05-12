@@ -141,4 +141,8 @@ public class Unfollow extends Function {
 		eventList = todoList;
 		return todoList;
 	}
+	
+	public String toString() {
+		return "unfollow\t" + username + "\t" + followee + "\t" + serverAddress;
+	}
 }

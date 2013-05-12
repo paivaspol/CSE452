@@ -144,4 +144,8 @@ public class Tweet extends Function {
 		eventList = todoList;
 		return todoList;
 	}
+	
+	public String toString() {
+		return "tweet\t" + username + "\t" + msg + "\t" + serverAddress;
+	}
 }
