@@ -76,7 +76,7 @@ public class Client {
 		if (isAbortMode) {
 			return;
 		}
-		if (tp.getMethod().equals("ABORTED")) {
+		if (tp.getMethod().equals(TwitterServer.ABORTED)) {
 			eventIndex = 0;
 			Callback cb = eventList.get(eventIndex);
 			try {
@@ -85,6 +85,7 @@ public class Client {
 				tnw.fail();
 				e.printStackTrace();
 			}
+			return;
 		}
 		if (tp.getMethod().equals(TwitterServer.READ)) {
 			if (tp.getData().startsWith(TwitterServer.SUCCESS)) {
