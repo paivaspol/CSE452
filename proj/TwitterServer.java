@@ -177,6 +177,10 @@ public class TwitterServer {
         responseData = fileManager.handleTransaction((int) transactionId, request.getMethod(), collection, data);
         nodeToTxn.remove(from);
         txnToPastRequests.remove(from);
+        TwitterProtocol response = new TwitterProtocol(request);
+        response.setData(responseData);
+        wrapper.RIOSend(from, protocol, response.toBytes());
+        return;
       } else if (request.getMethod().equals("TIMEOUT")) {
         TwitterProtocol response =
             new TwitterProtocol(RESTART, RESTART, RESTART, new Entry(wrapper.getAddr()).getHash());
