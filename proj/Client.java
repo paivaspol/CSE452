@@ -63,15 +63,13 @@ public class Client {
 			}
 		}
 		if (tp.getMethod().equals(TwitterServer.INVALIDATE)) {
-			if (eventIndex == 0) {
-				cache.clear();
-				return;
-			} else {
+			cache.clear();
+			if (eventIndex != 0) {
 				TwitterProtocol tpAbort = new TwitterProtocol(TwitterServer.ABORT, new Entry(tnw.addr).getHash());
 				tnw.RIOSend(from, protocol, tpAbort.toBytes());
 				isAbortMode = true;
-				return;
 			}
+			return;
 		}
 		if (isAbortMode) {
 			return;
@@ -85,6 +83,7 @@ public class Client {
 				tnw.fail();
 				e.printStackTrace();
 			}
+			isAbortMode = false;
 			return;
 		}
 		if (tp.getMethod().equals(TwitterServer.READ)) {
