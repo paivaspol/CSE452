@@ -45,10 +45,34 @@ public class Client {
 	public void onRIOReceive(Integer from, int protocol, byte[] msg) {
 		assert(eventIndex != 0);
 		TwitterProtocol tp = TwitterNodeWrapper.GSON.fromJson(new String(msg), TwitterProtocol.class);
+		if (tp.getMethod().equals(TwitterServer.ABORTED)) {
+			eventIndex = 0;
+			Callback cb = eventList.get(eventIndex);
+			try {
+				cb.invoke();
+			} catch (Exception e) {
+				tnw.fail();
+				e.printStackTrace();
+			}
+			isAbortMode = false;
+			return;
+		}
+		if (isAbortMode) {
+			return;
+		}
 		if (tp.getMethod().startsWith("TIMEOUT")) {
 			logOutput("Timeout has occured while issuing request to server.");
 			eventList = null;
 			commandQueue.clear();
+			return;
+		}
+		if (tp.getMethod().equals(TwitterServer.INVALIDATE)) {
+			cache.clear();
+			if (eventIndex != 0) {
+				TwitterProtocol tpAbort = new TwitterProtocol(TwitterServer.ABORT, new Entry(tnw.addr).getHash());
+				tnw.RIOSend(from, protocol, tpAbort.toBytes());
+				isAbortMode = true;
+			}
 			return;
 		}
 		if (tp.getData() != null && tp.getData().startsWith(TwitterServer.ROLLBACK)) {
@@ -61,29 +85,6 @@ public class Client {
 				tnw.fail();
 				e.printStackTrace();
 			}
-		}
-		if (tp.getMethod().equals(TwitterServer.INVALIDATE)) {
-			cache.clear();
-			if (eventIndex != 0) {
-				TwitterProtocol tpAbort = new TwitterProtocol(TwitterServer.ABORT, new Entry(tnw.addr).getHash());
-				tnw.RIOSend(from, protocol, tpAbort.toBytes());
-				isAbortMode = true;
-			}
-			return;
-		}
-		if (isAbortMode) {
-			return;
-		}
-		if (tp.getMethod().equals(TwitterServer.ABORTED)) {
-			eventIndex = 0;
-			Callback cb = eventList.get(eventIndex);
-			try {
-				cb.invoke();
-			} catch (Exception e) {
-				tnw.fail();
-				e.printStackTrace();
-			}
-			isAbortMode = false;
 			return;
 		}
 		if (tp.getMethod().equals(TwitterServer.READ)) {
