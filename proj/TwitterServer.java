@@ -33,6 +33,7 @@ public class TwitterServer {
   public static final String ABORT = "abort";
   public static final String INVALIDATE = "invalidate";
   public static final String ROLLBACK = "rollback";
+  public static final String ABORTED = "aborted";
 
   /**
    * Response indicators
@@ -180,6 +181,12 @@ public class TwitterServer {
         TwitterProtocol response = new TwitterProtocol(request);
         response.setData(responseData);
         wrapper.RIOSend(from, protocol, response.toBytes());
+        for (Integer i : connectedNodes) {
+          if (from != i) {
+            TwitterProtocol invalidation = new TwitterProtocol(INVALIDATE, INVALIDATE, INVALIDATE, INVALIDATE);
+            wrapper.RIOSend(i, protocol, invalidation.toBytes());
+          }
+        }
         return;
       } else if (request.getMethod().equals("TIMEOUT")) {
         TwitterProtocol response =
@@ -211,6 +218,8 @@ public class TwitterServer {
       } else if (request.getMethod().equals(ABORT)) {
         fileManager.handleTransaction((int) transactionId, request.getMethod(), collection, data);
         nodeToTxn.remove(from);
+        TwitterProtocol twitterProtocol = new TwitterProtocol(ABORTED, null);
+        wrapper.RIOSend(from, protocol, twitterProtocol.toBytes());
         return;
       } else {
         throw new RuntimeException("Command not supported by the server" + request.getMethod());
