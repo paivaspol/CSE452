@@ -188,6 +188,7 @@ public class TwitterServer {
               new TwitterProtocol(ROLLBACK, request.getCollection(), responseData, request.getHash(),
                   transactionCounter);
           wrapper.RIOSend(from, protocol, response.toBytes());
+          nodeToTxn.remove(from);
         }
         return;
       } else if (request.getMethod().equals(RESTART)) {
