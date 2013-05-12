@@ -7,11 +7,13 @@ public class FileHolder {
   private String content;
   private boolean isDeleted;
   private final int version;
+  private boolean isReadOperation;
 
-  public FileHolder(String content, int version) {
+  public FileHolder(String content, int version, boolean isReadOperation) {
     isDeleted = false;
     this.content = content;
     this.version = version;
+    this.isReadOperation = true;
   }
 
   /**
@@ -48,5 +50,13 @@ public class FileHolder {
 
   public int getVersion() {
     return version;
+  }
+
+  public void setIsReadOperation(boolean isReadOperation) {
+    this.isReadOperation = isReadOperation;
+  }
+
+  public boolean isReadOperation() {
+    return isReadOperation;
   }
 }

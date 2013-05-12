@@ -147,7 +147,7 @@ public class FileManager {
       readWholeFile(reader, content);
     }
     int version = getLastModifiedVersion(filename);
-    exec.modifyFile(version, filename, content.toString()); // put it in memory
+    exec.modifyFile(version, filename, content.toString(), false); // put it in memory
   }
 
   private void append(int transactionId, String filename, String value, TransactionalExecution exec) throws IOException {
@@ -168,7 +168,7 @@ public class FileManager {
       }
     }
     int version = getLastModifiedVersion(filename);
-    exec.modifyFile(version, filename, content.toString());
+    exec.modifyFile(version, filename, content.toString(), false);
   }
 
   private void delete(int transactionId, String filename, TransactionalExecution exec) {
@@ -192,7 +192,7 @@ public class FileManager {
       }
     }
     int version = getLastModifiedVersion(filename);
-    exec.modifyFile(version, filename, result.toString());
+    exec.modifyFile(version, filename, result.toString(), false);
   }
 
   private String read(int transactionId, String filename, String retval, TransactionalExecution exec)
@@ -204,7 +204,7 @@ public class FileManager {
       readWholeFile(reader, cont);
       content = cont.toString();
       int version = getLastModifiedVersion(filename);
-      exec.modifyFile(version, filename, content);
+      exec.modifyFile(version, filename, content, true);
     }
     retval += content;
     return retval;
@@ -229,9 +229,11 @@ public class FileManager {
         if (exec.isFileDeleted(file)) {
           deleteFile(transactionId, file);
         } else {
-          String content = transactionId + "\n";
-          content += filesModified.get(file).getContent();
-          writeToFile(file, content);
+          if (!filesModified.get(file).isReadOperation()) {
+            String content = transactionId + "\n";
+            content += filesModified.get(file).getContent();
+            writeToFile(file, content);
+          }
         }
       } else {
         retval = TwitterServer.ROLLBACK;
