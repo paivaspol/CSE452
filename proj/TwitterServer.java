@@ -61,6 +61,7 @@ public class TwitterServer {
   private final Set<Integer> connectedNodes;
   private final Set<String> pastRequests;
   private final Map<Integer, Integer> nodeToTxn;
+  private final Map<Integer, Set<String>> txnToPastRequests;
 
   private long transactionCounter;
 
@@ -77,6 +78,7 @@ public class TwitterServer {
     transactionCounter = 0;
     fileManager = new FileManager(this);
     nodeToTxn = new HashMap<Integer, Integer>();
+    txnToPastRequests = new HashMap<Integer, Set<String>>();
   }
 
   /**
@@ -112,7 +114,6 @@ public class TwitterServer {
         PersistentStorageReader reader = wrapper.getReader(CONTACTED_CLIENTS);
         String clientNode = "";
         while ((clientNode = reader.readLine()) != null) {
-          Utils.logOutput(wrapper.getAddr(), "I'm up! " + clientNode);
           int nodeId = Integer.parseInt(clientNode);
           connectedNodes.add(nodeId);
           TwitterProtocol msg = new TwitterProtocol(RESTART, RESTART, RESTART, new Entry(wrapper.getAddr()).getHash());
@@ -150,6 +151,9 @@ public class TwitterServer {
         nodeToTxn.put(from, (int) transactionCounter);
         transactionCounter++;
       }
+      if (!txnToPastRequests.containsKey(from)) {
+        txnToPastRequests.put(from, new HashSet<String>());
+      }
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -166,19 +170,20 @@ public class TwitterServer {
           || request.getMethod().equals(READ) || request.getMethod().equals(DELETE)) {
         responseData = fileManager.handleTransaction((int) transactionId, request.getMethod(), collection, data);
       } else if (request.getMethod().equals(APPEND)) {
-        if (!pastRequests.contains(hash)) {
+        if (!txnToPastRequests.get(from).contains(hash)) {
           responseData = fileManager.handleTransaction((int) transactionId, request.getMethod(), collection, data);
         }
       } else if (request.getMethod().equals(COMMIT)) {
         responseData = fileManager.handleTransaction((int) transactionId, request.getMethod(), collection, data);
         nodeToTxn.remove(from);
+        txnToPastRequests.remove(from);
       } else if (request.getMethod().equals("TIMEOUT")) {
         TwitterProtocol response =
             new TwitterProtocol(RESTART, RESTART, RESTART, new Entry(wrapper.getAddr()).getHash());
         wrapper.RIOSend(from, protocol, response.toBytes());
         return;
       } else if (request.getMethod().equals(BEGIN_TRANSACTION)) {
-        if (!pastRequests.contains(hash)) {
+        if (!txnToPastRequests.get(from).contains(hash)) {
           TwitterProtocol response =
               new TwitterProtocol(request.getMethod(), request.getCollection(), responseData, request.getHash(),
                   transactionCounter);
@@ -189,12 +194,14 @@ public class TwitterServer {
                   transactionCounter);
           wrapper.RIOSend(from, protocol, response.toBytes());
           nodeToTxn.remove(from);
+          txnToPastRequests.remove(from);
         }
         return;
       } else if (request.getMethod().equals(RESTART)) {
         if (nodeToTxn.containsKey(from)) {
           fileManager.removeTransaction(nodeToTxn.get(from));
           nodeToTxn.remove(from);
+          txnToPastRequests.remove(from);
         }
         return;
       } else if (request.getMethod().equals(ABORT)) {
@@ -211,7 +218,7 @@ public class TwitterServer {
     TwitterProtocol response = new TwitterProtocol(request);
     response.setData(responseData);
     wrapper.RIOSend(from, protocol, response.toBytes());
-    pastRequests.add(hash);
+    txnToPastRequests.get(from).add(hash);
     try {
       appendFile(LOG_FILENAME, hash + "\n");
     } catch (IOException e) {

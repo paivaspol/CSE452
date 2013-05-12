@@ -155,8 +155,8 @@ public class FileManager {
     String fContent = exec.readFile(filename);
     if (fContent != null) {
       // there's something
-      fContent += value;
       content.append(fContent);
+      content.append(value + "\n");
     } else {
       // it's null
       if (Utility.fileExists(server.getNode(), filename)) {
