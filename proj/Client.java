@@ -1,4 +1,3 @@
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -39,7 +38,6 @@ public class Client {
 	private boolean isAbortMode;
 	private static final String FILENAME = "clientState.txt";
 	private static final String TMPFILE = "clientState.tmp";
-	private boolean isFromFile;
 	private PersistentStorageReader fileReader;
 	private PersistentStorageWriter fileWriter;
 	
@@ -51,7 +49,6 @@ public class Client {
 	public Client(TwitterNodeWrapper tnw) {
 		this.tnw = tnw;
 		isAbortMode = false;
-		isFromFile = false;
 	}
 
 	public void onRIOReceive(Integer from, int protocol, byte[] msg) {
@@ -137,6 +134,30 @@ public class Client {
 		// Inform the server that this client just started/restarted.
 		TwitterProtocol tpRestart = new TwitterProtocol(TwitterServer.RESTART, TwitterServer.RESTART, TwitterServer.RESTART, new Entry(tnw.addr).getHash());
 		tnw.RIOSend(3, Protocol.DATA, tpRestart.toBytes());
+		if (Utility.fileExists(tnw, TMPFILE)) {
+			PersistentStorageReader temp;
+			try {
+				temp = tnw.getReader(TMPFILE);
+				if (temp.ready()) {
+					String oldContent = "";
+					String str = temp.readLine();
+					while (str != null) {
+						oldContent += str;
+						str = temp.readLine();
+					}
+					fileWriter = tnw.getWriter(FILENAME, false);
+					fileWriter.write(oldContent);
+				}
+				PersistentStorageWriter tempWriter = tnw.getWriter(TMPFILE, false);
+				tempWriter.delete();
+				tempWriter.close();
+			} catch (FileNotFoundException e) {
+				throw new RuntimeException(e);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		
 		if (Utility.fileExists(tnw, FILENAME)) {
 			try {
 				loadState();
@@ -144,6 +165,12 @@ public class Client {
 				logOutput("file exist");
 			} catch (Exception e) {
 				e.printStackTrace();
+				throw new RuntimeException(e);
+			}
+		} else {
+			try {
+				createFile(FILENAME);
+			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
 		}
@@ -280,13 +307,27 @@ public class Client {
 //		4: PSWriter newFile = getWriter(foo.txt, false)
 //		5: newFile.write(contents)
 //		6: delete temp
+		fileReader = tnw.getReader(FILENAME);
+		String str = fileReader.readLine() + "\n";
+		String oldFile = "";
+		while (str != null) {
+			oldFile += str;
+			str = fileReader.readLine() + "\n";
+		}
+		PersistentStorageWriter temp = tnw.getWriter(TMPFILE, false);
+		temp.write(oldFile);
+		// p
+		logOutput("done writing old file to temp");
 		fileWriter = tnw.getWriter(FILENAME, true);
 		Queue<Function> tmpQueue = new LinkedList<Function>();
 		while (!commandQueue.isEmpty()) {
 			Function f = commandQueue.poll();
-			fileWriter.append(f.toString());
+			fileWriter.append(f.toString() + "\n");
 			tmpQueue.add(f);
 		}
+		logOutput("done writing new things to filename");
+		temp.delete();
+		temp.close();
 		commandQueue = tmpQueue;
 	}
 	
