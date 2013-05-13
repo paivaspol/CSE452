@@ -109,7 +109,10 @@ public class ReliableInOrderMsgLayer {
    * @param seqNum The sequence number of the unACKed packet
    */
   public void onTimeout(Integer destAddr, Integer seqNum) {
-    outConnections.get(destAddr).onTimeout(n, seqNum);
+	  if (outConnections.get(destAddr) == null) {
+		  outConnections.put(destAddr, new OutChannel(this, destAddr));
+	  }
+	  outConnections.get(destAddr).onTimeout(n, seqNum);
   }
 
   @Override
