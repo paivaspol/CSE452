@@ -5,7 +5,7 @@ import edu.washington.cs.cse490h.lib.Callback;
 
 /**
  * Contains a sequence of events for signup action.
- * 
+ *
  * @author leelee
  *
  */
@@ -42,7 +42,7 @@ public class CreateUser extends Function {
 		client.eventIndex = 1;
 		client.RIOSend(serverAddress, Protocol.DATA, tpBeginT.toBytes());
 	}
-	
+
 	public void step1(TwitterProtocol response) {
 		String responseString = response.getData();
 		if (responseString.startsWith(TwitterServer.RESTART)) {
@@ -60,7 +60,7 @@ public class CreateUser extends Function {
 		client.RIOSend(serverAddress, Protocol.DATA, tpCheckUser.toBytes());
 	}
 
-	
+
 	public void step2(TwitterProtocol response) {
 		String responseString = response.getData();
 		if (responseString.startsWith(TwitterServer.RESTART)) {
@@ -88,10 +88,7 @@ public class CreateUser extends Function {
 		if (alreadyExist) {
 			logOutput("User already created.");
 			// Abort this transaction.
-			TwitterProtocol tpAbort = new TwitterProtocol(TwitterServer.ABORT, new Entry(rioNode.addr).getHash());
-			client.RIOSend(serverAddress, Protocol.DATA, tpAbort.toBytes());
-			client.eventIndex = 0;
-			client.completeCommand();
+            client.abortCommand();
 			return;
 		}
 		logOutput("Creating a user, name:" + name);
@@ -101,7 +98,7 @@ public class CreateUser extends Function {
 		client.eventIndex = 3;
 		client.RIOSend(serverAddress, Protocol.DATA,tpCreateUserFile.toBytes());
 	}
-	
+
 	public void step3(TwitterProtocol response) {
 		String responseString = response.getData();
 		if (responseString.startsWith(TwitterServer.RESTART)) {
@@ -121,7 +118,7 @@ public class CreateUser extends Function {
 		client.eventIndex = 4;
 		client.RIOSend(serverAddress, Protocol.DATA, tpCreateFollowingFile.toBytes());
 	}
-	
+
 	public void step4(TwitterProtocol response) {
 		String responseString = response.getData();
 		if (responseString.startsWith(TwitterServer.RESTART)) {
@@ -141,7 +138,7 @@ public class CreateUser extends Function {
 		client.eventIndex = 5;
 		client.RIOSend(serverAddress, Protocol.DATA, tpAppendUserInfo.toBytes());
 	}
-	
+
 	public void step5(TwitterProtocol response) {
 		String responseString = response.getData();
 		if (responseString.startsWith(TwitterServer.RESTART)) {
@@ -161,7 +158,7 @@ public class CreateUser extends Function {
 		client.eventIndex = 6;
 		client.RIOSend(serverAddress, Protocol.DATA, tpCommit.toBytes());
 	}
-	
+
 	public void step6(TwitterProtocol response) {
 		String responseString = response.getData();
 		if (responseString.startsWith(TwitterServer.RESTART)) {
@@ -193,7 +190,7 @@ public class CreateUser extends Function {
 		eventList = list;
 		return list;
 	}
-	
+
 	public String toString() {
 		return "signup\t" + username + "\t" + name + "\t" + password + "\t" + serverAddress;
 	}

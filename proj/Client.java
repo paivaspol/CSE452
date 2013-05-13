@@ -16,9 +16,9 @@ import edu.washington.cs.cse490h.lib.PersistentStorageWriter;
 import edu.washington.cs.cse490h.lib.Utility;
 
 /**
- * 
+ *
  * @author leelee
- * 
+ *
  */
 public class Client {
 
@@ -34,16 +34,16 @@ public class Client {
 	public int eventIndex;
 	/** Map from filename to file content. */
 	public Map<String, String> cache;
-	
+
 	private boolean isAbortMode;
 	private static final String FILENAME = "clientState.txt";
 	private static final String TMPFILE = "clientState.tmp";
 	private PersistentStorageReader fileReader;
 	private PersistentStorageWriter fileWriter;
-	
+
 	/**
 	 * Construct a new Client object using the given TwitterNodeWrapper.
-	 * 
+	 *
 	 * @param tnw The TwitterNodeWrapper object.
 	 */
 	public Client(TwitterNodeWrapper tnw) {
@@ -57,16 +57,19 @@ public class Client {
 		if (tp.getMethod().equals(TwitterServer.ABORTED)) {
 			eventIndex = 0;
 			Callback cb = eventList.get(eventIndex);
-			try {
-				cb.invoke();
-			} catch (Exception e) {
-				tnw.fail();
-				e.printStackTrace();
-			}
+            if (cb != null) {
+                try {
+                    cb.invoke();
+                } catch (Exception e) {
+                    tnw.fail();
+                    e.printStackTrace();
+                }
+            }
 			isAbortMode = false;
 			return;
 		}
 		if (isAbortMode) {
+			logOutput("packet ignored due to abort mode");
 			return;
 		}
 		if (tp.getMethod().startsWith("TIMEOUT")) {
@@ -157,7 +160,7 @@ public class Client {
 				throw new RuntimeException(e);
 			}
 		}
-		
+
 		if (Utility.fileExists(tnw, FILENAME)) {
 			try {
 				loadState();
@@ -181,6 +184,7 @@ public class Client {
 	}
 
 	public void onCommand(String command) throws IllegalAccessException, InvocationTargetException {
+		logOutput("at onCommand " + command);
 		enqueue(command);
 		try {
 			saveState();
@@ -190,7 +194,7 @@ public class Client {
 		}
 		processQueue();
 	}
-	
+
 	public void RIOSend(int destAddr, int protocol, byte[] payload) {
 		// Check the request to be sent to server. If the request is a read, check if we have cache
 		// information for that particular collection.
@@ -234,7 +238,7 @@ public class Client {
 
 	/**
 	 * Call the start of the next call back and reset the event index.
-	 * 
+	 *
 	 * @throws InvocationTargetException
 	 * @throws IllegalAccessException
 	 */
@@ -269,9 +273,32 @@ public class Client {
 		}
 	}
 
+    public void abortCommand() {
+        TwitterProtocol tpAbort = new TwitterProtocol(TwitterServer.ABORT, new Entry(tnw.addr).getHash());
+        RIOSend(3, Protocol.DATA, tpAbort.toBytes());
+        isAbortMode = true;
+		if (commandQueue.size() == 0) {
+			logError("no event to invoke in nextCommand");
+		} else {
+			commandQueue.poll();
+            if (commandQueue.size() != 0) {
+                eventList = commandQueue.peek().init();
+            } else {
+                eventList = null;
+            }
+			try {
+				saveState();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+				throw new RuntimeException(e1);
+			}
+            eventIndex = 0;
+		}
+    }
+
 	/**
 	 * Invoke first event for the command if it is the first command received.
-	 * 
+	 *
 	 * @throws IllegalAccessException
 	 * @throws InvocationTargetException
 	 */
@@ -288,7 +315,7 @@ public class Client {
 			eventList.get(0).invoke();
 		}
 	}
-	
+
 	/**
 	 * Create file.
 	 * @param collectionName
@@ -302,7 +329,7 @@ public class Client {
 		}
 		return true;
 	}
-	
+
 	private void saveState() throws IOException {
 		// iterate command queue, save to a file
 //		1: String oldFile = read foo.txt
@@ -336,7 +363,7 @@ public class Client {
 		temp.close();
 		commandQueue = tmpQueue;
 	}
-	
+
 	private void loadState() throws IOException, IllegalAccessException, InvocationTargetException {
 		// read line and call enqueue
 		fileReader = tnw.getReader(FILENAME);
@@ -347,7 +374,7 @@ public class Client {
 		}
 		eventIndex = 0;
 	}
-	
+
 	private void enqueue(String command) {
 		Pattern pattern = Pattern.compile("[A-Za-z0-9]+|\"[^\"]*\"");
 		Scanner sc = new Scanner(command);
@@ -499,7 +526,7 @@ public class Client {
 			// file to read from: [username]_following.txt
 			Read read = new Read(this, tnw, serverAddress, username + "_following.txt", username);
 			commandQueue.add(read);
-			
+
 		} else {
 			logError("Invalid command");
 		}

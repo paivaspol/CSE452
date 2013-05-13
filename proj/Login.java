@@ -5,7 +5,7 @@ import edu.washington.cs.cse490h.lib.Callback;
 
 /**
  * Contains a sequence of events for logging in.
- * 
+ *
  * @author leelee
  *
  */
@@ -96,10 +96,7 @@ public class Login extends Function {
 		if (!isValidUser) {
 			logError("username:" + " " + username + " password: " + password + " does not exist." );
 			// Abort this transaction.
-			TwitterProtocol tpAbort = new TwitterProtocol(TwitterServer.ABORT, new Entry(rioNode.addr).getHash());
-			client.RIOSend(serverAddress, Protocol.DATA, tpAbort.toBytes());
-			client.eventIndex = 0;
-			client.completeCommand();
+            client.abortCommand();
 			return;
 		}
 
@@ -132,7 +129,7 @@ public class Login extends Function {
 		client.RIOSend(serverAddress, Protocol.DATA, tpCommit.toBytes());
 
 	}
-	
+
 	public void step4(TwitterProtocol response) {
 		String responseString = response.getData();
 		if (responseString.startsWith(TwitterServer.RESTART)) {
@@ -145,7 +142,7 @@ public class Login extends Function {
 		client.eventIndex = 0;
 		client.completeCommand();
 	}
-	
+
 	public String toString() {
 		return "login\t" + username + "\t" + password + "\t" + serverAddress;
 	}

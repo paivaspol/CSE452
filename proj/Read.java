@@ -5,9 +5,9 @@ import edu.washington.cs.cse490h.lib.Callback;
 
 /**
  * Placeholder for tweet.
- * 
+ *
  * @author leelee
- * 
+ *
  */
 public class Read extends Function {
 
@@ -79,10 +79,7 @@ public class Read extends Function {
 		if (!isLogin) {
 			logError("You are not login. Cannot read.");
 			// Abort this transaction.
-			TwitterProtocol tpAbort = new TwitterProtocol(TwitterServer.ABORT, new Entry(rioNode.addr).getHash());
-			client.RIOSend(serverAddress, Protocol.DATA, tpAbort.toBytes());
-			client.eventIndex = 0;
-			client.completeCommand(); 
+            client.abortCommand();
 			return;
 		}
 		logOutput("Fecthing unread post");
@@ -272,7 +269,7 @@ public class Read extends Function {
 		eventList = todoList;
 		return todoList;
 	}
-	
+
 	public String toString() {
 		return "read\t" + username + "\t" + serverAddress;
 	}

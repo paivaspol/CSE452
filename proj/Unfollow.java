@@ -5,9 +5,9 @@ import edu.washington.cs.cse490h.lib.Callback;
 
 /**
  * Contains a sequence of events for unfollowing.
- * 
+ *
  * @author leelee
- * 
+ *
  */
 public class Unfollow extends Function {
 
@@ -74,10 +74,7 @@ public class Unfollow extends Function {
 		if (!isLogin) {
 			logError("You are not login. Cannot unfollow.");
 			// Abort this transaction.
-			TwitterProtocol tpAbort = new TwitterProtocol(TwitterServer.ABORT, new Entry(rioNode.addr).getHash());
-			client.RIOSend(serverAddress, Protocol.DATA, tpAbort.toBytes());
-			client.eventIndex = 0;
-			client.completeCommand(); 
+            client.abortCommand();
 			return;
 		}
 
@@ -111,7 +108,7 @@ public class Unfollow extends Function {
 		client.eventIndex = 4;
 		client.RIOSend(serverAddress, Protocol.DATA, tpCommit.toBytes());
 	}
-	
+
 	public void step4(TwitterProtocol response) {
 		String responseString = response.getData();
 		if (responseString.startsWith(TwitterServer.RESTART)) {
@@ -141,7 +138,7 @@ public class Unfollow extends Function {
 		eventList = todoList;
 		return todoList;
 	}
-	
+
 	public String toString() {
 		return "unfollow\t" + username + "\t" + followee + "\t" + serverAddress;
 	}

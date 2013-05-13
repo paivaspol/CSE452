@@ -1,0 +1,702 @@
+Starting simulation with seed: 1368432557205
+Warning: unable to open logfile '' for writing.
+...continuing
+Warning: unable to open logfile '' for writing.
+...continuing
+
+Time: 0
+0: START 3
+1: START 4
+In what order should the events happen? (enter for in-order)
+
+Node 3: Starting up server...
+Crash node 3 before creation of users.txt? (y/n)
+
+
+Crash node 3 before write(cbuf)? (y/n)
+Crash node 3 before write(cbuf, 0, 0)? (y/n)
+
+
+Crash node 3 before creation of login.txt? (y/n)
+
+Crash node 3 before write(cbuf)? (y/n)
+Crash node 3 before write(cbuf, 0, 0)? (y/n)
+
+Crash node 3 before creation of logs.txt? (y/n)
+
+Crash node 3 before write(cbuf)? (y/n)
+
+Crash node 3 before write(cbuf, 0, 0)? (y/n)
+
+Starting up client...
+client started
+Crash node 4 before creation of clientState.txt? (y/n)
+
+Crash node 4 before write(cbuf)? (y/n)
+
+Crash node 4 before write(cbuf, 0, 0)? (y/n)
+
+
+Time: 1
+The following messages are in transit: 
+0: Packet: 4->3 protocol: 0 contents: {"method":"RESTART","collection":"RESTART","data":"RESTART","hash":"5877373087690784768","transactionTimestamp":0}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: COMMAND 4 executes signup leelee leelee a2345 3
+1: DELIVERY Packet: 4->3 protocol: 0 contents: {"method":"RESTART","collection":"RESTART","data":"RESTART","hash":"5877373087690784768","transactionTimestamp":0}
+In what order should the events happen? (enter for in-order)
+
+
+
+Crash node 4 before creation of clientState.tmp? (y/n)
+Crash node 4 before write(str)? (y/n)
+Crash node 4 before write(s, 0, 0)? (y/n)
+
+done writing old file to temp
+Crash node 4 before creation of clientState.txt? (y/n)
+
+
+signup	   leelee   leelee   a2345		 3
+Crash node 4 before append(csq)? (y/n)
+Crash node 4 before write(str)? (y/n)
+
+Crash node 4 before write(s, 0, 29)? (y/n)
+
+done writing new things to filename
+Crash node 4 before delete ofclientState.tmp? (y/n)
+
+Node 3: {"method":"RESTART","collection":"RESTART","data":"RESTART","hash":"5877373087690784768","transactionTimestamp":0}
+Crash node 3 before creation of clients.txt? (y/n)
+
+Crash node 3 before write(cbuf)? (y/n)
+
+Crash node 3 before write(cbuf, 0, 0)? (y/n)
+
+Crash node 3 before creation of .tmp? (y/n)
+
+Crash node 3 before write(str)? (y/n)
+
+Crash node 3 before write(s, 0, 12)? (y/n)
+
+
+Crash node 3 before creation of clients.txt? (y/n)
+Crash node 3 before write(str)? (y/n)
+
+Crash node 3 before write(s, 0, 1)? (y/n)
+
+
+Crash node 3 before delete of.tmp? (y/n)
+
+Time: 2
+The following messages are in transit: 
+{"method":"begintransaction","hash":"5877373096280719362","transactionTimestamp":0}
+1: Packet: 3->4 protocol: 1 contents: 0
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: COMMAND 4 executes signup vaspol vaspol 1234 3
+{"method":"begintransaction","hash":"5877373096280719362","transactionTimestamp":0}
+2: DELIVERY Packet: 3->4 protocol: 1 contents: 0
+In what order should the events happen? (enter for in-order)
+
+
+Crash node 4 before creation of clientState.tmp? (y/n)
+Crash node 4 before write(str)? (y/n)
+
+
+Crash node 4 before write(s, 0, 29)? (y/n)
+done writing old file to temp
+Crash node 4 before creation of clientState.txt? (y/n)
+
+signup	   leelee   leelee   a2345		 3
+Crash node 4 before append(csq)? (y/n)
+
+
+Crash node 4 before write(str)? (y/n)
+Crash node 4 before write(s, 0, 29)? (y/n)
+
+signup	   vaspol   vaspol   1234    3
+Crash node 4 before append(csq)? (y/n)
+
+
+Crash node 4 before write(str)? (y/n)
+Crash node 4 before write(s, 0, 28)? (y/n)
+
+
+done writing new things to filename
+Crash node 4 before delete ofclientState.tmp? (y/n)
+{"method":"begintransaction","hash":"5877373096280719362","transactionTimestamp":0}
+
+Time: 3
+The following messages are in transit: 
+0: Packet: 3->4 protocol: 1 contents: 1
+1: Packet: 3->4 protocol: 0 contents: {"method":"begintransaction","data":"SUCCESS\n","hash":"5877373096280719362","transactionTimestamp":2}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 1
+1: DELIVERY Packet: 3->4 protocol: 0 contents: {"method":"begintransaction","data":"SUCCESS\n","hash":"5877373096280719362","transactionTimestamp":2}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@53fcc0a2) at 3
+In what order should the events happen? (enter for in-order)
+
+
+Node 4: {"method":"begintransaction","data":"SUCCESS\n","hash":"5877373096280719362","transactionTimestamp":2}
+Node 4: Client@76caf6c1
+
+Time: 4
+The following messages are in transit: 
+0: Packet: 4->3 protocol: 1 contents: 0
+1: Packet: 4->3 protocol: 0 contents:{"method":"read","collection":"users.txt","hash":"5877373104870653956","transactionTimestamp":2}
+Which should be dropped? (space delimited list or just press enter to drop none)
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 0
+1: DELIVERY Packet: 4->3 protocol: 0 contents:{"method":"read","collection":"users.txt","hash":"5877373104870653956","transactionTimestamp":2}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@67ce85c4) at 4
+In what order should the events happen? (enter for in-order)
+
+Node 3:{"method":"read","collection":"users.txt","hash":"5877373104870653956","transactionTimestamp":2}
+Crash node 3 before creation of .tmp? (y/n)
+
+Crash node 3 before write(str)? (y/n)
+
+
+Crash node 3 before write(s, 0, 9)? (y/n)
+Crash node 3 before creation of logs.txt? (y/n)
+
+
+Crash node 3 before write(str)? (y/n)
+Crash node 3 before write(s, 0, 20)? (y/n)
+
+
+Crash node 3 before delete of.tmp? (y/n)
+
+Time: 5
+The following messages are in transit: 
+0: Packet: 3->4 protocol: 1 contents: 2
+{"method":"read","collection":"users.txt","data":"SUCCESS\n","hash":"5877373104870653956","transactionTimestamp":2}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 2
+{"method":"read","collection":"users.txt","data":"SUCCESS\n","hash":"5877373104870653956","transactionTimestamp":2}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@62a2220f) at 5
+In what order should the events happen? (enter for in-order)
+
+{"method":"read","collection":"users.txt","data":"SUCCESS\n","hash":"5877373104870653956","transactionTimestamp":2}
+Node 4: Client@76caf6c1
+
+add to the cache read
+users.txt
+SUCCESS
+
+
+Creating a user, name:leelee
+
+Time: 6
+The following messages are in transit: 
+0: Packet: 4->3 protocol: 1 contents: 1
+1: Packet: 4->3 protocol: 0 contents: "method":"create","collection":"leelee.txt","hash":"5877373122050523141","transactionTimestamp":2}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 1
+1: DELIVERY Packet: 4->3 protocol: 0 contents: "method":"create","collection":"leelee.txt","hash":"5877373122050523141","transactionTimestamp":2}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@3219762f) at 6
+In what order should the events happen? (enter for in-order)
+
+Node 3: "method":"create","collection":"leelee.txt","hash":"5877373122050523141","transactionTimestamp":2}
+Crash node 3 before creation of .tmp? (y/n)
+
+
+Crash node 3 before write(str)? (y/n)
+Crash node 3 before write(s, 0, 29)? (y/n)
+
+
+Crash node 3 before creation of logs.txt? (y/n)
+Crash node 3 before write(str)? (y/n)
+
+
+Crash node 3 before write(s, 0, 40)? (y/n)
+Crash node 3 before delete of.tmp? (y/n)
+
+
+Time: 7
+The following messages are in transit: 
+0: Packet: 3->4 protocol: 1 contents: 3
+1: Packet: 3->4 protocol: 0 contents:{"method":"create","collection":"leelee.txt","data":"SUCCESS\n","hash":"5877373122050523141","transactionTimestamp":2}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 3
+1: DELIVERY Packet: 3->4 protocol: 0 contents:{"method":"create","collection":"leelee.txt","data":"SUCCESS\n","hash":"5877373122050523141","transactionTimestamp":2}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@4a6397eb) at 7
+In what order should the events happen? (enter for in-order)
+Node 4:{"method":"create","collection":"leelee.txt","data":"SUCCESS\n","hash":"5877373122050523141","transactionTimestamp":2}
+
+Node 4: Client@76caf6c1
+
+Time: 8
+The following messages are in transit: 
+0: Packet: 4->3 protocol: 1 contents: 2
+1: Packet: 4->3 protocol: 0 contents: {"method":"create","collection":"leelee_following.txt","hash":"5877373134935425030","transactionTimestamp":2}
+Which should be dropped? (space delimited list or just press enter to drop none)
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 2
+1: DELIVERY Packet: 4->3 protocol: 0 contents: {"method":"create","collection":"leelee_following.txt","hash":"5877373134935425030","transactionTimestamp":2}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@7f636e4e) at 8
+In what order should the events happen? (enter for in-order)
+
+Node 3: {"method":"create","collection":"leelee_following.txt","hash":"5877373134935425030","transactionTimestamp":2}
+Crash node 3 before creation of .tmp? (y/n)
+
+Crash node 3 before write(str)? (y/n)
+
+Crash node 3 before write(s, 0, 49)? (y/n)
+
+
+Crash node 3 before creation of logs.txt? (y/n)
+Crash node 3 before write(str)? (y/n)
+
+Crash node 3 before write(s, 0, 60)? (y/n)
+
+
+Crash node 3 before delete of.tmp? (y/n)
+
+Time: 9
+The following messages are in transit: 
+0: Packet: 3->4 protocol: 1 contents: 4
+1: Packet: 3->4 protocol: 0 contents: "method":"create","collection":"leelee_following.txt","data":"SUCCESS\n","hash":"5877373134935425030","transactionTimestamp":2}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 4
+1: DELIVERY Packet: 3->4 protocol: 0 contents: "method":"create","collection":"leelee_following.txt","data":"SUCCESS\n","hash":"5877373134935425030","transactionTimestamp":2}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@65d0d124) at 9
+In what order should the events happen? (enter for in-order)
+Node 4: "method":"create","collection":"leelee_following.txt","data":"SUCCESS\n","hash":"5877373134935425030","transactionTimestamp":2}
+Node 4: Client@76caf6c1
+
+invalidate cache append
+
+
+Time: 10
+The following messages are in transit: 
+0: Packet: 4->3 protocol: 1 contents: 3
+1: Packet: 4->3 protocol: 0 contents: Node 4: 1: DELIVERY Packet: 3->4 protocol: 0 contents: 1: Packet: 3->4 protocol: 0 contents:    Node 3: 1: DELIVERY Packet: 4->3 protocol: 0 contents: 0: Packet: 4->3 protocol: 0 contents: {"method":"append","collection":"users.txt","data":"leelee\ta2345\tleelee","hash":"5877373091985752065","transactionTimestamp":2}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 3
+1: DELIVERY Packet: 4->3 protocol: 0 contents: {"method":"append","collection":"users.txt","data":"leelee\ta2345\tleelee","hash":"5877373091985752065","transactionTimestamp":2}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@3336a1a1) at 10
+In what order should the events happen? (enter for in-order)
+
+Node 3: {"method":"append","collection":"users.txt","data":"leelee\ta2345\tleelee","hash":"5877373091985752065","transactionTimestamp":2}
+Crash node 3 before creation of .tmp? (y/n)
+
+
+Crash node 3 before write(str)? (y/n)
+Crash node 3 before write(s, 0, 69)? (y/n)
+
+Crash node 3 before creation of logs.txt? (y/n)
+
+Crash node 3 before write(str)? (y/n)
+
+Crash node 3 before write(s, 0, 80)? (y/n)
+
+
+Crash node 3 before delete of.tmp? (y/n)
+
+Time: 11
+The following messages are in transit: 
+0: Packet: 3->4 protocol: 1 contents: 5
+1: Packet: 3->4 protocol: 0 contents:  delayed? (space delimited list or just press enter to delay none)
+
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 5
+1: DELIVERY Packet: 3->4 protocol: 0 contents: 19","transactionTimestamp":2}
+Which should be dropped? (space delimited list or just press enter to drop none)
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 6
+1: DELIVERY Packet: 3->4 protocol: 0 contents: {"method":"commit","data":"SUCCESS\n","hash":"5877373147820326919","transactionTimestamp":2}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@4b14b82b) at 13
+In what order should the events happen? (enter for in-order)
+
+Node 4: {"method":"commit","data":"SUCCESS\n","hash":"5877373147820326919","transactionTimestamp":2}
+Node 4: Client@76caf6c1
+You are signed up!
+Crash node 4 before creation of clientState.tmp? (y/n)
+y
+java.lang.Thread.getStackTrace(Thread.java:1503)
+edu.washington.cs.cse490h.lib.Node.fail(Node.java:85)
+edu.washington.cs.cse490h.lib.Simulator.failNode(Simulator.java:313)
+edu.washington.cs.cse490h.lib.Simulator.checkWriteCrash(Simulator.java:358)
+edu.washington.cs.cse490h.lib.Node.handleDiskWriteEvent(Node.java:266)
+edu.washington.cs.cse490h.lib.Node.getWriter(Node.java:224)
+TwitterNodeWrapper.getWriter(TwitterNodeWrapper.java:82)
+Client.saveState(Client.java:346)
+Client.completeCommand(Client.java:259)
+CreateUser.step6(CreateUser.java:172)
+sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:39)
+sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)
+java.lang.reflect.Method.invoke(Method.java:597)
+edu.washington.cs.cse490h.lib.Callback.invoke(Callback.java:62)
+Client.onRIOReceive(Client.java:112)
+TwitterNodeWrapper.onRIOReceive(TwitterNodeWrapper.java:25)
+ReliableInOrderMsgLayer.RIODataReceive(ReliableInOrderMsgLayer.java:65)
+RIONode.onReceive(RIONode.java:20)
+edu.washington.cs.cse490h.lib.Simulator.deliverPkt(Simulator.java:787)
+edu.washington.cs.cse490h.lib.Simulator.handleEvent(Simulator.java:680)
+edu.washington.cs.cse490h.lib.Simulator.executeEvents(Simulator.java:613)
+edu.washington.cs.cse490h.lib.Simulator.doTimestep(Simulator.java:229)
+edu.washington.cs.cse490h.lib.Simulator.start(Simulator.java:165)
+edu.washington.cs.cse490h.lib.MessageLayer.main(MessageLayer.java:315)
+java.lang.reflect.InvocationTargetExceptionjava.lang.Thread.getStackTrace(Thread.java:1503)
+edu.washington.cs.cse490h.lib.Node.fail(Node.java:85)
+Client.onRIOReceive(Client.java:115)
+TwitterNodeWrapper.onRIOReceive(TwitterNodeWrapper.java:25)
+ReliableInOrderMsgLayer.RIODataReceive(ReliableInOrderMsgLayer.java:65)
+RIONode.onReceive(RIONode.java:20)
+edu.washington.cs.cse490h.lib.Simulator.deliverPkt(Simulator.java:787)
+edu.washington.cs.cse490h.lib.Simulator.handleEvent(Simulator.java:680)
+edu.washington.cs.cse490h.lib.Simulator.executeEvents(Simulator.java:613)
+edu.washington.cs.cse490h.lib.Simulator.doTimestep(Simulator.java:229)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:39)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)
+	at java.lang.reflect.Method.invoke(Method.java:597)
+	at edu.washington.cs.cse490h.lib.Callback.invoke(Callback.java:62)
+	at Client.onRIOReceive(Client.java:112)
+	at TwitterNodeWrapper.onRIOReceive(TwitterNodeWrapper.java:25)
+	at ReliableInOrderMsgLayer.RIODataReceive(ReliableInOrderMsgLayer.java:65)
+	at RIONode.onReceive(RIONode.java:20)
+	at edu.washington.cs.cse490h.lib.Simulator.deliverPkt(Simulator.java:787)
+	at edu.washington.cs.cse490h.lib.Simulator.handleEvent(Simulator.java:680)
+	at edu.washington.cs.cse490h.lib.Simulator.executeEvents(Simulator.java:613)
+	at edu.washington.cs.cse490h.lib.Simulator.doTimestep(Simulator.java:229)
+	at edu.washington.cs.cse490h.lib.Simulator.start(Simulator.java:165)
+	at edu.washington.cs.cse490h.lib.MessageLayer.main(MessageLayer.java:315)
+Caused by: edu.washington.cs.cse490h.lib.Node$NodeCrashException
+       at edu.washington.cs.cse490h.lib.Node.fail(Node.java:88)
+       at edu.washington.cs.cse490h.lib.Simulator.failNode(Simulator.java:313)
+       at edu.washington.cs.cse490h.lib.Simulator.checkWriteCrash(Simulator.java:358)
+       at edu.washington.cs.cse490h.lib.Node.handleDiskWriteEvent(Node.java:266)
+       at edu.washington.cs.cse490h.lib.Node.getWriter(Node.java:224)
+       at TwitterNodeWrapper.getWriter(TwitterNodeWrapper.java:82)
+       at Client.saveState(Client.java:346)
+       at Client.completeCommand(Client.java:259)
+       at CreateUser.step6(CreateUser.java:172)
+       ... 15 more
+
+edu.washington.cs.cse490h.lib.Simulator.start(Simulator.java:165)
+edu.washington.cs.cse490h.lib.MessageLayer.main(MessageLayer.java:315)
+
+Time: 14
+The following messages are in transit: 
+0: Packet: 4->3 protocol: 1 contents: 5
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3
+Dead nodes: 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+Restart which nodes? (space-delimited list of addresses or just press enter)
+4
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 5
+1: START 4
+In what order should the events happen? (enter for in-order)
+
+Starting up client...
+client started
+file exist
+
+Time: 15
+The following messages are in transit: 
+0: Packet: 4->3 protocol: 0 contents: {"method":"RESTART","collection":"RESTART","data":"RESTART","hash":"5877373199359934472","transactionTimestamp":0}
+{"method":"begintransaction","hash":"5877373199359934475","transactionTimestamp":0}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 0 contents: {"method":"RESTART","collection":"RESTART","data":"RESTART","hash":"5877373199359934472","transactionTimestamp":0}
+{"method":"begintransaction","hash":"5877373199359934475","transactionTimestamp":0}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@62770d2e) at 15
+In what order should the events happen? (enter for in-order)
+
+Node 3: {"method":"RESTART","collection":"RESTART","data":"RESTART","hash":"5877373199359934472","transactionTimestamp":0}
+{"method":"begintransaction","hash":"5877373199359934475","transactionTimestamp":0}
+
+Time: 16
+The following messages are in transit: 
+0: Packet: 3->4 protocol: 1 contents: 0
+1: Packet: 3->4 protocol: 1 contents: 1
+2: Packet: 3->4 protocol: 0 contents: {"method":"begintransaction","data":"SUCCESS\n","hash":"5877373199359934475","transactionTimestamp":4}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 0
+1: DELIVERY Packet: 3->4 protocol: 1 contents: 1
+2: DELIVERY Packet: 3->4 protocol: 0 contents: {"method":"begintransaction","data":"SUCCESS\n","hash":"5877373199359934475","transactionTimestamp":4}
+In what order should the events happen? (enter for in-order)
+
+Node 4: {"method":"begintransaction","data":"SUCCESS\n","hash":"5877373199359934475","transactionTimestamp":4}
+Node 4: Client@298488ef
+
+Time: 17
+The following messages are in transit: 
+0: Packet: 4->3 protocol: 1 contents: 0
+1: Packet: 4->3 protocol: 0 contents:{"method":"read","collection":"users.txt","hash":"5877373246604574732","transactionTimestamp":4}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 0
+1: DELIVERY Packet: 4->3 protocol: 0 contents:{"method":"read","collection":"users.txt","hash":"5877373246604574732","transactionTimestamp":4}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@1b0deb5f) at 17
+3: TIMEOUT 4: onTimeout([Ljava.lang.Object;@2ed7b7d9) at 17
+In what order should the events happen? (enter for in-order)
+
+Node 3:{"method":"read","collection":"users.txt","hash":"5877373246604574732","transactionTimestamp":4}
+Crash node 3 before creation of .tmp? (y/n)
+
+Crash node 3 before write(str)? (y/n)
+
+Crash node 3 before write(s, 0, 89)? (y/n)
+
+Crash node 3 before creation of logs.txt? (y/n)
+
+Crash node 3 before write(str)? (y/n)
+
+Crash node 3 before write(s, 0, 100)? (y/n)
+
+Crash node 3 before delete of.tmp? (y/n)
+
+
+Time: 18
+The following messages are in transit: 
+0: Packet: 3->4 protocol: 1 contents: 2
+{"method":"read","collection":"users.txt","data":"SUCCESS\nleelee\ta2345\tleelee\n","hash":"5877373246604574732","transactionTimestamp":4}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 2
+{"method":"read","collection":"users.txt","data":"SUCCESS\nleelee\ta2345\tleelee\n","hash":"5877373246604574732","transactionTimestamp":4}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@69264eab) at 18
+In what order should the events happen? (enter for in-order)
+
+{"method":"read","collection":"users.txt","data":"SUCCESS\nleelee\ta2345\tleelee\n","hash":"5877373246604574732","transactionTimestamp":4}
+Node 4: Client@298488ef
+
+add to the cache read
+users.txt
+SUCCESS
+leelee	a2345	leelee
+
+
+leelee	a2345	leelee
+User already created.
+Crash node 4 before creation of clientState.tmp? (y/n)
+
+Crash node 4 before write(str)? (y/n)
+
+Crash node 4 before write(s, 0, 57)? (y/n)
+
+done writing old file to temp
+Crash node 4 before creation of clientState.txt? (y/n)
+
+signup	   vaspol   vaspol   1234		 3
+Crash node 4 before append(csq)? (y/n)
+
+Crash node 4 before write(str)? (y/n)
+
+Crash node 4 before write(s, 0, 28)? (y/n)
+
+done writing new things to filename
+Crash node 4 before delete ofclientState.tmp? (y/n)
+
+
+Time: 19
+The following messages are in transit: 
+0: Packet: 4->3 protocol: 1 contents: 1
+1: Packet: 4->3 protocol: 0 contents: "method":"abort","hash":"5877373422698233869","transactionTimestamp":0}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 1
+1: DELIVERY Packet: 4->3 protocol: 0 contents: "method":"abort","hash":"5877373422698233869","transactionTimestamp":0}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@7a70610a) at 19
+In what order should the events happen? (enter for in-order)
+
+Node 3: "method":"abort","hash":"5877373422698233869","transactionTimestamp":0}
+
+Time: 20
+The following messages are in transit: 
+0: Packet: 3->4 protocol: 1 contents: 3
+1: Packet: 3->4 protocol: 0 contents:{"method":"aborted","transactionTimestamp":0}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 3
+1: DELIVERY Packet: 3->4 protocol: 0 contents:{"method":"aborted","transactionTimestamp":0}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@26a7dd39) at 20
+In what order should the events happen? (enter for in-order)
+
+Node 4:{"method":"aborted","transactionTimestamp":0}
+Node 4: Client@298488ef
+
+Time: 21
+The following messages are in transit: 
+0: Packet: 4->3 protocol: 1 contents: 2
+1: Packet: 4->3 protocol: 0 contents: {"method":"begintransaction","hash":"5877373487122743310","transactionTimestamp":0}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 2
+1: DELIVERY Packet: 4->3 protocol: 0 contents: {"method":"begintransaction","hash":"5877373487122743310","transactionTimestamp":0}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@1af0b4a3) at 21
+In what order should the events happen? (enter for in-order)
+
+Node 3: {"method":"begintransaction","hash":"5877373487122743310","transactionTimestamp":0}
+
+Time: 22
+The following messages are in transit: 
+0: Packet: 3->4 protocol: 1 contents: 4
+1: Packet: 3->4 protocol: 0 contents: "method":"begintransaction","data":"SUCCESS\n","hash":"5877373487122743310","transactionTimestamp":5}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+0: DELIVERY Packet: 3->4 protocol: 1 contents: 4
+1: DELIVERY Packet: 3->4 protocol: 0 contents: "method":"begintransaction","data":"SUCCESS\n","hash":"5877373487122743310","transactionTimestamp":5}
+2: TIMEOUT 3: onTimeout([Ljava.lang.Object;@2ce99681) at 22
+In what order should the events happen? (enter for in-order)
+
+Node 4: "method":"begintransaction","data":"SUCCESS\n","hash":"5877373487122743310","transactionTimestamp":5}
+Node 4: Client@298488ef
+
+get info from cache read
+users.txt
+SUCCESS
+leelee	a2345	leelee
+
+
+Creating a user, name:vaspol
+
+Time: 23
+The following messages are in transit: 
+0: Packet: 4->3 protocol: 1 contents: 3
+1: Packet: 4->3 protocol: 0 contents: Node 4: 1: DELIVERY Packet: 3->4 protocol: 0 contents: 1: Packet: 3->4 protocol: 0 contents:    Node 3: 1: DELIVERY Packet: 4->3 protocol: 0 contents: 1: Packet: 4->3 protocol: 0 contents: {"method":"create","collection":"vaspol.txt","hash":"5877373534367383568","transactionTimestamp":5}
+Which should be dropped? (space delimited list or just press enter to drop none)
+
+Which should be delayed? (space delimited list or just press enter to delay none)
+
+Live nodes: 3, 4
+Crash which nodes? (space-delimited list of addresses or just press enter)
+
+
+0: DELIVERY Packet: 4->3 protocol: 1 contents: 3
+1: DELIVERY Packet: 4->3 protocol: 0 contents: {"method":"create","collection":"vaspol.txt","hash":"5877373534367383568","transactionTimestamp":5}
+2: TIMEOUT 4: onTimeout([Ljava.lang.Object;@73d32e45) at 23
+In what order should the events happen? (enter for in-order)
+Node 3: {"method":"create","collection":"vaspol.txt","hash":"5877373534367383568","transactionTimestamp":5}
+Crash node 3 before creation of .tmp? (y/n)
+
+
+Crash node 3 before write(str)? (y/n)
+Crash node 3 before write(s, 0, 109)? (y/n)
+
+Crash node 3 before creation of logs.txt? (y/n)
+
+
+Crash node 3 before write(str)? (y/n)
+Crash node 3 before write(s, 0, 120)? (y/n)
+
+Crash node 3 before delete of.tmp? (y/n)
+
+
+
+Time: 24
+The following messages are in transit: 
+0: Packet: 3->4 protocol: 1 contents: 5
+1: Packet: 3->4 protocol: 0 contents: 

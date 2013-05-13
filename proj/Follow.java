@@ -5,9 +5,9 @@ import edu.washington.cs.cse490h.lib.Callback;
 
 /**
  * Contains a sequence of events for following action.
- * 
+ *
  * @author leelee
- * 
+ *
  */
 public class Follow extends Function {
 
@@ -76,10 +76,7 @@ public class Follow extends Function {
 		if (!isLogin) {
 			logError("You are not login. Cannot follow.");
 			// Abort this transaction.
-			TwitterProtocol tpAbort = new TwitterProtocol(TwitterServer.ABORT, new Entry(rioNode.addr).getHash());
-			client.RIOSend(serverAddress, Protocol.DATA, tpAbort.toBytes());
-			client.eventIndex = 0;
-			client.completeCommand(); 
+            client.abortCommand();
 			return;
 		}
 		// request the userlist
@@ -152,7 +149,7 @@ public class Follow extends Function {
 		client.eventIndex = 5;
 		client.RIOSend(serverAddress, Protocol.DATA, tpCommit.toBytes());
 	}
-	
+
 	public void step5(TwitterProtocol response) {
 		String responseString = response.getData();
 		if (responseString.startsWith(TwitterServer.RESTART)) {
@@ -183,7 +180,7 @@ public class Follow extends Function {
 		eventList = todoList;
 		return todoList;
 	}
-	
+
 	public String toString() {
 		return "follow\t" + username + "\t" + followee + "\t" + serverAddress;
 	}
