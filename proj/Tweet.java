@@ -82,7 +82,7 @@ public class Tweet extends Function {
 		logOutput("Posting tweet");
 		// append the tweet to the file on the server
 		strData = new StringData(rioNode.addr);
-		strData.setData(System.currentTimeMillis() + "\t" + msg + "\n");
+		strData.setData(response.getPersistentTimestamp() + "\t" + msg + "\n");
 		TwitterProtocol tpAppendTweet =
 				new TwitterProtocol(TwitterServer.APPEND, usersFile, strData.toString(), strData.getHash());
 		tpAppendTweet.setTimestamp(timestamp);

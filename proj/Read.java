@@ -149,7 +149,7 @@ public class Read extends Function {
 		for (int j = i; j < tweetsToBeDisplayed.length; j++) {
 			logOutput(followeeInfo[0] + ": " + tweetsToBeDisplayed[j]);
 		}
-		newFollowingList.append(followeeInfo[0] + "\t" + System.currentTimeMillis() + "\n");
+		newFollowingList.append(followeeInfo[0] + "\t" + response.getPersistentTimestamp() + "\n");
 		++curFollowIndex;
 		if (curFollowIndex == following.length) {
 			// update the following list time by delete the the original following file

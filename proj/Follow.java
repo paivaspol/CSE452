@@ -120,7 +120,7 @@ public class Follow extends Function {
 			return;
 		}
 		// append the tweet to the file on the server
-		String followeeDetail = followee + "\t" + System.currentTimeMillis();
+		String followeeDetail = followee + "\t" + response.getPersistentTimestamp();
 		strData = new StringData(rioNode.addr);
 		strData.setData(followeeDetail);
 		TwitterProtocol tpAddToFollowing = new TwitterProtocol(TwitterServer.APPEND, usersFile, strData.toString(), strData.getHash());

@@ -15,6 +15,8 @@ public class TwitterProtocol {
 	private String hash;
 	/** the timestamp for transaction */
 	private long transactionTimestamp;
+	/** the timestamp for every packet issued by server */
+	private long persistentTimestamp;
 
 	/**
 	 * Constructs a new structure to hold information for communication
@@ -121,6 +123,14 @@ public class TwitterProtocol {
 	public long getTimestamp() {
 		return transactionTimestamp;
 	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public long getPersistentTimestamp() {
+		return persistentTimestamp;
+	}
 
 	/**
 	 * Sets the method
@@ -165,6 +175,10 @@ public class TwitterProtocol {
 	 */
 	public void setTimestamp(long timestamp) {
 		this.transactionTimestamp = timestamp;
+	}
+	
+	public void setPersistentTimestamp(long pTime) {
+		this.persistentTimestamp = pTime;
 	}
 
 	/**
