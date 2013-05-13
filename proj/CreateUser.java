@@ -77,7 +77,10 @@ public class CreateUser extends Function {
 		}
 		boolean alreadyExist = false;
 		for (int i = 1; i < tokens.length; i++) {
-			if (tokens[i].equals(username)) {
+			String existedUserName = tokens[i].split("\t")[0];
+			if (existedUserName.equals(username)) {
+				// p
+				logOutput(tokens[i]);
 				alreadyExist = true;
 				break;
 			}

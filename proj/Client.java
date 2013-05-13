@@ -142,7 +142,7 @@ public class Client {
 					String oldContent = "";
 					String str = temp.readLine();
 					while (str != null) {
-						oldContent += str;
+						oldContent += str + "\n";
 						str = temp.readLine();
 					}
 					fileWriter = tnw.getWriter(FILENAME, false);
@@ -161,7 +161,11 @@ public class Client {
 		if (Utility.fileExists(tnw, FILENAME)) {
 			try {
 				loadState();
-				processQueue();
+				if (commandQueue.size() != 0) {
+					eventList = commandQueue.peek().init();
+					eventIndex = 1;
+					eventList.get(0).invoke();
+				}
 				logOutput("file exist");
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -308,20 +312,22 @@ public class Client {
 //		5: newFile.write(contents)
 //		6: delete temp
 		fileReader = tnw.getReader(FILENAME);
-		String str = fileReader.readLine() + "\n";
+		String str = fileReader.readLine();
 		String oldFile = "";
 		while (str != null) {
-			oldFile += str;
-			str = fileReader.readLine() + "\n";
+			oldFile += str + "\n";
+			str = fileReader.readLine();
 		}
 		PersistentStorageWriter temp = tnw.getWriter(TMPFILE, false);
 		temp.write(oldFile);
 		// p
 		logOutput("done writing old file to temp");
-		fileWriter = tnw.getWriter(FILENAME, true);
+		fileWriter = tnw.getWriter(FILENAME, false);
 		Queue<Function> tmpQueue = new LinkedList<Function>();
 		while (!commandQueue.isEmpty()) {
 			Function f = commandQueue.poll();
+			// p
+			logOutput(f.toString());
 			fileWriter.append(f.toString() + "\n");
 			tmpQueue.add(f);
 		}
