@@ -13,7 +13,7 @@ public class FileHolder {
     isDeleted = false;
     this.content = content;
     this.version = version;
-    this.isReadOperation = true;
+    this.isReadOperation = isReadOperation;
   }
 
   /**
