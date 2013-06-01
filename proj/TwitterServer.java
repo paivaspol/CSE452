@@ -12,7 +12,8 @@ import edu.washington.cs.cse490h.lib.PersistentStorageWriter;
 import edu.washington.cs.cse490h.lib.Utility;
 
 /**
- * Twitter Server that will handle requests from Twitter Client
+ * Twitter Server that will handle requests from Twitter Client,
+ * has one corresponding PaxosNode
  * 
  * @author vaspol, leelee
  */
@@ -70,6 +71,8 @@ public class TwitterServer {
 
   private final FileManager fileManager;
 
+  private final int paxosNodeId;
+  
   /**
    * Constructs the server side
    */
@@ -83,6 +86,13 @@ public class TwitterServer {
     nodeToTxn = new HashMap<Integer, Integer>();
     txnToPastRequests = new HashMap<Integer, Set<String>>();
     persistentTimestampCounter = 0;
+    if (wrapper.addr == 0) {
+    	this.paxosNodeId = 2;
+    } else if (wrapper.addr == 1) {
+    	this.paxosNodeId = 3;
+    } else {
+    	throw new RuntimeException("Nice :)");
+    }
   }
 
   /**
