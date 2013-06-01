@@ -145,7 +145,7 @@ public class FileManager {
   }
 
   /**
-   * Handles the transaction
+   * Handles the transaction, just put an entry of the operation in the log but not actually executing it yet
    * 
    * @param transactionId
    * @param method
@@ -163,7 +163,9 @@ public class FileManager {
         && !method.equals(TwitterServer.ABORT)) {
       exec.addLogEntry(transactionId, filename, method, value);
     }
-    retval = handleMethod(transactionId, method, filename, value, retval, exec);
+    if (method.equals(TwitterServer.READ) || method.equals(TwitterServer.COMMIT)) {
+      retval = handleMethod(transactionId, method, filename, value, retval, exec);  
+    }
     return retval;
   }
 
