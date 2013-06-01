@@ -72,6 +72,7 @@ public class TwitterServer {
   private final FileManager fileManager;
 
   private final int paxosNodeId;
+  private int waitingClientId;
   
   /**
    * Constructs the server side
@@ -138,7 +139,10 @@ public class TwitterServer {
           TwitterProtocol msg = new TwitterProtocol(RESTART, RESTART, RESTART, new Entry(wrapper.getAddr()).getHash());
           wrapper.RIOSend(nodeId, Protocol.DATA, gson.toJson(msg).getBytes());
         }
+        TwitterProtocol requestLogs = new TwitterProtocol(RESTART, RESTART, RESTART, new Entry(wrapper.getAddr()).getHash());
+        wrapper.RIOSend(paxosNodeId, Protocol.DATA, gson.toJson(requestLogs).getBytes());
       }
+      
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -146,12 +150,69 @@ public class TwitterServer {
 
   /**
    * Called when the server received a packet
+   * ASSUMPTION: paxos nodes are 2, 3, 4
    * 
    * @param from the node it received the packet from
    * @param protocol which protocol it conforms to
    * @param msg the message
    */
   public void onRIOReceive(Integer from, int protocol, byte[] msg) {
+    if (from == 2 || from == 3 || from == 4) {
+      handlePaxos(from, protocol, msg);
+    } else {
+      handleClient(from, protocol, msg);
+    }
+  }
+  
+  /**
+   * Handles the paxos response on the storage server
+   * @param from
+   * @param protocol
+   * @param msg
+   */
+  private void handlePaxos(Integer from, int protocol, byte[] msg) {
+    if (!Protocol.isPktProtocolValid(protocol)) {
+      Utils.logError(wrapper.addr, "unknown protocol: " + protocol);
+      throw new RuntimeException();
+    }
+    // received the operations back from the Paxos node
+    String jsonStr = wrapper.packetBytesToString(msg);
+    TwitterProtocol request = gson.fromJson(jsonStr, TwitterProtocol.class);
+    String data = request.getData();
+    String method = request.getMethod();
+    TwitterProtocol response = new TwitterProtocol(request);
+    String responseData = SUCCESS + "\n";
+    response.setData(responseData);
+    if (method.equals(PaxosNode.NO)) {
+      // no, make sure to rollback the client and execute the operations received.
+      responseData = ROLLBACK + "\n";
+    }
+    int numCommits = fileManager.getNumCommitFromLogContent(data);
+    fileManager.executeLogContentFromLogContent(data, numCommits);
+    // send the response back to the client who is waiting.
+    wrapper.RIOSend(waitingClientId, protocol, response.toBytes());
+    if (responseData.equals(ROLLBACK)) {
+      for (Integer i : connectedNodes) {
+        if (waitingClientId != i) {
+          TwitterProtocol invalidation = new TwitterProtocol(INVALIDATE, INVALIDATE, INVALIDATE, INVALIDATE);
+          wrapper.RIOSend(i, protocol, invalidation.toBytes());
+        }
+      }
+    }
+    try {
+      deleteFile(REDO_LOGGING_FILENAME);
+    } catch (IOException e) {
+      Utils.logError(wrapper.addr, "Error in deleting the file");
+    }
+  }
+
+  /**
+   * Handles the client
+   * @param from
+   * @param protocol
+   * @param msg
+   */
+  private void handleClient(Integer from, int protocol, byte[] msg) {
     // first check whether it is a valid protocol or not
     if (!Protocol.isPktProtocolValid(protocol)) {
       Utils.logError(from, "unknown protocol: " + protocol);
@@ -189,23 +250,25 @@ public class TwitterServer {
           || request.getMethod().equals(READ) || request.getMethod().equals(DELETE)) {
         responseData = fileManager.handleTransaction((int) transactionId, request.getMethod(), collection, data);
       } else if (request.getMethod().equals(APPEND)) {
-        if (!txnToPastRequests.get(from).contains(hash)) {
+        if (!txnToPastRequests.get(from).contains(hash) && !pastRequests.contains(hash)) {
           responseData = fileManager.handleTransaction((int) transactionId, request.getMethod(), collection, data);
         }
       } else if (request.getMethod().equals(COMMIT)) {
-        responseData = fileManager.handleTransaction((int) transactionId, request.getMethod(), collection, data);
-        nodeToTxn.remove(from);
-        txnToPastRequests.remove(from);
-        TwitterProtocol response = new TwitterProtocol(request);
-        response.setData(responseData);
-        wrapper.RIOSend(from, protocol, response.toBytes());
-        if (responseData.equals(ROLLBACK)) {
-          for (Integer i : connectedNodes) {
-            if (from != i) {
-              TwitterProtocol invalidation = new TwitterProtocol(INVALIDATE, INVALIDATE, INVALIDATE, INVALIDATE);
-              wrapper.RIOSend(i, protocol, invalidation.toBytes());
-            }
+        // when a client tries to commit, the server will send the information to its corresponding paxos node
+        // the log of operations is sent.
+        String logContent = fileManager.handleTransaction((int) transactionId, request.getMethod(), collection, data);
+        waitingClientId = from;
+        wrapper.RIOSend(paxosNodeId, Protocol.DATA, logContent.getBytes());
+        try {
+          Set<String> hashes = txnToPastRequests.get(from);
+          StringBuilder sb = new StringBuilder();
+          for (String h : hashes) {
+            sb.append(h + "\n");
           }
+          sb.append(hash + "\n");
+          appendFile(LOG_FILENAME, sb.toString());
+        } catch (IOException e) {
+          e.printStackTrace();
         }
         return;
       } else if (request.getMethod().equals("TIMEOUT")) {
@@ -261,11 +324,6 @@ public class TwitterServer {
     response.setData(responseData);
     wrapper.RIOSend(from, protocol, response.toBytes());
     txnToPastRequests.get(from).add(hash);
-    try {
-      appendFile(LOG_FILENAME, hash + "\n");
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
   }
 
   /**

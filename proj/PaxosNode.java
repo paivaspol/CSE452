@@ -8,6 +8,7 @@ public class PaxosNode {
 
 	/** the wrapper of this node */
 	private final TwitterNodeWrapper wrapper;
+	
 	public static final String PREPARE = "prepare";
 	public static final String PROMISE = "promise";
 	public static final String ACCEPT = "accept";
