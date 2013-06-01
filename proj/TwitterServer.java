@@ -51,6 +51,7 @@ public class TwitterServer {
   private static final String CONTACTED_CLIENTS = "clients.txt";
   private static final String LOG_FILENAME = "logs.txt";
   public static final String REDO_LOGGING_FILENAME = "log.txt";
+  private static final String TIME_FILENAME = "time.txt";
 
   /**
    * An instance of GSON for serializing and deserializing JSON objects
@@ -65,6 +66,7 @@ public class TwitterServer {
   private final Map<Integer, Set<String>> txnToPastRequests;
 
   private long transactionCounter;
+  private long persistentTimestampCounter;
 
   private final FileManager fileManager;
 
@@ -80,6 +82,7 @@ public class TwitterServer {
     fileManager = new FileManager(this);
     nodeToTxn = new HashMap<Integer, Integer>();
     txnToPastRequests = new HashMap<Integer, Set<String>>();
+    persistentTimestampCounter = 0;
   }
 
   /**
@@ -108,6 +111,11 @@ public class TwitterServer {
         while ((pastRequest = reader.readLine()) != null) {
           pastRequests.add(pastRequest);
         }
+      }
+
+      if (Utility.fileExists(wrapper, TIME_FILENAME)) {
+        PersistentStorageReader reader = wrapper.getReader(TIME_FILENAME);
+        persistentTimestampCounter = Long.parseLong(reader.readLine());
       }
 
       // should tell all the clients (nodes) after upon restart, so they know that you're back :)
@@ -193,18 +201,21 @@ public class TwitterServer {
       } else if (request.getMethod().equals("TIMEOUT")) {
         TwitterProtocol response =
             new TwitterProtocol(RESTART, RESTART, RESTART, new Entry(wrapper.getAddr()).getHash());
+        updatePersistentTime();
         wrapper.RIOSend(from, protocol, response.toBytes());
         return;
       } else if (request.getMethod().equals(BEGIN_TRANSACTION)) {
         if (!txnToPastRequests.get(from).contains(hash)) {
           TwitterProtocol response =
               new TwitterProtocol(request.getMethod(), request.getCollection(), responseData, request.getHash(),
-                  transactionCounter);
+                  transactionCounter, persistentTimestampCounter);
+          updatePersistentTime();
           wrapper.RIOSend(from, protocol, response.toBytes());
         } else {
           TwitterProtocol response =
               new TwitterProtocol(ROLLBACK, request.getCollection(), responseData, request.getHash(),
-                  transactionCounter);
+                  transactionCounter, persistentTimestampCounter);
+          updatePersistentTime();
           wrapper.RIOSend(from, protocol, response.toBytes());
           nodeToTxn.remove(from);
           txnToPastRequests.remove(from);
@@ -230,7 +241,13 @@ public class TwitterServer {
       responseData = FAILURE + "\n";
       e.printStackTrace();
     }
+    try {
+      updatePersistentTime();
+    } catch (IOException e1) {
+      e1.printStackTrace();
+    }
     TwitterProtocol response = new TwitterProtocol(request);
+    response.setPersistentTimestamp(persistentTimestampCounter);
     response.setData(responseData);
     wrapper.RIOSend(from, protocol, response.toBytes());
     txnToPastRequests.get(from).add(hash);
@@ -260,6 +277,17 @@ public class TwitterServer {
     } else if (tokenized[0].equals(READ)) {
       readFile(tokenized[1]);
     }
+  }
+
+  private void updatePersistentTime() throws IOException {
+    if (!Utility.fileExists(wrapper, TIME_FILENAME)) {
+      createFile(TIME_FILENAME);
+    } else {
+      deleteFile(TIME_FILENAME);
+      createFile(TIME_FILENAME);
+    }
+    ++persistentTimestampCounter;
+    appendFile(TIME_FILENAME, String.valueOf(persistentTimestampCounter));
   }
 
   // creates a file with the collection name
