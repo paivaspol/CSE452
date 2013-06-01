@@ -204,6 +204,7 @@ public class TwitterServer {
     } catch (IOException e) {
       Utils.logError(wrapper.addr, "Error in deleting the file");
     }
+    waitingClientId = -1;
   }
 
   /**
@@ -245,6 +246,17 @@ public class TwitterServer {
     String responseData = SUCCESS + "\n";
     String hash = request.getHash();
     long transactionId = request.getTimestamp();
+    
+    // first check if the server is waiting for the paxos node to reply or not,
+    // if so, then just reject the client to rollback.
+    if (waitingClientId == -1) {
+      TwitterProtocol response =
+          new TwitterProtocol(ROLLBACK, request.getCollection(), responseData, request.getHash(),
+              transactionCounter, persistentTimestampCounter);
+      wrapper.RIOSend(from, protocol, response.toBytes());
+      return;
+    }
+    
     try {
       if (request.getMethod().equals(CREATE) || request.getMethod().equals(DELETE_LINES)
           || request.getMethod().equals(READ) || request.getMethod().equals(DELETE)) {
