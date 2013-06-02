@@ -17,6 +17,8 @@ public class TwitterProtocol {
   private long transactionTimestamp;
   /** the timestamp for every packet issued by server */
   private long persistentTimestamp;
+  /** the proposal number. */
+  private int proposalNumber;
 
   /**
    * Constructs a new structure to hold information for communication
@@ -189,5 +191,13 @@ public class TwitterProtocol {
    */
   public byte[] toBytes() {
     return TwitterNodeWrapper.GSON.toJson(this).getBytes();
+  }
+  
+  public void setProposalNumber(int proposalNumber) {
+	  this.proposalNumber = proposalNumber; 
+  }
+  
+  public int getProposalNumber() {
+	  return proposalNumber;
   }
 }
