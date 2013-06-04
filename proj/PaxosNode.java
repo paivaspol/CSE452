@@ -18,7 +18,7 @@ public class PaxosNode {
   public static final String PREPARE = "prepare";
   public static final String PROMISE = "promise";
   public static final String ACCEPT = "accept";
-  public static final String CONSE = "accepted";
+  public static final String CONSE = "conses";
   public static final String YES = "yes";
   public static final String NO = "no";
   public static final String CHANGE = "change";
@@ -109,9 +109,10 @@ public class PaxosNode {
       } else if (method.startsWith(PaxosNode.CHANGE)) {
         // propose the change to other paxos node
         try {
+          Utils.logOutput(wrapper.addr, tp.getFileServerRequestValue());
           prepare(tp.getFileServerRequestValue());
         } catch (IOException e) {
-          throw new RuntimeException("There's something wrong with the underlying file system.");
+          throw new RuntimeException(e);
         }
       } else {
         throw new IllegalArgumentException("Unexpected method name from server: " + method);
@@ -133,7 +134,9 @@ public class PaxosNode {
         // we miss, then ask our server to execute, may be more than one
         // transaction.
         try {
-          handleChange(tp.getConsensusValue());
+          Utils.logOutput(wrapper.addr, tp.getConsensusValue());
+
+          handleConsensus(tp.getConsensusValue());
         } catch (IOException e) {
           throw new RuntimeException("something went wrong in handleChange\n" + e.getMessage());
         }
@@ -194,6 +197,9 @@ public class PaxosNode {
       TwitterProtocol accept = new TwitterProtocol(PaxosNode.ACCEPT, new Entry(wrapper.addr).getHash());
       // our proposal number
       accept.setProposalNumber(highestProposalNumberSeen);
+      if (value == null) {
+        Utils.logOutput(wrapper.addr, "VALUE IS NULLLLLL");
+      }
       accept.setAcceptValue(this.value);
       wrapper.RIOSend(from, Protocol.DATA, accept.toBytes());
     } else {
@@ -237,31 +243,36 @@ public class PaxosNode {
    * 
    * @throws IOException
    */
-  private void handleChange(String logEntry) throws IOException {
+  private void handleConsensus(String logEntry) throws IOException {
+    Utils.logOutput(wrapper.addr, "LogEntry: " + logEntry);
     RandomAccessFile raf = new RandomAccessFile(getFullPath(paxosLogFileName), "rw");
     long length = raf.length();
+    Utils.logOutput(wrapper.addr, String.valueOf(length));
     String toExecute = logEntry.substring((int) length);
     raf.seek(length);
     // TODO(): possible bugs, look here if there are bugs!
+    Utils.logOutput(wrapper.addr, "bef toExec: " + toExecute);
     raf.writeUTF(toExecute);
     raf.close();
-    executeConsensus(toExecute, toExecute.contains(fileServerRequest));
+    Utils.logOutput(wrapper.addr, "aft toExec: " + toExecute);
+    if (fileServer != -1) {
+      boolean isYes = false;
+      if (fileServerRequest != null) {
+        isYes = toExecute.contains(fileServerRequest);
+      }
+      executeConsensus(toExecute, isYes);
+    }
   }
 
   private void handleAccepted(String newValue) throws IOException {
-    if (value.equals(newValue)) {
-      acceptedReceivedCounter++;
-      if (acceptedReceivedCounter >= 2) {
-        announceChange();
-      }
-    } else {
-      // the value accepted doesn't agree, so we shouldn't increment the accept counter
-      // TODO: respond back with reject?
+    acceptedReceivedCounter++;
+    if (acceptedReceivedCounter >= 2) {
+      announceChange();
     }
   }
 
   private void handleAccept(int n, String value, int from) {
-    if (n > highestProposalNumberSeen) {
+    if (n >= highestProposalNumberSeen) {
       TwitterProtocol accepted = new TwitterProtocol(PaxosNode.ACCEPTED, new Entry(wrapper.addr).getHash());
       accepted.setAcceptedValue(value);
       wrapper.RIOSend(from, Protocol.DATA, accepted.toBytes());
@@ -283,7 +294,9 @@ public class PaxosNode {
     // send to every paxos node the value.
     TwitterProtocol decided = new TwitterProtocol(PaxosNode.CONSE, new Entry(wrapper.addr).getHash());
     // send whole paxos log
-    decided.setData(readFile(paxosLogFileName));
+    // append current value to paxosLogFile then readFile
+    appendFile(paxosLogFileName, value);
+    decided.setConsensusValue(readFile(paxosLogFileName));
     for (int paxosNum : otherPaxosNodes) {
       wrapper.RIOSend(paxosNum, Protocol.DATA, decided.toBytes());
     }
@@ -308,6 +321,9 @@ public class PaxosNode {
     if (!Utility.fileExists(wrapper, paxosLogFileName)) {
       try {
         createFile(paxosLogFileName);
+        createFile(PAXOS_STATE_FILENAME);
+        createFile(VALUE_FILENAME);
+        createFile(FILE_SERVER_REQ_VALUE);
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
