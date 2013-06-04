@@ -23,6 +23,8 @@ public class PaxosNode {
   public static final String NO = "no";
   public static final String CHANGE = "change";
   public static final String ACCEPTED = "accepted";
+  public static final String PREPARE_FAILED = "prepFailed";
+  public static final String ACCEPT_FAILED = "acceptFailed";
 
   /** filenames */
   private static final String PAXOS_STATE_FILENAME = "paxos_state.txt";
@@ -141,6 +143,19 @@ public class PaxosNode {
         } catch (IOException e) {
           throw new RuntimeException("something went wrong in handleAccepted()\n" + e.getMessage());
         }
+      } else if (method.equals(PaxosNode.ACCEPT_FAILED)) {
+        try {
+          handleAcceptFailed(value);
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+      } else if (method.equals(PaxosNode.PREPARE_FAILED)) {
+        try {
+          handlePrepareFailed(value);
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+
       }
     } else {
       throw new IllegalArgumentException("Don't send request to me!");
@@ -151,14 +166,16 @@ public class PaxosNode {
   // returns the content of the value, null when the node should reject.
   private void handlePrepare(int n, int from) {
     if (highestProposalNumberSeen >= n) {
-      // we don't want to accept
-      return;
+      TwitterProtocol prepFailed = new TwitterProtocol(PaxosNode.PREPARE_FAILED, new Entry(wrapper.addr).getHash());
+      prepFailed.setProposalNumber(highestProposalNumberSeen);
+      wrapper.RIOSend(from, Protocol.DATA, prepFailed.toBytes());
+    } else {
+      TwitterProtocol promise = new TwitterProtocol(PaxosNode.PROMISE, new Entry(wrapper.addr).getHash());
+      promise.setProposalNumber(highestProposalNumberSeen);
+      highestProposalNumberSeen = n;
+      promise.setPromiseValue(value);
+      wrapper.RIOSend(from, Protocol.DATA, promise.toBytes());
     }
-    TwitterProtocol promise = new TwitterProtocol(PaxosNode.PROMISE, new Entry(wrapper.addr).getHash());
-    promise.setProposalNumber(highestProposalNumberSeen);
-    highestProposalNumberSeen = n;
-    promise.setPromiseValue(value);
-    wrapper.RIOSend(from, Protocol.DATA, promise.toBytes());
   }
 
   /**
@@ -182,6 +199,14 @@ public class PaxosNode {
     } else {
       throw new RuntimeException("Impossible state.");
     }
+  }
+
+  private void handlePrepareFailed(String value) throws IOException {
+    prepare(value);
+  }
+
+  private void handleAcceptFailed(String value) throws IOException {
+    prepare(value);
   }
 
   /**
@@ -240,11 +265,11 @@ public class PaxosNode {
       TwitterProtocol accepted = new TwitterProtocol(PaxosNode.ACCEPTED, new Entry(wrapper.addr).getHash());
       accepted.setAcceptedValue(value);
       wrapper.RIOSend(from, Protocol.DATA, accepted.toBytes());
+    } else {
+      TwitterProtocol acceptFailed = new TwitterProtocol(PaxosNode.ACCEPT_FAILED, new Entry(wrapper.addr).getHash());
+      acceptFailed.setProposalNumber(highestProposalNumberSeen);
+      wrapper.RIOSend(from, Protocol.DATA, acceptFailed.toBytes());
     }
-  }
-
-  private String getFullPath(String filename) {
-    return Utility.realFilename(wrapper.addr, filename);
   }
 
   /**
@@ -362,6 +387,10 @@ public class PaxosNode {
   public void onCommand(String command) {
     // Shouldn't be accepting any command
     throw new RuntimeException("No commands for paxos please!");
+  }
+
+  private String getFullPath(String filename) {
+    return Utility.realFilename(wrapper.addr, filename);
   }
 
 }
