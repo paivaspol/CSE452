@@ -4,15 +4,12 @@ import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
 
-import com.sun.corba.se.impl.javax.rmi.CORBA.Util;
-
 import edu.washington.cs.cse490h.lib.PersistentStorageReader;
 import edu.washington.cs.cse490h.lib.PersistentStorageWriter;
 import edu.washington.cs.cse490h.lib.Utility;
 
 /**
- * Represents a Paxos node that has all the Paxos roles: acceptor, learner,
- * proposer
+ * Represents a Paxos node that has all the Paxos roles: acceptor, learner, proposer
  */
 public class PaxosNode {
 
@@ -26,13 +23,13 @@ public class PaxosNode {
   public static final String NO = "no";
   public static final String CHANGE = "change";
   public static final String ACCEPTED = "accepted";
-  
+
   /** filenames */
   private static final String PAXOS_STATE_FILENAME = "paxos_state.txt";
   private static final String VALUE_FILENAME = "value_file.txt";
   private static final String FILE_SERVER_REQ_VALUE = "file_server_req_val.txt";
-  
-  private String paxosLogFileName;
+
+  private final String paxosLogFileName;
   private String fileServerRequest;
 
   private int promiseReceivedCounter;
@@ -59,7 +56,7 @@ public class PaxosNode {
   public String value;
 
   public State state;
-  private Set<Integer> otherPaxosNodes;
+  private final Set<Integer> otherPaxosNodes;
 
   public PaxosNode(TwitterNodeWrapper wrapper) {
     this.wrapper = wrapper;
@@ -92,8 +89,7 @@ public class PaxosNode {
   }
 
   public void onRIOReceive(Integer from, int protocol, byte[] msg) {
-    TwitterProtocol tp = TwitterNodeWrapper.GSON.fromJson(new String(msg),
-        TwitterProtocol.class);
+    TwitterProtocol tp = TwitterNodeWrapper.GSON.fromJson(new String(msg), TwitterProtocol.class);
     String method = tp.getMethod();
     String response = "";
     // check if it is from other paxos or from file server?
@@ -113,12 +109,10 @@ public class PaxosNode {
         try {
           prepare(tp.getFileServerRequestValue());
         } catch (IOException e) {
-          throw new RuntimeException(
-              "There's something wrong with the underlying file system.");
+          throw new RuntimeException("There's something wrong with the underlying file system.");
         }
       } else {
-        throw new IllegalArgumentException(
-            "Unexpected method name from server: " + method);
+        throw new IllegalArgumentException("Unexpected method name from server: " + method);
       }
 
     } else if (otherPaxosNodes.contains(from)) {
@@ -129,10 +123,10 @@ public class PaxosNode {
         // other paxos promise
         handlePromise(tp.getPromiseValue(), from);
       } else if (method.equals(PaxosNode.ACCEPT)) {
-        // other paxos is anouncing the change
+        // other paxos is announcing the change
         handleAccept(tp.getProposalNumber(), tp.getAcceptValue(), from);
       } else if (method.equals(PaxosNode.CONSE)) {
-        // someone annouce change, we need to ask our server to execute it.
+        // someone announced the change, we need to ask our server to execute it.
         // first compare our paxos log with the one sent by them, see which one
         // we miss, then ask our server to execute, may be more than one
         // transaction.
@@ -143,30 +137,24 @@ public class PaxosNode {
         }
       } else if (method.equals(PaxosNode.ACCEPTED)) {
         try {
-        handleAccepted();
+          handleAccepted(tp.getAcceptedValue()); // TODO: double check if this is the correct value or not
         } catch (IOException e) {
-          throw new RuntimeException("something went wrong in handleAccepted()\t" + e.getMessage());
+          throw new RuntimeException("something went wrong in handleAccepted()\n" + e.getMessage());
         }
       }
     } else {
       throw new IllegalArgumentException("Don't send request to me!");
     }
-
   }
 
   // Check if the proposal number if greater than the current one.
   // returns the content of the value, null when the node should reject.
   private void handlePrepare(int n, int from) {
-    if (state == State.ACCEPTED) {
-      // the node already accepted something, so reject the proposal
-      return;
-    }
     if (highestProposalNumberSeen >= n) {
       // we don't want to accept
       return;
     }
-    TwitterProtocol promise = new TwitterProtocol(PaxosNode.PROMISE, new Entry(
-        wrapper.addr).getHash());
+    TwitterProtocol promise = new TwitterProtocol(PaxosNode.PROMISE, new Entry(wrapper.addr).getHash());
     promise.setProposalNumber(highestProposalNumberSeen);
     highestProposalNumberSeen = n;
     promise.setPromiseValue(value);
@@ -186,8 +174,7 @@ public class PaxosNode {
       if (value != null) {
         this.value = value;
       }
-      TwitterProtocol accept = new TwitterProtocol(PaxosNode.ACCEPT, new Entry(
-          wrapper.addr).getHash());
+      TwitterProtocol accept = new TwitterProtocol(PaxosNode.ACCEPT, new Entry(wrapper.addr).getHash());
       // our proposal number
       accept.setProposalNumber(highestProposalNumberSeen);
       accept.setAcceptValue(this.value);
@@ -213,8 +200,7 @@ public class PaxosNode {
     this.value = value;
     fileServerRequest = value;
     // send to other nodes
-    TwitterProtocol proposal = new TwitterProtocol(PaxosNode.PREPARE,
-        new Entry(wrapper.addr).getHash());
+    TwitterProtocol proposal = new TwitterProtocol(PaxosNode.PREPARE, new Entry(wrapper.addr).getHash());
     proposal.setProposalNumber(highestProposalNumberSeen);
     for (int i : otherPaxosNodes) {
       wrapper.RIOSend(i, Protocol.DATA, proposal.toBytes());
@@ -227,17 +213,7 @@ public class PaxosNode {
    * @throws IOException
    */
   private void handleChange(String logEntry) throws IOException {
-    // compare the log received with out log then pass the missed part to
-    // execute consensus
-    // String logContent = readFile(paxosLogFileName);
-    // StringBuilder newContent = new StringBuilder();
-    // Scanner scan = new Scanner(logContent);
-    // Scanner scan2 = new Scanner(logEntry);
-    // while (scan.nextLine() && scan2.nextLine()) {
-    //
-    // }
-    RandomAccessFile raf = new RandomAccessFile(getFullPath(paxosLogFileName),
-        "rw");
+    RandomAccessFile raf = new RandomAccessFile(getFullPath(paxosLogFileName), "rw");
     long length = raf.length();
     String toExecute = logEntry.substring((int) length);
     raf.seek(length);
@@ -247,17 +223,21 @@ public class PaxosNode {
     executeConsensus(toExecute, toExecute.contains(fileServerRequest));
   }
 
-  private void handleAccepted() throws IOException {
-    this.acceptedReceivedCounter++;
-    if (acceptedReceivedCounter >= 2) {
-      announceChange();
+  private void handleAccepted(String newValue) throws IOException {
+    if (value.equals(newValue)) {
+      acceptedReceivedCounter++;
+      if (acceptedReceivedCounter >= 2) {
+        announceChange();
+      }
+    } else {
+      // the value accepted doesn't agree, so we shouldn't increment the accept counter
+      // TODO: respond back with reject?
     }
   }
 
   private void handleAccept(int n, String value, int from) {
     if (n > highestProposalNumberSeen) {
-      TwitterProtocol accepted = new TwitterProtocol(PaxosNode.ACCEPTED,
-          new Entry(wrapper.addr).getHash());
+      TwitterProtocol accepted = new TwitterProtocol(PaxosNode.ACCEPTED, new Entry(wrapper.addr).getHash());
       accepted.setAcceptedValue(value);
       wrapper.RIOSend(from, Protocol.DATA, accepted.toBytes());
     }
@@ -273,11 +253,10 @@ public class PaxosNode {
    * @throws IOException
    */
   private void announceChange() throws IOException {
-    this.promiseReceivedCounter = 1;
-    this.acceptedReceivedCounter = 1;
+    promiseReceivedCounter = 1;
+    acceptedReceivedCounter = 1;
     // send to every paxos node the value.
-    TwitterProtocol decided = new TwitterProtocol(PaxosNode.CONSE, new Entry(
-        wrapper.addr).getHash());
+    TwitterProtocol decided = new TwitterProtocol(PaxosNode.CONSE, new Entry(wrapper.addr).getHash());
     // send whole paxos log
     decided.setData(readFile(paxosLogFileName));
     for (int paxosNum : otherPaxosNodes) {
@@ -320,10 +299,10 @@ public class PaxosNode {
         throw new RuntimeException("Read failed");
       }
       Scanner scan = new Scanner(stateString);
-      this.state = State.strToState(scan.nextLine());
-      this.highestProposalNumberSeen = Integer.parseInt(scan.nextLine());
-      this.value = valueStr;
-      this.fileServerRequest = fileServerStr;
+      state = State.strToState(scan.nextLine());
+      highestProposalNumberSeen = Integer.parseInt(scan.nextLine());
+      value = valueStr;
+      fileServerRequest = fileServerStr;
       scan.close();
     }
   }
@@ -346,8 +325,7 @@ public class PaxosNode {
   }
 
   // reads the whole file in the reader into the oldContent variable
-  public void readWholeFile(PersistentStorageReader reader,
-      StringBuilder builder) throws IOException {
+  public void readWholeFile(PersistentStorageReader reader, StringBuilder builder) throws IOException {
     String temp = "";
     while ((temp = reader.readLine()) != null) {
       builder = builder.append(temp + "\n");
@@ -357,17 +335,13 @@ public class PaxosNode {
   /**
    * Append a data to the end of the file
    * 
-   * @param collectionName
-   *          the filename
-   * @param data
-   *          the line to be appended at the end of the file
+   * @param collectionName the filename
+   * @param data the line to be appended at the end of the file
    * @throws IOException
    */
-  private void appendFile(String collectionName, String data)
-      throws IOException {
+  private void appendFile(String collectionName, String data) throws IOException {
     PersistentStorageReader reader = wrapper.getReader(collectionName);
-    PersistentStorageWriter tempFileWriter = wrapper.getWriter(
-        TwitterServer.TEMP_FILENAME, false);
+    PersistentStorageWriter tempFileWriter = wrapper.getWriter(TwitterServer.TEMP_FILENAME, false);
     StringBuilder tempContent = new StringBuilder(collectionName + "\n");
     StringBuilder oldContent = new StringBuilder();
     readWholeFile(reader, oldContent);
