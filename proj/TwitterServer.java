@@ -191,7 +191,7 @@ public class TwitterServer {
     }
     response.setData(responseData);
     int numCommits = fileManager.getNumCommitFromLogContent(data);
-    fileManager.executeLogContentFromLogContent(data, numCommits);
+    responseData = fileManager.executeLogContentFromLogContent(data, numCommits);
     // send the response back to the client who is waiting.
     if (waitingClientId != -1) {
     	Utils.logOutput(wrapper.addr, waitingClientId + "");
