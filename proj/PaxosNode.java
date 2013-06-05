@@ -258,11 +258,8 @@ public class PaxosNode {
     if (fileServer != -1) {
       boolean isYes = false;
       if (fileServerRequest != null) {
-    	  Utils.logOutput(wrapper.addr, "toExecute " + toExecute);
-    	  Utils.logOutput(wrapper.addr, "toExecute " + fileServerRequest);
         isYes = toExecute.contains(fileServerRequest);
       }
-      Utils.logOutput(wrapper.addr, "Why the heck is fileServerRequest = null?");
       executeConsensus(toExecute, isYes);
     }
   }
@@ -299,9 +296,19 @@ public class PaxosNode {
     // send whole paxos log
     // append current value to paxosLogFile then readFile
     appendFile(paxosLogFileName, value);
+    // p
+    Utils.logOutput(wrapper.addr, "readFileContent " + readFile(paxosLogFileName));
     decided.setConsensusValue(readFile(paxosLogFileName));
     for (int paxosNum : otherPaxosNodes) {
       wrapper.RIOSend(paxosNum, Protocol.DATA, decided.toBytes());
+    }
+    // ask own fileserver to execute if this paxos node has a mapping to a fileserver
+    if (fileServer != -1) {
+    	boolean isYes = false;
+    	if (this.value.equals(fileServerRequest)) {
+    		isYes = true;
+    	}
+    	executeConsensus(fileServerRequest, isYes);
     }
   }
 
