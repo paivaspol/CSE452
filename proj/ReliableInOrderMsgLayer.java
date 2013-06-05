@@ -1,4 +1,5 @@
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -41,6 +42,8 @@ public class ReliableInOrderMsgLayer {
   public void RIODataReceive(int from, byte[] msg) {
     RIOPacket riopkt = RIOPacket.unpack(msg);
     Utils.logOutput(n.addr, new String(msg));
+    Utils.logOutput(n.addr, riopkt.toString());
+    Utils.logOutput(n.addr, Arrays.toString(riopkt.getPayload()));
     TwitterProtocol tp = TwitterNodeWrapper.GSON.fromJson(new String(riopkt.getPayload()), TwitterProtocol.class);
 
     if (tp.getMethod().equals(TwitterServer.RESTART)) {

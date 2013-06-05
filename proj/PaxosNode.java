@@ -258,8 +258,11 @@ public class PaxosNode {
     if (fileServer != -1) {
       boolean isYes = false;
       if (fileServerRequest != null) {
+    	  Utils.logOutput(wrapper.addr, "toExecute " + toExecute);
+    	  Utils.logOutput(wrapper.addr, "toExecute " + fileServerRequest);
         isYes = toExecute.contains(fileServerRequest);
       }
+      Utils.logOutput(wrapper.addr, "Why the heck is fileServerRequest = null?");
       executeConsensus(toExecute, isYes);
     }
   }
@@ -314,7 +317,7 @@ public class PaxosNode {
       tp = new TwitterProtocol(PaxosNode.NO, new Entry(wrapper.addr).getHash());
     }
     tp.setData(logEntry);
-    wrapper.send(fileServer, Protocol.DATA, tp.toBytes());
+    wrapper.RIOSend(fileServer, Protocol.DATA, tp.toBytes());
   }
 
   public void start() {

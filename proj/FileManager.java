@@ -123,6 +123,7 @@ public class FileManager {
    */
   public void executeLogContentFromLogContent(String content, int numCommits) {
     try {
+    	Utils.logOutput(4, "Executing log");
       String[] entries = content.split("\n");
       TransactionalExecution exec = new TransactionalExecution();
       for (String entry : entries) {
@@ -200,8 +201,6 @@ public class FileManager {
     }
     int version = getLastModifiedVersion(filename);
     exec.modifyFile(version, filename, content.toString(), false); // put it
-    // in
-    // memory
   }
 
   private void append(int transactionId, String filename, String value,

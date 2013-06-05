@@ -102,14 +102,17 @@ public class RIOPacket {
 			int bytesRead = in.read(payload, 0, payload.length);
 
 			if (bytesRead != payload.length) {
+				Utils.logOutput(3, "not equals!");
 				return null;
 			}
 
 			return new RIOPacket(protocol, seqNum, payload);
 		} catch (IllegalArgumentException e) {
 			// will return null
+//			 e.printStackTrace();
 		} catch(IOException e) {
 			// will return null
+//			 e.printStackTrace();
 		}
 		return null;
 	}
