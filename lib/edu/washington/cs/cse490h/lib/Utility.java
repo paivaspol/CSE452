@@ -62,7 +62,7 @@ public class Utility {
     return "''";
   }
 
-  static String realFilename(int nodeAddr, String filename) {
+  public static String realFilename(int nodeAddr, String filename) {
     return "storage/" + nodeAddr + "/" + filename;
   }
 

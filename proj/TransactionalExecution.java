@@ -20,7 +20,7 @@ public class TransactionalExecution {
    * @param value the value. This is optional. Can be null if not wanted.
    */
   public void addLogEntry(long tid, String filename, String method, String value) {
-    String entry = tid + '\t' + filename + '\t' + method;
+    String entry = String.valueOf(tid) + '\t' + filename + '\t' + method;
     if (value != null) {
       entry += '\t' + value;
     }

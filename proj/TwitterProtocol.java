@@ -17,6 +17,37 @@ public class TwitterProtocol {
   private long transactionTimestamp;
   /** the timestamp for every packet issued by server */
   private long persistentTimestamp;
+  /** the proposal number. */
+  private int proposalNumber;
+
+  /** Send in an accept packet. */
+  private String acceptValue;
+  /** Send in an accepted packet. */
+  private String acceptedValue;
+  /** Send from server to paxos. */
+  private String fileServerRequestValue;
+  /** Send fr0om paxos to server. */
+  private String executeValue;
+  private String promiseValue;
+  private String consensusValue;
+
+  public String getConsensusValue() {
+    return consensusValue;
+  }
+
+  public void setConsensusValue(String consensusValue) {
+    this.consensusValue = consensusValue;
+  }
+
+  public String getPromiseValue() {
+    return promiseValue;
+  }
+
+  public void setPromiseValue(String promiseValue) {
+    this.promiseValue = promiseValue;
+  }
+  
+  
 
   /**
    * Constructs a new structure to hold information for communication
@@ -87,6 +118,30 @@ public class TwitterProtocol {
     data = twitterProtocol.data;
     hash = twitterProtocol.hash;
     transactionTimestamp = twitterProtocol.transactionTimestamp;
+  }
+  
+  /**
+   * sets the logValue
+   * @param logValue the value
+   */
+  public void setAcceptValue(String acceptValue) {
+    this.acceptValue = acceptValue;
+  }
+  
+  /**
+   * returns the logvalue
+   * @return
+   */
+  public String getAcceptValue() {
+    return this.acceptValue;
+  }
+  
+  /**
+   * sets the logValue
+   * @param logValue the value
+   */
+  public void setAcceptedValue(String acceptedValue) {
+    this.acceptedValue = acceptedValue;
   }
 
   /**
@@ -189,5 +244,41 @@ public class TwitterProtocol {
    */
   public byte[] toBytes() {
     return TwitterNodeWrapper.GSON.toJson(this).getBytes();
+  }
+  
+  public void setProposalNumber(int proposalNumber) {
+	  this.proposalNumber = proposalNumber; 
+  }
+  
+  public int getProposalNumber() {
+	  return proposalNumber;
+  }
+  
+  public long getTransactionTimestamp() {
+    return transactionTimestamp;
+  }
+
+  public void setTransactionTimestamp(long transactionTimestamp) {
+    this.transactionTimestamp = transactionTimestamp;
+  }
+
+  public String getFileServerRequestValue() {
+    return fileServerRequestValue;
+  }
+
+  public void setFileServerRequestValue(String fileServerRequestValue) {
+    this.fileServerRequestValue = fileServerRequestValue;
+  }
+
+  public String getExecuteValue() {
+    return executeValue;
+  }
+
+  public void setExecuteValue(String executeValue) {
+    this.executeValue = executeValue;
+  }
+
+  public String getAcceptedValue() {
+    return acceptedValue;
   }
 }
