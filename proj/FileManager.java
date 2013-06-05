@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -37,7 +38,7 @@ public class FileManager {
     int counter = 0;
     Scanner scan = new Scanner(content);
     while (scan.hasNextLine()) {
-      if (scan.nextLine().equals(TwitterServer.COMMIT)) {
+      if (scan.nextLine().contains(TwitterServer.COMMIT)) {
         counter++;
       }
     }
@@ -121,28 +122,89 @@ public class FileManager {
    * @param content contains all the operations
    * @param numCommits
    */
-  public void executeLogContentFromLogContent(String content, int numCommits) {
+  public String executeLogContentFromLogContent(String content, int numCommits) {
+    String retval = TwitterServer.SUCCESS;
     try {
-    	Utils.logOutput(4, "Executing log");
       String[] entries = content.split("\n");
-      TransactionalExecution exec = new TransactionalExecution();
       for (String entry : entries) {
         if (numCommits <= 0) {
           break;
         }
         String[] tokenized = entry.split("\t");
-        if (tokenized.length == 4) {
-          handleMethod(Integer.parseInt(tokenized[0]), tokenized[2],
-              tokenized[1], tokenized[3], "", exec);
-        } else {
+        Utils.logOutput(server.getNode().addr, Arrays.toString(tokenized));
+        if (tokenized.length >= 4) {
+          StringBuilder value = new StringBuilder();
+          for (int i = 3; i < tokenized.length; i++) {
+            value.append(tokenized[i] + "\t");
+          }
+          retval = handleFileIOOperations(Integer.parseInt(tokenized[0]), tokenized[2],
+              tokenized[1], value.toString());
+        } else if (tokenized.length <= 3) {
+          retval = handleFileIOOperations(Integer.parseInt(tokenized[0]), tokenized[2], tokenized[1], "");
+        }else {
           if (tokenized[2].equals(TwitterServer.COMMIT)) {
             numCommits--;
           }
         }
       }
     } catch (IOException e) {
+      retval = TwitterServer.ROLLBACK;
       Utils.logError(server.getNode().addr, e.getMessage());
     }
+    return retval;
+  }
+  
+  /**
+   * handles IO Operation
+   * @param transactionId
+   * @param method
+   * @param filename
+   * @param value
+   * @throws IOException 
+   */
+  private String handleFileIOOperations(int transactionId, String method,
+      String filename, String value) throws IOException {
+    String retval = "SUCCESS\n";
+    if (method.equals(TwitterServer.CREATE)) {
+      StringBuilder content = new StringBuilder();
+      if (Utility.fileExists(server.getNode(), filename)) {
+        PersistentStorageReader reader = server
+            .getPersistentStorageReader(filename);
+        readWholeFile(reader, content);
+      }
+      String finalContent = String.valueOf(transactionId) + "\n" + content.toString();
+      writeToFile(filename, finalContent);
+    } else if (method.equals(TwitterServer.APPEND)) {
+      Utils.logOutput(this.server.getNode().addr, "appending: " + value);
+      StringBuilder content = new StringBuilder();
+      if (Utility.fileExists(server.getNode(), filename)) {
+        PersistentStorageReader reader = server
+            .getPersistentStorageReader(filename);
+        readWholeFileNoLastUpdated(reader, content);
+      }
+      content.append(value + "\n");
+      String finalContent = String.valueOf(transactionId) + "\n" + content.toString();
+      writeToFile(filename, finalContent);
+    } else if (method.equals(TwitterServer.DELETE)) {
+      deleteFile(transactionId, filename);
+    } else if (method.equals(TwitterServer.DELETE_LINES)) {
+      StringBuilder result = new StringBuilder();
+      PersistentStorageReader reader = server
+          .getPersistentStorageReader(filename);
+      StringBuilder cont = new StringBuilder();
+      readWholeFileNoLastUpdated(reader, cont);
+      String content = cont.toString();
+      String[] file = content.toString().split("\n");
+      result.append(String.valueOf(transactionId));
+      for (String str : file) {
+        if (!str.startsWith(value)) {
+          result.append(str);
+        }
+      }
+      String finalContent = String.valueOf(result.toString());
+      writeToFile(filename, finalContent);
+    }
+    return retval;
   }
 
   /**
@@ -193,63 +255,63 @@ public class FileManager {
 
   private void create(int transactionId, String filename,
       TransactionalExecution exec) throws IOException {
-    StringBuilder content = new StringBuilder();
-    if (Utility.fileExists(server.getNode(), filename)) {
-      PersistentStorageReader reader = server
-          .getPersistentStorageReader(filename);
-      readWholeFile(reader, content);
-    }
-    int version = getLastModifiedVersion(filename);
-    exec.modifyFile(version, filename, content.toString(), false); // put it
+//    StringBuilder content = new StringBuilder();
+//    if (Utility.fileExists(server.getNode(), filename)) {
+//      PersistentStorageReader reader = server
+//          .getPersistentStorageReader(filename);
+//      readWholeFile(reader, content);
+//    }
+//    int version = getLastModifiedVersion(filename);
+//    exec.modifyFile(version, filename, content.toString(), false); // put it
   }
 
   private void append(int transactionId, String filename, String value,
       TransactionalExecution exec) throws IOException {
-    StringBuilder content = new StringBuilder();
-    String fContent = exec.readFile(filename);
-    if (fContent != null) {
-      // there's something
-      content.append(fContent);
-      content.append(value + "\n");
-    } else {
-      // it's null
-      if (Utility.fileExists(server.getNode(), filename)) {
-        PersistentStorageReader reader = server
-            .getPersistentStorageReader(filename);
-        readWholeFile(reader, content);
-        content.append(value + "\n");
-      } else {
-        content.append(value + "\n");
-      }
-    }
-    int version = getLastModifiedVersion(filename);
-    exec.modifyFile(version, filename, content.toString(), false);
+//    StringBuilder content = new StringBuilder();
+//    String fContent = exec.readFile(filename);
+//    if (fContent != null) {
+//      // there's something
+//      content.append(fContent);
+//      content.append(value + "\n");
+//    } else {
+//      // it's null
+//      if (Utility.fileExists(server.getNode(), filename)) {
+//        PersistentStorageReader reader = server
+//            .getPersistentStorageReader(filename);
+//        readWholeFile(reader, content);
+//        content.append(value + "\n");
+//      } else {
+//        content.append(value + "\n");
+//      }
+//    }
+//    int version = getLastModifiedVersion(filename);
+//    exec.modifyFile(version, filename, content.toString(), false);
   }
 
   private void delete(int transactionId, String filename,
       TransactionalExecution exec) {
-    exec.deleteFile(transactionId, filename);
+//    exec.deleteFile(transactionId, filename);
   }
 
   private void deleteLines(int transactionId, String filename, String value,
       TransactionalExecution exec) throws IOException {
-    String content = exec.readFile(filename);
-    StringBuilder result = new StringBuilder();
-    if (content == null) {
-      PersistentStorageReader reader = server
-          .getPersistentStorageReader(filename);
-      StringBuilder cont = new StringBuilder();
-      readWholeFile(reader, cont);
-      content = cont.toString();
-    }
-    String[] file = content.toString().split("\n");
-    for (String str : file) {
-      if (!str.startsWith(value)) {
-        result.append(str);
-      }
-    }
-    int version = getLastModifiedVersion(filename);
-    exec.modifyFile(version, filename, result.toString(), false);
+//    String content = exec.readFile(filename);
+//    StringBuilder result = new StringBuilder();
+//    if (content == null) {
+//      PersistentStorageReader reader = server
+//          .getPersistentStorageReader(filename);
+//      StringBuilder cont = new StringBuilder();
+//      readWholeFile(reader, cont);
+//      content = cont.toString();
+//    }
+//    String[] file = content.toString().split("\n");
+//    for (String str : file) {
+//      if (!str.startsWith(value)) {
+//        result.append(str);
+//      }
+//    }
+//    int version = getLastModifiedVersion(filename);
+//    exec.modifyFile(version, filename, result.toString(), false);
   }
 
   private String read(int transactionId, String filename, String retval,
@@ -332,7 +394,7 @@ public class FileManager {
     StringBuilder oldContent = new StringBuilder();
     if (Utility.fileExists(server.getNode(), filename)) {
       reader = server.getPersistentStorageReader(filename);
-      readWholeFile(reader, oldContent);
+      readWholeFileNoLastUpdated(reader, oldContent);
       reader.close();
     }
     // first, write the tmp file
@@ -352,14 +414,14 @@ public class FileManager {
   }
 
   // reads the whole file in the reader into the oldContent variable
-  public void readWholeFile(PersistentStorageReader reader,
+  public void readWholeFileNoLastUpdated(PersistentStorageReader reader,
       StringBuilder builder) throws IOException {
     reader.readLine(); // assuming there's the last updated
-    readWholeFileNoLastUpdated(reader, builder);
+    readWholeFile(reader, builder);
   }
 
   // reads the whole file in the reader into the oldContent variable
-  public void readWholeFileNoLastUpdated(PersistentStorageReader reader,
+  public void readWholeFile(PersistentStorageReader reader,
       StringBuilder builder) throws IOException {
     String temp = "";
     while ((temp = reader.readLine()) != null) {
