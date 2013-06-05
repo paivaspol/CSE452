@@ -278,12 +278,11 @@ public class TwitterServer {
         String logContent = fileManager.handleTransaction((int) transactionId, request.getMethod(), collection, data);
         TwitterProtocol sendToPaxos = new TwitterProtocol(PaxosNode.CHANGE, new Entry(wrapper.addr).getHash());
         sendToPaxos.setFileServerRequestValue(logContent);
-        // p
         if (logContent == null) {
         	 Utils.logOutput(wrapper.addr, "why the heck is logContent = null");
         }
-       
         waitingClientId = from;
+        sendToPaxos.setTransactionTimestamp(transactionCounter);
         wrapper.RIOSend(paxosNodeId, Protocol.DATA, sendToPaxos.toBytes());
         try {
           Set<String> hashes = txnToPastRequests.get(from);
