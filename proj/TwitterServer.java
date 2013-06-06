@@ -185,6 +185,12 @@ public class TwitterServer {
     TwitterProtocol request = gson.fromJson(jsonStr, TwitterProtocol.class);
     String data = request.getData();
     String method = request.getMethod();
+    
+    if (method.equals(RESTART)) {
+      
+      return;
+    }
+    
     TwitterProtocol response = new TwitterProtocol(request);
     String responseData = SUCCESS + "\n";
     if (method.equals(PaxosNode.NO)) {

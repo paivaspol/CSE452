@@ -129,7 +129,7 @@ public class PaxosNode {
       } else if (method.startsWith(PaxosNode.CHANGE)) {
         // propose the change to other paxos node
         try {
-
+          Utils.logOutput(wrapper.addr, "\t\t\t\t" + tp.getFileServerRequestValue());
           prepare(tp.getFileServerRequestValue(), tp.getTransactionTimestamp());
         } catch (IOException e) {
           throw new RuntimeException(e);
@@ -178,17 +178,7 @@ public class PaxosNode {
         }
       } else if (method.equals(PaxosNode.ACCEPTED)) {
         try {
-          handleAccepted(tp.getAcceptedValue(), tp.getTransactionTimestamp()); // TODO:
-                                                                               // double
-                                                                               // check
-                                                                               // if
-                                                                               // this
-                                                                               // is
-                                                                               // the
-                                                                               // correct
-                                                                               // value
-                                                                               // or
-                                                                               // not
+          handleAccepted(tp.getAcceptedValue(), tp.getTransactionTimestamp());
         } catch (IOException e) {
           throw new RuntimeException(
               "something went wrong in handleAccepted()\n" + e.getMessage());
@@ -201,7 +191,12 @@ public class PaxosNode {
         }
       } else if (method.equals(PaxosNode.PREPARE_FAILED)) {
         try {
-          handlePrepareFailed(value, tp.getTransactionTimestamp());
+          if (value == null) {
+            handlePrepareFailed(fileServerRequest, tp.getTransactionTimestamp());
+          } else {
+            handlePrepareFailed(value, tp.getTransactionTimestamp());
+          }
+          
         } catch (IOException e) {
           throw new RuntimeException(e);
         }
@@ -263,6 +258,9 @@ public class PaxosNode {
       if (value != null) {
         this.value = value;
       } else {
+        
+        Utils.logOutput(wrapper.addr, "fileServerRequest " + fileServerRequest);
+        
         this.value = fileServerRequest;
       }
       try {
@@ -361,7 +359,9 @@ public class PaxosNode {
       }
       executeConsensus(toExecute, isYes, id);
     }
-    value = null;
+    if (currServerRequestId == -1) {
+      value = null;
+    }
   }
 
   private void handleAccepted(String newValue, long id) throws IOException {
@@ -425,6 +425,7 @@ public class PaxosNode {
       // executeConsensus(fileServerRequest, isYes, inProgressId);
       executeConsensus(value, isYes, inProgressId);
     }
+    value = null;
   }
 
   // someone annouce change, we need to ask our server to execute it.
@@ -502,6 +503,13 @@ public class PaxosNode {
           TwitterServer.RESTART, TwitterServer.RESTART, new Entry(
               wrapper.getAddr()).getHash());
       wrapper.RIOSend(connectedNode, Protocol.DATA, TwitterNodeWrapper.GSON
+          .toJson(msg).getBytes());
+    }
+    if (currWaitingServer != -1) {
+      TwitterProtocol msg = new TwitterProtocol(TwitterServer.RESTART,
+          TwitterServer.RESTART, TwitterServer.RESTART, new Entry(
+              wrapper.getAddr()).getHash());
+      wrapper.RIOSend(currWaitingServer, Protocol.DATA, TwitterNodeWrapper.GSON
           .toJson(msg).getBytes());
     }
   }
