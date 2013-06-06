@@ -100,6 +100,10 @@ public class PaxosNode {
     TwitterProtocol tp = TwitterNodeWrapper.GSON.fromJson(new String(msg), TwitterProtocol.class);
     String method = tp.getMethod();
     String response = "";
+    
+    Utils.logOutput(wrapper.addr, "HHHHHHHH " + from + " method: " + method);
+    
+    
     // check if it is from other paxos or from file server?
     if (from == 0 || from == 1) {
       // it is a server
@@ -125,6 +129,15 @@ public class PaxosNode {
       }
 
     } else if (otherPaxosNodes.contains(from)) {
+      if (method.equals("TIMEOUT") && fileServer != -1) {
+        Utils.logOutput(wrapper.addr, "\t\t\tHERE!");
+        try {
+          prepare(value, inProgressId);
+        } catch (IOException e) {
+         throw new RuntimeException(e);
+        }
+        return;
+      }
       if (method.equals(PaxosNode.PREPARE)) {
         // other paxos node wants to propose
         handlePrepare(tp.getProposalNumber(), from, tp.getTransactionTimestamp());

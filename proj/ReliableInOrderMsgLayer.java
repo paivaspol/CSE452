@@ -7,11 +7,12 @@ import edu.washington.cs.cse490h.lib.Callback;
 import edu.washington.cs.cse490h.lib.Utility;
 
 /**
- * Layer above the basic messaging layer that provides reliable, in-order delivery in the absence of faults. This layer
- * does not provide much more than the above.
+ * Layer above the basic messaging layer that provides reliable, in-order
+ * delivery in the absence of faults. This layer does not provide much more than
+ * the above.
  * 
- * At a minimum, the student should extend/modify this layer to provide reliable, in-order message delivery, even in the
- * presence of node failures.
+ * At a minimum, the student should extend/modify this layer to provide
+ * reliable, in-order message delivery, even in the presence of node failures.
  */
 public class ReliableInOrderMsgLayer {
   public static int TIMEOUT = 3;
@@ -23,9 +24,12 @@ public class ReliableInOrderMsgLayer {
   /**
    * Constructor.
    * 
-   * @param destAddr The address of the destination host
-   * @param msg The message that was sent
-   * @param timeSent The time that the ping was sent
+   * @param destAddr
+   *          The address of the destination host
+   * @param msg
+   *          The message that was sent
+   * @param timeSent
+   *          The time that the ping was sent
    */
   public ReliableInOrderMsgLayer(RIONode n) {
     inConnections = new HashMap<Integer, InChannel>();
@@ -36,59 +40,71 @@ public class ReliableInOrderMsgLayer {
   /**
    * Receive a data packet.
    * 
-   * @param from The address from which the data packet came
-   * @param pkt The Packet of data
+   * @param from
+   *          The address from which the data packet came
+   * @param pkt
+   *          The Packet of data
    */
   public void RIODataReceive(int from, byte[] msg) {
     RIOPacket riopkt = RIOPacket.unpack(msg);
-    TwitterProtocol tp = TwitterNodeWrapper.GSON.fromJson(new String(riopkt.getPayload()), TwitterProtocol.class);
+    TwitterProtocol tp = TwitterNodeWrapper.GSON.fromJson(
+        new String(riopkt.getPayload()), TwitterProtocol.class);
 
     if (tp.getMethod().equals(TwitterServer.RESTART)) {
-    	// reset sequence number of receiver.
+      // reset sequence number of receiver.
       inConnections.remove(from);
       outConnections.remove(from);
     }
-    
+
+    // p
+    Utils.logOutput(n.addr, "method " + tp.getMethod());
+
     // at-most-once semantics
     // ack the message
     byte[] seqNumByteArray = Utility.stringToByteArray("" + riopkt.getSeqNum());
     n.send(from, Protocol.ACK, seqNumByteArray);
-      InChannel in = inConnections.get(from);
-      if (in == null) {
-        in = new InChannel();
-        inConnections.put(from, in);
-      }
-
-      LinkedList<RIOPacket> toBeDelivered = in.gotPacket(riopkt);
-      for (RIOPacket p : toBeDelivered) {
-        // deliver in-order the next sequence of packets
-        n.onRIOReceive(from, p.getProtocol(), p.getPayload());
-      }
+    InChannel in = inConnections.get(from);
+    if (in == null) {
+      in = new InChannel();
+      inConnections.put(from, in);
+    }
+    
+    LinkedList<RIOPacket> toBeDelivered = in.gotPacket(riopkt);
+    Utils.logOutput(n.addr, toBeDelivered.toString());
+    for (RIOPacket p : toBeDelivered) {
+      // deliver in-order the next sequence of packets
+      n.onRIOReceive(from, p.getProtocol(), p.getPayload());
+    }
 
   }
 
   /**
    * Receive an acknowledgment packet.
    * 
-   * @param from The address from which the data packet came
-   * @param pkt The Packet of data
+   * @param from
+   *          The address from which the data packet came
+   * @param pkt
+   *          The Packet of data
    */
   public void RIOAckReceive(int from, byte[] msg) {
     int seqNum = Integer.parseInt(Utility.byteArrayToString(msg));
-    if(outConnections.get(from) != null) {
-    	 outConnections.get(from).gotACK(seqNum);
+    if (outConnections.get(from) != null) {
+      outConnections.get(from).gotACK(seqNum);
     } else {
-    	outConnections.put(from, new OutChannel(this, from));
+      outConnections.put(from, new OutChannel(this, from));
     }
   }
 
   /**
-   * Send a packet using this reliable, in-order messaging layer. Note that this method does not include a reliable,
-   * in-order broadcast mechanism.
+   * Send a packet using this reliable, in-order messaging layer. Note that this
+   * method does not include a reliable, in-order broadcast mechanism.
    * 
-   * @param destAddr The address of the destination for this packet
-   * @param protocol The protocol identifier for the packet
-   * @param payload The payload to be sent
+   * @param destAddr
+   *          The address of the destination for this packet
+   * @param protocol
+   *          The protocol identifier for the packet
+   * @param payload
+   *          The payload to be sent
    */
   public void RIOSend(int destAddr, int protocol, byte[] payload) {
     OutChannel out = outConnections.get(destAddr);
@@ -103,16 +119,19 @@ public class ReliableInOrderMsgLayer {
   /**
    * Callback for timeouts while waiting for an ACK.
    * 
-   * This method is here and not in OutChannel because OutChannel is not a public class.
+   * This method is here and not in OutChannel because OutChannel is not a
+   * public class.
    * 
-   * @param destAddr The receiving node of the unACKed packet
-   * @param seqNum The sequence number of the unACKed packet
+   * @param destAddr
+   *          The receiving node of the unACKed packet
+   * @param seqNum
+   *          The sequence number of the unACKed packet
    */
   public void onTimeout(Integer destAddr, Integer seqNum) {
-	  if (outConnections.get(destAddr) == null) {
-		  outConnections.put(destAddr, new OutChannel(this, destAddr));
-	  }
-	  outConnections.get(destAddr).onTimeout(n, seqNum);
+    if (outConnections.get(destAddr) == null) {
+      outConnections.put(destAddr, new OutChannel(this, destAddr));
+    }
+    outConnections.get(destAddr).onTimeout(n, seqNum);
   }
 
   @Override
@@ -141,13 +160,15 @@ class InChannel {
   /**
    * Method called whenever we receive a data packet.
    * 
-   * @param pkt The packet
-   * @return A list of the packets that we can now deliver due to the receipt of this packet
+   * @param pkt
+   *          The packet
+   * @return A list of the packets that we can now deliver due to the receipt of
+   *         this packet
    */
   public LinkedList<RIOPacket> gotPacket(RIOPacket pkt) {
     LinkedList<RIOPacket> pktsToBeDelivered = new LinkedList<RIOPacket>();
     int seqNum = pkt.getSeqNum();
-
+    Utils.logOutput(999, "\taaaa seqNum: " + seqNum + ", lastSeqNum: " + lastSeqNumDelivered);
     if (seqNum == lastSeqNumDelivered + 1) {
       // We were waiting for this packet
       pktsToBeDelivered.add(pkt);
@@ -165,7 +186,8 @@ class InChannel {
   /**
    * Helper method to grab all the packets we can now deliver.
    * 
-   * @param pktsToBeDelivered List to append to
+   * @param pktsToBeDelivered
+   *          List to append to
    */
   private void deliverSequence(LinkedList<RIOPacket> pktsToBeDelivered) {
     while (outOfOrderMsgs.containsKey(lastSeqNumDelivered + 1)) {
@@ -176,7 +198,8 @@ class InChannel {
 
   @Override
   public String toString() {
-    return "last delivered: " + lastSeqNumDelivered + ", outstanding: " + outOfOrderMsgs.size();
+    return "last delivered: " + lastSeqNumDelivered + ", outstanding: "
+        + outOfOrderMsgs.size();
   }
 }
 
@@ -204,20 +227,23 @@ class OutChannel {
   /**
    * Send a new RIOPacket out on this channel.
    * 
-   * @param n The sender and parent of this channel
-   * @param protocol The protocol identifier of this packet
-   * @param payload The payload to be sent
+   * @param n
+   *          The sender and parent of this channel
+   * @param protocol
+   *          The protocol identifier of this packet
+   * @param payload
+   *          The payload to be sent
    */
   protected void sendRIOPacket(RIONode n, int protocol, byte[] payload) {
     try {
-      Method onTimeoutMethod =
-          Callback.getMethod("onTimeout", parent, new String[] { "java.lang.Integer", "java.lang.Integer" });
+      Method onTimeoutMethod = Callback.getMethod("onTimeout", parent,
+          new String[] { "java.lang.Integer", "java.lang.Integer" });
       RIOPacket newPkt = new RIOPacket(protocol, ++lastSeqNumSent, payload);
       unACKedPackets.put(lastSeqNumSent, newPkt);
       resendCounter.put(lastSeqNumSent, MAX_RESEND);
       n.send(destAddr, Protocol.DATA, newPkt.pack());
-      n.addTimeout(new Callback(onTimeoutMethod, parent, new Object[] { destAddr, lastSeqNumSent }),
-          ReliableInOrderMsgLayer.TIMEOUT);
+      n.addTimeout(new Callback(onTimeoutMethod, parent, new Object[] {
+          destAddr, lastSeqNumSent }), ReliableInOrderMsgLayer.TIMEOUT);
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -226,23 +252,27 @@ class OutChannel {
   /**
    * Called when a timeout for this channel triggers
    * 
-   * @param n The sender and parent of this channel
-   * @param seqNum The sequence number of the unACKed packet
+   * @param n
+   *          The sender and parent of this channel
+   * @param seqNum
+   *          The sequence number of the unACKed packet
    */
   public void onTimeout(RIONode n, Integer seqNum) {
     if (unACKedPackets.containsKey(seqNum)) {
       if (resendCounter.get(seqNum) > 0) {
-    	  resendRIOPacket(n, seqNum);
+        resendRIOPacket(n, seqNum);
       } else {
-    	  stopResend(n, seqNum);
+        stopResend(n, seqNum);
       }
     }
   }
 
   /**
-   * Called when we get an ACK back. Removes the outstanding packet if it is still in unACKedPackets.
+   * Called when we get an ACK back. Removes the outstanding packet if it is
+   * still in unACKedPackets.
    * 
-   * @param seqNum The sequence number that was just ACKed
+   * @param seqNum
+   *          The sequence number that was just ACKed
    */
   protected void gotACK(int seqNum) {
     unACKedPackets.remove(seqNum);
@@ -252,39 +282,44 @@ class OutChannel {
   /**
    * Resend an unACKed packet.
    * 
-   * @param n The sender and parent of this channel
-   * @param seqNum The sequence number of the unACKed packet
+   * @param n
+   *          The sender and parent of this channel
+   * @param seqNum
+   *          The sequence number of the unACKed packet
    */
   private void resendRIOPacket(RIONode n, int seqNum) {
     try {
-      Method onTimeoutMethod =
-          Callback.getMethod("onTimeout", parent, new String[] { "java.lang.Integer", "java.lang.Integer" });
+      Method onTimeoutMethod = Callback.getMethod("onTimeout", parent,
+          new String[] { "java.lang.Integer", "java.lang.Integer" });
       RIOPacket riopkt = unACKedPackets.get(seqNum);
       Integer counter = resendCounter.get(seqNum);
       resendCounter.put(seqNum, counter - 1);
       n.send(destAddr, Protocol.DATA, riopkt.pack());
-      n.addTimeout(new Callback(onTimeoutMethod, parent, new Object[] { destAddr, seqNum }),
-          ReliableInOrderMsgLayer.TIMEOUT);
+      n.addTimeout(new Callback(onTimeoutMethod, parent, new Object[] {
+          destAddr, seqNum }), ReliableInOrderMsgLayer.TIMEOUT);
     } catch (Exception e) {
       e.printStackTrace();
     }
   }
-  
 
   private void stopResend(RIONode rioNode, int seqNum) {
-	  // time out!
-	  try {
-		  Method onTimeoutMethod =
-				  Callback.getMethod("onTimeout", parent, new String[] { "java.lang.Integer", "java.lang.Integer" });
-		  TwitterProtocol tp = new TwitterProtocol("TIMEOUT", "TIMEOUT", "TIMEOUT", new Entry(rioNode.addr).getHash());
-		  RIOPacket pck = new RIOPacket(Protocol.DATA, seqNum, tp.toBytes());
-		  rioNode.onReceive(destAddr, Protocol.DATA, pck.pack());
-		  unACKedPackets.remove(seqNum);
-		  resendCounter.remove(seqNum);
-		  rioNode.addTimeout(new Callback(onTimeoutMethod, parent, new Object[] { destAddr, seqNum }),
-				  ReliableInOrderMsgLayer.TIMEOUT);
-	  } catch (Exception e) {
-		  e.printStackTrace();
-	  }
+    // time out!
+    try {
+      Method onTimeoutMethod = Callback.getMethod("onTimeout", parent,
+          new String[] { "java.lang.Integer", "java.lang.Integer" });
+      TwitterProtocol tp = new TwitterProtocol("TIMEOUT", "TIMEOUT", "TIMEOUT",
+          new Entry(rioNode.addr).getHash());
+      // p
+      Utils.logOutput(rioNode.addr, "STOP resend, send timeout " + destAddr);
+      RIOPacket pck = new RIOPacket(Protocol.DATA, seqNum, tp.toBytes());
+      rioNode.onReceive(destAddr, Protocol.DATA, pck.pack());
+
+      unACKedPackets.remove(seqNum);
+      resendCounter.remove(seqNum);
+      rioNode.addTimeout(new Callback(onTimeoutMethod, parent, new Object[] {
+          destAddr, seqNum }), ReliableInOrderMsgLayer.TIMEOUT);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 }

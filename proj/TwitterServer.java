@@ -72,6 +72,7 @@ public class TwitterServer {
 
   private final int paxosNodeId;
   private int waitingClientId;
+  private boolean heardBackFromPaxos;
 
   /**
    * Constructs the server side
@@ -173,6 +174,7 @@ public class TwitterServer {
    * @param msg
    */
   private void handlePaxos(Integer from, int protocol, byte[] msg) {
+    heardBackFromPaxos = true;
     Utils.logOutput(wrapper.addr, "HALLOOOOOOOOOOO");
     if (!Protocol.isPktProtocolValid(protocol)) {
       Utils.logError(wrapper.addr, "unknown protocol: " + protocol);
@@ -196,7 +198,7 @@ public class TwitterServer {
     if (waitingClientId != -1) {
       Utils.logOutput(wrapper.addr, waitingClientId + "");
       wrapper.RIOSend(waitingClientId, protocol, response.toBytes());
-      if (responseData.equals(ROLLBACK)) {
+      if (responseData.contains(ROLLBACK)) {
         for (Integer i : connectedNodes) {
           if (waitingClientId != i) {
             TwitterProtocol invalidation = new TwitterProtocol(INVALIDATE, INVALIDATE, INVALIDATE, INVALIDATE);
@@ -210,6 +212,8 @@ public class TwitterServer {
     } catch (IOException e) {
       Utils.logError(wrapper.addr, "Error in deleting the file");
     }
+    nodeToTxn.remove(from);
+    txnToPastRequests.remove(from);
     waitingClientId = -1;
   }
 
@@ -258,9 +262,11 @@ public class TwitterServer {
     // if so, then just reject the client to rollback.
     if (waitingClientId != -1) {
       TwitterProtocol response =
-          new TwitterProtocol(ROLLBACK, request.getCollection(), responseData, request.getHash(), transactionCounter,
+          new TwitterProtocol(ROLLBACK, request.getCollection(), ROLLBACK, request.getHash(), transactionCounter,
               persistentTimestampCounter);
       wrapper.RIOSend(from, protocol, response.toBytes());
+      nodeToTxn.remove(from);
+      txnToPastRequests.remove(from);
       return;
     }
 
@@ -283,10 +289,19 @@ public class TwitterServer {
         }
         sendToPaxos.setTransactionTimestamp(transactionCounter);
         if (logContent.contains(ROLLBACK)) {
-          wrapper.RIOSend(from, protocol, sendToPaxos.toBytes());
+          TwitterProtocol response =
+              new TwitterProtocol(ROLLBACK, request.getCollection(), ROLLBACK, request.getHash(), transactionCounter,
+                  persistentTimestampCounter);
+          wrapper.RIOSend(from, protocol, response.toBytes());
+          nodeToTxn.remove(from);
+          txnToPastRequests.remove(from);
+          return;
         } else {
           waitingClientId = from;
           wrapper.RIOSend(paxosNodeId, Protocol.DATA, sendToPaxos.toBytes());
+          // adds a callback here, if never hear back from paxos for after a certain period of time, send change again
+          // but we need to be able to somehow stop this call back when paxos gets back to us.
+          heardBackFromPaxos = false;
         }
         try {
           Set<String> hashes = txnToPastRequests.get(from);
@@ -315,7 +330,7 @@ public class TwitterServer {
           wrapper.RIOSend(from, protocol, response.toBytes());
         } else {
           TwitterProtocol response =
-              new TwitterProtocol(ROLLBACK, request.getCollection(), responseData, request.getHash(),
+              new TwitterProtocol(ROLLBACK, request.getCollection(), ROLLBACK, request.getHash(),
                   transactionCounter, persistentTimestampCounter);
           updatePersistentTime();
           wrapper.RIOSend(from, protocol, response.toBytes());
