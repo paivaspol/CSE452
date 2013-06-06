@@ -103,6 +103,9 @@ public class PaxosNode {
     
     Utils.logOutput(wrapper.addr, "HHHHHHHH " + from + " method: " + method);
     
+    if (method.equals(PREPARE)) {
+      otherPaxosNodes.add(from);
+    }
     
     // check if it is from other paxos or from file server?
     if (from == 0 || from == 1) {
@@ -129,8 +132,10 @@ public class PaxosNode {
       }
 
     } else if (otherPaxosNodes.contains(from)) {
+      
       if (method.equals("TIMEOUT") && fileServer != -1) {
         Utils.logOutput(wrapper.addr, "\t\t\tHERE!");
+        otherPaxosNodes.remove(from);
         try {
           prepare(value, inProgressId);
         } catch (IOException e) {
@@ -398,6 +403,12 @@ public class PaxosNode {
       value = valueStr;
       fileServerRequest = fileServerStr;
       scan.close();
+      // join the paxos group :)
+      try {
+        prepare(value, inProgressId);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
     }
   }
 

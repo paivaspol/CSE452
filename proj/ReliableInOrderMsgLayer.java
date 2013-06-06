@@ -311,11 +311,12 @@ class OutChannel {
           new Entry(rioNode.addr).getHash());
       // p
       Utils.logOutput(rioNode.addr, "STOP resend, send timeout " + destAddr);
-      RIOPacket pck = new RIOPacket(Protocol.DATA, seqNum, tp.toBytes());
+      RIOPacket pck = new RIOPacket(Protocol.DATA, seqNum + 1, tp.toBytes());
       rioNode.onReceive(destAddr, Protocol.DATA, pck.pack());
 
       unACKedPackets.remove(seqNum);
       resendCounter.remove(seqNum);
+      Utils.logOutput(rioNode.addr, "\t\tblahssssss " + unACKedPackets.toString());
       rioNode.addTimeout(new Callback(onTimeoutMethod, parent, new Object[] {
           destAddr, seqNum }), ReliableInOrderMsgLayer.TIMEOUT);
     } catch (Exception e) {
