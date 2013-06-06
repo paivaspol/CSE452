@@ -352,7 +352,7 @@ public class PaxosNode {
     raf.writeBytes(toExecute);
     raf.close();
     Utils.logOutput(wrapper.addr, "aft toExec: " + toExecute);
-    if (currWaitingServer != -1) {
+    if (fileServer != -1) {
       boolean isYes = false;
       if (fileServerRequest != null) {
         isYes = toExecute.contains(fileServerRequest);
