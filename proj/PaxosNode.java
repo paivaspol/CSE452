@@ -1,8 +1,8 @@
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
-import java.util.Set;
 
 import edu.washington.cs.cse490h.lib.PersistentStorageReader;
 import edu.washington.cs.cse490h.lib.PersistentStorageWriter;
@@ -61,11 +61,11 @@ public class PaxosNode {
   public String value;
 
   public State state;
-  private final Set<Integer> otherPaxosNodes;
+  private final List<Integer> otherPaxosNodes;
 
   public PaxosNode(TwitterNodeWrapper wrapper) {
     this.wrapper = wrapper;
-    otherPaxosNodes = new HashSet<Integer>();
+    otherPaxosNodes = new ArrayList<Integer>();
     populateOtherPaxosNodeAndServer(wrapper.addr);
     paxosLogFileName = "paxosLog" + wrapper.addr;
     state = State.ACTIVE;
@@ -175,12 +175,12 @@ public class PaxosNode {
   // returns the content of the value, null when the node should reject.
   private void handlePrepare(int n, int from, long id) {
     if (highestProposalNumberSeen >= n) {
-      inProgressId = id;
       TwitterProtocol prepFailed = new TwitterProtocol(PaxosNode.PREPARE_FAILED, new Entry(wrapper.addr).getHash());
       prepFailed.setProposalNumber(highestProposalNumberSeen);
       prepFailed.setTransactionTimestamp(n);
       wrapper.RIOSend(from, Protocol.DATA, prepFailed.toBytes());
     } else {
+      inProgressId = id;
       TwitterProtocol promise = new TwitterProtocol(PaxosNode.PROMISE, new Entry(wrapper.addr).getHash());
       promise.setProposalNumber(highestProposalNumberSeen);
       highestProposalNumberSeen = n;
@@ -201,6 +201,7 @@ public class PaxosNode {
     // send accept()
     promiseReceivedCounter++;
     state = State.ACCEPT;
+    inProgressId = id;
     if (promiseReceivedCounter >= 2 && id == highestProposalNumberSeen) {
       if (value != null) {
         this.value = value;
@@ -278,6 +279,7 @@ public class PaxosNode {
       }
       executeConsensus(toExecute, isYes, id);
     }
+    value = null;
   }
 
   private void handleAccepted(String newValue, long id) throws IOException {
@@ -311,7 +313,7 @@ public class PaxosNode {
    * @throws IOException
    */
   private void announceChange() throws IOException {
-	prevChangeAnnounceId = currServerRequestId;
+	prevChangeAnnounceId = inProgressId;
     promiseReceivedCounter = 1;
     acceptedReceivedCounter = 1;
     // send to every paxos node the value.
@@ -332,7 +334,7 @@ public class PaxosNode {
     	if (this.value.equals(fileServerRequest)) {
     		isYes = true;
     	}
-    	executeConsensus(fileServerRequest, isYes, currServerRequestId);
+    	executeConsensus(fileServerRequest, isYes, inProgressId);
     }
   }
 
@@ -342,18 +344,15 @@ public class PaxosNode {
   private void executeConsensus(String logEntry, boolean isYes, long id) {
     TwitterProtocol tp;
 
-//    if (isYes) {
-//      tp = new TwitterProtocol(PaxosNode.YES, new Entry(wrapper.addr).getHash());
-//    } else {
-//      tp = new TwitterProtocol(PaxosNode.NO, new Entry(wrapper.addr).getHash());
-//    }
-    // no need to send no because we are trying for the file server already.
     if (isYes) {
-    	tp = new TwitterProtocol(PaxosNode.YES, new Entry(wrapper.addr).getHash());
-    	tp.setData(logEntry);
-    	tp.setTransactionTimestamp(id);
-    	wrapper.RIOSend(fileServer, Protocol.DATA, tp.toBytes());
+      tp = new TwitterProtocol(PaxosNode.YES, new Entry(wrapper.addr).getHash());
+    } else {
+      tp = new TwitterProtocol(PaxosNode.NO, new Entry(wrapper.addr).getHash());
     }
+    // no need to send no because we are trying for the file server already.
+    tp.setData(logEntry);
+    tp.setTransactionTimestamp(id);
+    wrapper.RIOSend(fileServer, Protocol.DATA, tp.toBytes());
   }
 
   public void start() {
