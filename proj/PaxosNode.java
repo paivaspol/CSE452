@@ -103,7 +103,7 @@ public class PaxosNode {
     
     Utils.logOutput(wrapper.addr, "HHHHHHHH " + from + " method: " + method);
     
-    if (method.equals(PREPARE)) {
+    if (method.equals(PREPARE) && !otherPaxosNodes.contains(from)) {
       otherPaxosNodes.add(from);
     }
     
@@ -268,6 +268,8 @@ public class PaxosNode {
     // send to other nodes
     TwitterProtocol proposal = new TwitterProtocol(PaxosNode.PREPARE, new Entry(wrapper.addr).getHash());
     proposal.setProposalNumber(highestProposalNumberSeen);
+    // p
+    Utils.logOutput(wrapper.addr, "otherPaxosNodes size " + otherPaxosNodes.size());
     for (int i : otherPaxosNodes) {
       wrapper.RIOSend(i, Protocol.DATA, proposal.toBytes());
     }
