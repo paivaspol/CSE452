@@ -157,7 +157,7 @@ public class TwitterServer {
    * @param msg the message
    */
   public void onRIOReceive(Integer from, int protocol, byte[] msg) {
-	  Utils.logOutput(wrapper.addr, "RECEIVED!");
+    Utils.logOutput(wrapper.addr, "RECEIVED!");
     if (from == 2 || from == 3 || from == 4) {
       handlePaxos(from, protocol, msg);
     } else {
@@ -173,7 +173,7 @@ public class TwitterServer {
    * @param msg
    */
   private void handlePaxos(Integer from, int protocol, byte[] msg) {
-	Utils.logOutput(wrapper.addr, "HALLOOOOOOOOOOO");
+    Utils.logOutput(wrapper.addr, "HALLOOOOOOOOOOO");
     if (!Protocol.isPktProtocolValid(protocol)) {
       Utils.logError(wrapper.addr, "unknown protocol: " + protocol);
       throw new RuntimeException();
@@ -194,7 +194,7 @@ public class TwitterServer {
     responseData = fileManager.executeLogContentFromLogContent(data, numCommits);
     // send the response back to the client who is waiting.
     if (waitingClientId != -1) {
-    	Utils.logOutput(wrapper.addr, waitingClientId + "");
+      Utils.logOutput(wrapper.addr, waitingClientId + "");
       wrapper.RIOSend(waitingClientId, protocol, response.toBytes());
       if (responseData.equals(ROLLBACK)) {
         for (Integer i : connectedNodes) {
@@ -279,11 +279,15 @@ public class TwitterServer {
         TwitterProtocol sendToPaxos = new TwitterProtocol(PaxosNode.CHANGE, new Entry(wrapper.addr).getHash());
         sendToPaxos.setFileServerRequestValue(logContent);
         if (logContent == null) {
-        	 Utils.logOutput(wrapper.addr, "why the heck is logContent = null");
+          Utils.logOutput(wrapper.addr, "why the heck is logContent = null");
         }
-        waitingClientId = from;
         sendToPaxos.setTransactionTimestamp(transactionCounter);
-        wrapper.RIOSend(paxosNodeId, Protocol.DATA, sendToPaxos.toBytes());
+        if (logContent.contains(ROLLBACK)) {
+          wrapper.RIOSend(from, protocol, sendToPaxos.toBytes());
+        } else {
+          waitingClientId = from;
+          wrapper.RIOSend(paxosNodeId, Protocol.DATA, sendToPaxos.toBytes());
+        }
         try {
           Set<String> hashes = txnToPastRequests.get(from);
           StringBuilder sb = new StringBuilder();

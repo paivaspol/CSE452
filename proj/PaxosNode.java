@@ -115,7 +115,7 @@ public class PaxosNode {
       } else if (method.startsWith(PaxosNode.CHANGE)) {
         // propose the change to other paxos node
         try {
-          
+
           prepare(tp.getFileServerRequestValue(), tp.getTransactionTimestamp());
         } catch (IOException e) {
           throw new RuntimeException(e);
@@ -148,7 +148,8 @@ public class PaxosNode {
         }
       } else if (method.equals(PaxosNode.ACCEPTED)) {
         try {
-          handleAccepted(tp.getAcceptedValue(), tp.getTransactionTimestamp()); // TODO: double check if this is the correct value or not
+          handleAccepted(tp.getAcceptedValue(), tp.getTransactionTimestamp()); // TODO: double check if this is the
+                                                                               // correct value or not
         } catch (IOException e) {
           throw new RuntimeException("something went wrong in handleAccepted()\n" + e.getMessage());
         }
@@ -187,7 +188,7 @@ public class PaxosNode {
       promise.setPromiseValue(value);
       promise.setTransactionTimestamp(n);
       wrapper.RIOSend(from, Protocol.DATA, promise.toBytes());
-      
+
     }
   }
 
@@ -219,15 +220,15 @@ public class PaxosNode {
   }
 
   private void handlePrepareFailed(String value, long id) throws IOException {
-	  if (state.equals(State.PROPOSE) && id == highestProposalNumberSeen) {
-		  prepare(value, id);
-	  }
+    if (state.equals(State.PROPOSE) && id == highestProposalNumberSeen) {
+      prepare(value, id);
+    }
   }
 
   private void handleAcceptFailed(String value, long id) throws IOException {
-	  if (state.equals(State.ACCEPT) && id == highestProposalNumberSeen) {
-		  prepare(value, id);
-	  }
+    if (state.equals(State.ACCEPT) && id == highestProposalNumberSeen) {
+      prepare(value, id);
+    }
   }
 
   /**
@@ -239,8 +240,8 @@ public class PaxosNode {
   private void prepare(String value, long id) throws IOException {
     // TODO(vaspol): need to consider the case where we are not in the state of
     // accepting?
-	this.currServerRequestId = id;
-	this.inProgressId = id;
+    currServerRequestId = id;
+    inProgressId = id;
     state = State.PROPOSE;
     highestProposalNumberSeen++;
     appendFile(PAXOS_STATE_FILENAME, PREPARE + "\n" + highestProposalNumberSeen);
@@ -265,7 +266,7 @@ public class PaxosNode {
     long length = raf.length();
     String toExecute;
     toExecute = logEntry.substring((int) length);
-    
+
     raf.seek(length);
     // TODO(): possible bugs, look here if there are bugs!
     Utils.logOutput(wrapper.addr, "bef toExec: " + toExecute);
@@ -283,13 +284,13 @@ public class PaxosNode {
   }
 
   private void handleAccepted(String newValue, long id) throws IOException {
-	  if (id == highestProposalNumberSeen) {
-		  acceptedReceivedCounter++;
-		  Utils.logOutput(wrapper.addr, "\t" + id + " " + prevChangeAnnounceId + " " + currServerRequestId);
-		  if (acceptedReceivedCounter >= 2 && id != prevChangeAnnounceId) {
-			  announceChange();
-		  }
-	  }
+    if (id == highestProposalNumberSeen) {
+      acceptedReceivedCounter++;
+      Utils.logOutput(wrapper.addr, "\t" + id + " " + prevChangeAnnounceId + " " + currServerRequestId);
+      if (acceptedReceivedCounter >= 2 && id != prevChangeAnnounceId) {
+        announceChange();
+      }
+    }
   }
 
   private void handleAccept(int n, String value, int from, long id) {
@@ -313,7 +314,7 @@ public class PaxosNode {
    * @throws IOException
    */
   private void announceChange() throws IOException {
-	prevChangeAnnounceId = inProgressId;
+    prevChangeAnnounceId = inProgressId;
     promiseReceivedCounter = 1;
     acceptedReceivedCounter = 1;
     // send to every paxos node the value.
@@ -330,11 +331,12 @@ public class PaxosNode {
     }
     // ask own fileserver to execute if this paxos node has a mapping to a fileserver
     if (fileServer != -1) {
-    	boolean isYes = false;
-    	if (this.value.equals(fileServerRequest)) {
-    		isYes = true;
-    	}
-    	executeConsensus(fileServerRequest, isYes, inProgressId);
+      boolean isYes = false;
+      if (value.equals(fileServerRequest)) {
+        isYes = true;
+      }
+      // executeConsensus(fileServerRequest, isYes, inProgressId);
+      executeConsensus(value, isYes, inProgressId);
     }
   }
 
