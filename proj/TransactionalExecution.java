@@ -19,8 +19,8 @@ public class TransactionalExecution {
    * @param method the method
    * @param value the value. This is optional. Can be null if not wanted.
    */
-  public void addLogEntry(long tid, String filename, String method, String value) {
-    String entry = String.valueOf(tid) + '\t' + filename + '\t' + method;
+  public void addLogEntry(int transactionId, String filename, String method, String opId, String value) {
+    String entry = String.valueOf(transactionId) + '\t' + filename + '\t' + method + '\t' + opId;
     if (value != null) {
       entry += '\t' + value;
     }

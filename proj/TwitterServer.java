@@ -158,7 +158,6 @@ public class TwitterServer {
    * @param msg the message
    */
   public void onRIOReceive(Integer from, int protocol, byte[] msg) {
-    Utils.logOutput(wrapper.addr, "RECEIVED!");
     if (from == 2 || from == 3 || from == 4) {
       handlePaxos(from, protocol, msg);
     } else {
@@ -175,7 +174,6 @@ public class TwitterServer {
    */
   private void handlePaxos(Integer from, int protocol, byte[] msg) {
     heardBackFromPaxos = true;
-    Utils.logOutput(wrapper.addr, "HALLOOOOOOOOOOO");
     if (!Protocol.isPktProtocolValid(protocol)) {
       Utils.logError(wrapper.addr, "unknown protocol: " + protocol);
       throw new RuntimeException();
@@ -187,7 +185,6 @@ public class TwitterServer {
     String method = request.getMethod();
     
     if (method.equals(RESTART)) {
-      
       return;
     }
     
@@ -197,12 +194,21 @@ public class TwitterServer {
       // no, make sure to rollback the client and execute the operations received.
       responseData = ROLLBACK + "\n";
     }
+    
+    if (method.equals(PaxosNode.CATCH_UP)) {
+      int numCommits = fileManager.getNumCommitFromLogContent(data);
+      responseData = fileManager.executeLogContentFromLogContent(data, numCommits, txnToPastRequests, pastRequests);
+      writePastRequestToFile();
+      return;
+    }
+    
+    
     response.setData(responseData);
     int numCommits = fileManager.getNumCommitFromLogContent(data);
-    responseData = fileManager.executeLogContentFromLogContent(data, numCommits);
+    responseData = fileManager.executeLogContentFromLogContent(data, numCommits, txnToPastRequests, pastRequests);
+    writePastRequestToFile();
     // send the response back to the client who is waiting.
     if (waitingClientId != -1) {
-      Utils.logOutput(wrapper.addr, waitingClientId + "");
       wrapper.RIOSend(waitingClientId, protocol, response.toBytes());
       if (responseData.contains(ROLLBACK)) {
         for (Integer i : connectedNodes) {
@@ -221,6 +227,21 @@ public class TwitterServer {
     nodeToTxn.remove(from);
     txnToPastRequests.remove(from);
     waitingClientId = -1;
+  }
+
+  private void writePastRequestToFile() {
+    try {
+      for (Integer txn : txnToPastRequests.keySet()) {
+        Set<String> hashes = txnToPastRequests.get(txn);
+        StringBuilder sb = new StringBuilder();
+        for (String h : hashes) {
+          sb.append(h + "\n");
+        }
+        appendFile(LOG_FILENAME, sb.toString());
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   /**
@@ -279,20 +300,17 @@ public class TwitterServer {
     try {
       if (request.getMethod().equals(CREATE) || request.getMethod().equals(DELETE_LINES)
           || request.getMethod().equals(READ) || request.getMethod().equals(DELETE)) {
-        responseData = fileManager.handleTransaction((int) transactionId, request.getMethod(), collection, data);
+        responseData = fileManager.handleTransaction((int) transactionId, request.getMethod(), request.getHash(), collection, data);
       } else if (request.getMethod().equals(APPEND)) {
         if (!txnToPastRequests.get(from).contains(hash) && !pastRequests.contains(hash)) {
-          responseData = fileManager.handleTransaction((int) transactionId, request.getMethod(), collection, data);
+          responseData = fileManager.handleTransaction((int) transactionId, request.getMethod(), request.getHash(), collection, data);
         }
       } else if (request.getMethod().equals(COMMIT)) {
         // when a client tries to commit, the server will send the information to its corresponding paxos node
         // the log of operations is sent.
-        String logContent = fileManager.handleTransaction((int) transactionId, request.getMethod(), collection, data);
+        String logContent = fileManager.handleTransaction((int) transactionId, request.getMethod(), request.getHash(), collection, data);
         TwitterProtocol sendToPaxos = new TwitterProtocol(PaxosNode.CHANGE, new Entry(wrapper.addr).getHash());
         sendToPaxos.setFileServerRequestValue(logContent);
-        if (logContent == null) {
-          Utils.logOutput(wrapper.addr, "why the heck is logContent = null");
-        }
         sendToPaxos.setTransactionTimestamp(transactionCounter);
         if (logContent.contains(ROLLBACK)) {
           TwitterProtocol response =
@@ -308,17 +326,6 @@ public class TwitterServer {
           // adds a callback here, if never hear back from paxos for after a certain period of time, send change again
           // but we need to be able to somehow stop this call back when paxos gets back to us.
           heardBackFromPaxos = false;
-        }
-        try {
-          Set<String> hashes = txnToPastRequests.get(from);
-          StringBuilder sb = new StringBuilder();
-          for (String h : hashes) {
-            sb.append(h + "\n");
-          }
-          sb.append(hash + "\n");
-          appendFile(LOG_FILENAME, sb.toString());
-        } catch (IOException e) {
-          e.printStackTrace();
         }
         return;
       } else if (request.getMethod().equals("TIMEOUT")) {
@@ -352,7 +359,7 @@ public class TwitterServer {
         }
         return;
       } else if (request.getMethod().equals(ABORT)) {
-        fileManager.handleTransaction((int) transactionId, request.getMethod(), collection, data);
+        fileManager.handleTransaction((int) transactionId, request.getMethod(), request.getHash(), collection, data);
         nodeToTxn.remove(from);
         TwitterProtocol twitterProtocol = new TwitterProtocol(ABORTED, null);
         wrapper.RIOSend(from, protocol, twitterProtocol.toBytes());

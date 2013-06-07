@@ -1,8 +1,9 @@
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 
 import edu.washington.cs.cse490h.lib.PersistentStorageReader;
 import edu.washington.cs.cse490h.lib.PersistentStorageWriter;
@@ -130,22 +131,71 @@ public class FileManager {
         if (numCommits <= 0) {
           break;
         }
+        //            0                                 1             2                3
+        //  String.valueOf(transactionId) + '\t' + filename + '\t' + method + '\t' + opId;
         String[] tokenized = entry.split("\t");
-        Utils.logOutput(server.getNode().addr, Arrays.toString(tokenized));
-        if (tokenized.length >= 4) {
+        if (tokenized.length >= 5) {
           StringBuilder value = new StringBuilder();
           for (int i = 3; i < tokenized.length; i++) {
             value.append(tokenized[i] + "\t");
           }
           retval = handleFileIOOperations(Integer.parseInt(tokenized[0]), tokenized[2],
               tokenized[1], value.toString());
-        } else if (tokenized.length <= 3) {
+        } else if (tokenized.length <= 4) {
           retval = handleFileIOOperations(Integer.parseInt(tokenized[0]), tokenized[2], tokenized[1], "");
         }else {
           if (tokenized[2].equals(TwitterServer.COMMIT)) {
             numCommits--;
           }
         }
+      }
+    } catch (IOException e) {
+      retval = TwitterServer.ROLLBACK;
+      Utils.logError(server.getNode().addr, e.getMessage());
+    }
+    return retval;
+  }
+  
+
+  /**
+   * Executes the operations stored in the content of the string
+   * @param content contains all the operations
+   * @param numCommits
+   */
+  public String executeLogContentFromLogContent(String content, int numCommits, Map<Integer, Set<String>> txnToPastRequests, Set<String> pastRequests) {
+    String retval = TwitterServer.SUCCESS;
+    try {
+      String[] entries = content.split("\n");
+      for (String entry : entries) {
+        if (numCommits <= 0) {
+          break;
+        }
+        String[] tokenized = entry.split("\t");
+        int transactionId = Integer.parseInt(tokenized[0]);
+        String opId = tokenized[3];
+        if (tokenized.length >= 5) {
+          StringBuilder value = new StringBuilder();
+          for (int i = 4; i < tokenized.length; i++) {
+            value.append(tokenized[i] + "\t");
+          }
+          if (txnToPastRequests.containsKey(transactionId) && !txnToPastRequests.get(transactionId).contains(opId) && !pastRequests.contains(opId)) {
+            retval = handleFileIOOperations(transactionId, tokenized[2],
+                tokenized[1], value.toString());
+          }
+        } else if (tokenized.length <= 4) {
+          if (txnToPastRequests.containsKey(transactionId) && !txnToPastRequests.get(transactionId).contains(opId) && !pastRequests.contains(opId)) {
+            retval = handleFileIOOperations(transactionId, tokenized[2], tokenized[1], "");
+          }
+        }else {
+          if (tokenized[2].equals(TwitterServer.COMMIT)) {
+            numCommits--;
+          }
+        }
+        if (!txnToPastRequests.containsKey(transactionId)) {
+          txnToPastRequests.put(transactionId, new HashSet<String>());
+        }
+        txnToPastRequests.get(transactionId).add(opId);
+        pastRequests.add(opId);
       }
     } catch (IOException e) {
       retval = TwitterServer.ROLLBACK;
@@ -175,16 +225,15 @@ public class FileManager {
       String finalContent = String.valueOf(transactionId) + "\n" + content.toString();
       writeToFile(filename, finalContent);
     } else if (method.equals(TwitterServer.APPEND)) {
-      Utils.logOutput(this.server.getNode().addr, "appending: " + value);
-      StringBuilder content = new StringBuilder();
-      if (Utility.fileExists(server.getNode(), filename)) {
-        PersistentStorageReader reader = server
-            .getPersistentStorageReader(filename);
-        readWholeFileNoLastUpdated(reader, content);
-      }
-      content.append(value + "\n");
-      String finalContent = String.valueOf(transactionId) + "\n" + content.toString();
-      writeToFile(filename, finalContent);
+        StringBuilder content = new StringBuilder();
+        if (Utility.fileExists(server.getNode(), filename)) {
+          PersistentStorageReader reader = server
+              .getPersistentStorageReader(filename);
+          readWholeFileNoLastUpdated(reader, content);
+        }
+        content.append(value + "\n");
+        String finalContent = String.valueOf(transactionId) + "\n" + content.toString();
+        writeToFile(filename, finalContent);
     } else if (method.equals(TwitterServer.DELETE)) {
       deleteFile(transactionId, filename);
     } else if (method.equals(TwitterServer.DELETE_LINES)) {
@@ -215,7 +264,7 @@ public class FileManager {
    * @param value
    * @return true if the operation is valid, otherwise return false.
    */
-  public String handleTransaction(int transactionId, String method,
+  public String handleTransaction(Integer transactionId, String method, String opId,
       String filename, String value) throws IOException {
     String retval = TwitterServer.SUCCESS + "\n";
     if (!activeTransactions.containsKey(transactionId)) {
@@ -224,7 +273,7 @@ public class FileManager {
     TransactionalExecution exec = activeTransactions.get(transactionId);
     if (!method.equals(TwitterServer.READ)
         && !method.equals(TwitterServer.ABORT)) {
-      exec.addLogEntry(transactionId, filename, method, value);
+      exec.addLogEntry(transactionId, filename, method, opId, value);
     }
     if (method.equals(TwitterServer.READ) || method.equals(TwitterServer.COMMIT)) {
       retval = handleMethod(transactionId, method, filename, value, retval, exec);  
@@ -232,18 +281,10 @@ public class FileManager {
     return retval;
   }
 
-  private String handleMethod(int transactionId, String method,
+  private String handleMethod(Integer transactionId, String method,
       String filename, String value, String retval, TransactionalExecution exec)
       throws IOException {
-    if (method.equals(TwitterServer.CREATE)) {
-      create(transactionId, filename, exec);
-    } else if (method.equals(TwitterServer.APPEND)) {
-      append(transactionId, filename, value, exec);
-    } else if (method.equals(TwitterServer.DELETE)) {
-      delete(transactionId, filename, exec);
-    } else if (method.equals(TwitterServer.DELETE_LINES)) {
-      deleteLines(transactionId, filename, value, exec);
-    } else if (method.equals(TwitterServer.READ)) {
+    if (method.equals(TwitterServer.READ)) {
       retval = read(transactionId, filename, retval, exec);
     } else if (method.equals(TwitterServer.COMMIT)) {
       retval = commit(transactionId, filename, retval, exec);
@@ -253,68 +294,7 @@ public class FileManager {
     return retval;
   }
 
-  private void create(int transactionId, String filename,
-      TransactionalExecution exec) throws IOException {
-//    StringBuilder content = new StringBuilder();
-//    if (Utility.fileExists(server.getNode(), filename)) {
-//      PersistentStorageReader reader = server
-//          .getPersistentStorageReader(filename);
-//      readWholeFile(reader, content);
-//    }
-//    int version = getLastModifiedVersion(filename);
-//    exec.modifyFile(version, filename, content.toString(), false); // put it
-  }
-
-  private void append(int transactionId, String filename, String value,
-      TransactionalExecution exec) throws IOException {
-//    StringBuilder content = new StringBuilder();
-//    String fContent = exec.readFile(filename);
-//    if (fContent != null) {
-//      // there's something
-//      content.append(fContent);
-//      content.append(value + "\n");
-//    } else {
-//      // it's null
-//      if (Utility.fileExists(server.getNode(), filename)) {
-//        PersistentStorageReader reader = server
-//            .getPersistentStorageReader(filename);
-//        readWholeFile(reader, content);
-//        content.append(value + "\n");
-//      } else {
-//        content.append(value + "\n");
-//      }
-//    }
-//    int version = getLastModifiedVersion(filename);
-//    exec.modifyFile(version, filename, content.toString(), false);
-  }
-
-  private void delete(int transactionId, String filename,
-      TransactionalExecution exec) {
-//    exec.deleteFile(transactionId, filename);
-  }
-
-  private void deleteLines(int transactionId, String filename, String value,
-      TransactionalExecution exec) throws IOException {
-//    String content = exec.readFile(filename);
-//    StringBuilder result = new StringBuilder();
-//    if (content == null) {
-//      PersistentStorageReader reader = server
-//          .getPersistentStorageReader(filename);
-//      StringBuilder cont = new StringBuilder();
-//      readWholeFile(reader, cont);
-//      content = cont.toString();
-//    }
-//    String[] file = content.toString().split("\n");
-//    for (String str : file) {
-//      if (!str.startsWith(value)) {
-//        result.append(str);
-//      }
-//    }
-//    int version = getLastModifiedVersion(filename);
-//    exec.modifyFile(version, filename, result.toString(), false);
-  }
-
-  private String read(int transactionId, String filename, String retval,
+  private String read(Integer transactionId, String filename, String retval,
       TransactionalExecution exec) throws IOException {
     String content = exec.readFile(filename);
     if (content == null) {
@@ -330,7 +310,7 @@ public class FileManager {
     return retval;
   }
 
-  private String commit(int transactionId, String retval, String filename,
+  private String commit(Integer transactionId, String retval, String filename,
       TransactionalExecution exec) throws IOException {
 
     // we're good, let's first write the log file, then the content of

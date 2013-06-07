@@ -62,15 +62,18 @@ public class Client {
     TwitterProtocol tp = TwitterNodeWrapper.GSON.fromJson(new String(msg), TwitterProtocol.class);
     if (tp.getMethod().equals(TwitterServer.ABORTED)) {
       eventIndex = 0;
-      Callback cb = eventList.get(eventIndex);
-      if (cb != null) {
-        try {
-          cb.invoke();
-        } catch (Exception e) {
-          tnw.fail();
-          e.printStackTrace();
+      if (eventList != null) {
+        Callback cb = eventList.get(eventIndex);
+        if (cb != null) {
+          try {
+            cb.invoke();
+          } catch (Exception e) {
+            tnw.fail();
+            e.printStackTrace();
+          }
         }
       }
+
       isAbortMode = false;
       return;
     }

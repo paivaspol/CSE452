@@ -107,8 +107,6 @@ public class PaxosNode {
     String method = tp.getMethod();
     String response = "";
 
-    Utils.logOutput(wrapper.addr, "HHHHHHHH " + from + " method: " + method);
-
     if ((method.equals(TwitterServer.RESTART) || method.equals(PREPARE))
         && !otherPaxosNodes.contains(from)) {
       otherPaxosNodes.add(from);
@@ -121,7 +119,8 @@ public class PaxosNode {
         try {
           response = readFile(paxosLogFileName);
           assert (response != null);
-          tp.setMethod(response);
+          tp.setMethod(CATCH_UP);
+          tp.setData(response);
           wrapper.RIOSend(from, protocol, tp.toBytes());
         } catch (IOException e) {
           throw new RuntimeException(e);
@@ -129,7 +128,6 @@ public class PaxosNode {
       } else if (method.startsWith(PaxosNode.CHANGE)) {
         // propose the change to other paxos node
         try {
-          Utils.logOutput(wrapper.addr, "\t\t\t\t" + tp.getFileServerRequestValue());
           prepare(tp.getFileServerRequestValue(), tp.getTransactionTimestamp());
         } catch (IOException e) {
           throw new RuntimeException(e);
@@ -142,7 +140,6 @@ public class PaxosNode {
     } else if (otherPaxosNodes.contains(from)) {
 
       if (method.equals("TIMEOUT") && fileServer != -1) {
-        Utils.logOutput(wrapper.addr, "\t\t\tHERE!");
         otherPaxosNodes.remove(from);
         try {
           prepare(value, inProgressId);
@@ -169,8 +166,6 @@ public class PaxosNode {
         // we miss, then ask our server to execute, may be more than one
         // transaction.
         try {
-          Utils.logOutput(wrapper.addr, tp.getConsensusValue());
-
           handleConsensus(tp.getConsensusValue(), tp.getTransactionTimestamp());
         } catch (IOException e) {
           throw new RuntimeException("something went wrong in handleChange\n"
@@ -257,10 +252,7 @@ public class PaxosNode {
     if (promiseReceivedCounter >= 2 && id == highestProposalNumberSeen) {
       if (value != null) {
         this.value = value;
-      } else {
-        
-        Utils.logOutput(wrapper.addr, "fileServerRequest " + fileServerRequest);
-        
+      } else {      
         this.value = fileServerRequest;
       }
       try {
@@ -281,9 +273,6 @@ public class PaxosNode {
       // our proposal number
       accept.setProposalNumber(highestProposalNumberSeen);
       accept.setTransactionTimestamp(inProgressId);
-      if (value == null) {
-        Utils.logOutput(wrapper.addr, "VALUE IS NULLLLLL");
-      }
       accept.setAcceptValue(this.value);
       wrapper.RIOSend(from, Protocol.DATA, accept.toBytes());
     }
@@ -325,9 +314,6 @@ public class PaxosNode {
     TwitterProtocol proposal = new TwitterProtocol(PaxosNode.PREPARE,
         new Entry(wrapper.addr).getHash());
     proposal.setProposalNumber(highestProposalNumberSeen);
-    // p
-    Utils.logOutput(wrapper.addr,
-        "otherPaxosNodes size " + otherPaxosNodes.size());
     for (int i : otherPaxosNodes) {
       wrapper.RIOSend(i, Protocol.DATA, proposal.toBytes());
     }
@@ -339,7 +325,9 @@ public class PaxosNode {
    * @throws IOException
    */
   private void handleConsensus(String logEntry, long id) throws IOException {
-    Utils.logOutput(wrapper.addr, "LogEntry: " + logEntry);
+    if (logEntry.isEmpty()) {
+      return;
+    }
     RandomAccessFile raf = new RandomAccessFile(getFullPath(paxosLogFileName),
         "rw");
     long length = raf.length();
@@ -347,11 +335,8 @@ public class PaxosNode {
     toExecute = logEntry.substring((int) length);
 
     raf.seek(length);
-    // TODO(): possible bugs, look here if there are bugs!
-    Utils.logOutput(wrapper.addr, "bef toExec: " + toExecute);
     raf.writeBytes(toExecute);
     raf.close();
-    Utils.logOutput(wrapper.addr, "aft toExec: " + toExecute);
     if (fileServer != -1) {
       boolean isYes = false;
       if (fileServerRequest != null) {
@@ -359,7 +344,7 @@ public class PaxosNode {
       }
       executeConsensus(toExecute, isYes, id);
     }
-    if (currServerRequestId == -1) {
+    if (currWaitingServer == -1) {
       value = null;
     }
   }
@@ -367,8 +352,6 @@ public class PaxosNode {
   private void handleAccepted(String newValue, long id) throws IOException {
     if (id == highestProposalNumberSeen) {
       acceptedReceivedCounter++;
-      Utils.logOutput(wrapper.addr, "\t" + id + " " + prevChangeAnnounceId
-          + " " + currServerRequestId);
       if (acceptedReceivedCounter >= 2 && id != prevChangeAnnounceId) {
         announceChange();
       }
@@ -407,9 +390,6 @@ public class PaxosNode {
     // send whole paxos log
     // append current value to paxosLogFile then readFile
     appendFile(paxosLogFileName, value);
-    // p
-    Utils.logOutput(wrapper.addr, "readFileContent "
-        + readFile(paxosLogFileName));
     decided.setConsensusValue(readFile(paxosLogFileName));
     decided.setTransactionTimestamp(currServerRequestId);
     for (int paxosNum : otherPaxosNodes) {
@@ -432,9 +412,6 @@ public class PaxosNode {
   // first compare our paxos log with the one sent by them, see which one
   // we miss, then ask our server to execute, may be more than one transaction.
   private void executeConsensus(String logEntry, boolean isYes, long id) {
-    if (logEntry.isEmpty()) {
-      return;
-    }
     TwitterProtocol tp;
 
     if (isYes) {

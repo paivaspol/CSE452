@@ -1,5 +1,4 @@
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -55,10 +54,6 @@ public class ReliableInOrderMsgLayer {
       inConnections.remove(from);
       outConnections.remove(from);
     }
-
-    // p
-    Utils.logOutput(n.addr, "method " + tp.getMethod());
-
     // at-most-once semantics
     // ack the message
     byte[] seqNumByteArray = Utility.stringToByteArray("" + riopkt.getSeqNum());
@@ -70,7 +65,6 @@ public class ReliableInOrderMsgLayer {
     }
     
     LinkedList<RIOPacket> toBeDelivered = in.gotPacket(riopkt);
-    Utils.logOutput(n.addr, toBeDelivered.toString());
     for (RIOPacket p : toBeDelivered) {
       // deliver in-order the next sequence of packets
       n.onRIOReceive(from, p.getProtocol(), p.getPayload());
@@ -168,7 +162,6 @@ class InChannel {
   public LinkedList<RIOPacket> gotPacket(RIOPacket pkt) {
     LinkedList<RIOPacket> pktsToBeDelivered = new LinkedList<RIOPacket>();
     int seqNum = pkt.getSeqNum();
-    Utils.logOutput(999, "\taaaa seqNum: " + seqNum + ", lastSeqNum: " + lastSeqNumDelivered);
     if (seqNum == lastSeqNumDelivered + 1) {
       // We were waiting for this packet
       pktsToBeDelivered.add(pkt);
@@ -309,14 +302,11 @@ class OutChannel {
           new String[] { "java.lang.Integer", "java.lang.Integer" });
       TwitterProtocol tp = new TwitterProtocol("TIMEOUT", "TIMEOUT", "TIMEOUT",
           new Entry(rioNode.addr).getHash());
-      // p
-      Utils.logOutput(rioNode.addr, "STOP resend, send timeout " + destAddr);
       RIOPacket pck = new RIOPacket(Protocol.DATA, seqNum + 1, tp.toBytes());
       rioNode.onReceive(destAddr, Protocol.DATA, pck.pack());
 
       unACKedPackets.remove(seqNum);
       resendCounter.remove(seqNum);
-      Utils.logOutput(rioNode.addr, "\t\tblahssssss " + unACKedPackets.toString());
       rioNode.addTimeout(new Callback(onTimeoutMethod, parent, new Object[] {
           destAddr, seqNum }), ReliableInOrderMsgLayer.TIMEOUT);
     } catch (Exception e) {
